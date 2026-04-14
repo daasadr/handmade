@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx --yes @nestjs/cli new backend --package-manager npm --skip-git --language typescript)"
+    ]
+  }
+}

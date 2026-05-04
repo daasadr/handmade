@@ -1,12 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { IsString, IsOptional, IsUrl } from 'class-validator';
 import { MakerProfile } from './maker-profile.entity';
 import { User } from '../users/user.entity';
 
 export class CreateMakerProfileDto {
+  @IsString()
   brandName: string;
+
+  @IsOptional()
+  @IsString()
   bio?: string;
+
+  @IsOptional()
+  @IsUrl()
+  videoUrl?: string;
 }
 
 @Injectable()

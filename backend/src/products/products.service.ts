@@ -1,3 +1,5 @@
+import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,9 +8,20 @@ import { User } from '../users/user.entity';
 import { MakersService } from '../makers/makers.service';
 
 export class CreateProductDto {
+  @IsString()
   titleOriginal: string;
+
+  @IsString()
   descriptionOriginal: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
   priceOriginal?: number;
+
+  @IsOptional()
+  @IsString()
   category?: string;
 }
 

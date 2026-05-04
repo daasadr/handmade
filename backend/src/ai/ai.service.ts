@@ -82,7 +82,10 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
 
     let parsed: any;
     try {
-      parsed = JSON.parse(content.text);
+      // Claude někdy obalí JSON do markdown bloků — extrahujeme čistý JSON
+      const raw = content.text.trim();
+      const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      parsed = JSON.parse(jsonText);
     } catch {
       throw new BadRequestException('AI vrátila neplatný formát odpovědi');
     }

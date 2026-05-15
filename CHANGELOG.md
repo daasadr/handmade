@@ -28,6 +28,37 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-05-15] Email service, S3 upload, Charity/Admin/Affiliate moduly
+
+**Typ:** feat
+**Soubory:** `backend/src/common/email/`, `backend/src/common/s3/`, `backend/src/charity/`, `backend/src/admin/`, `backend/src/affiliate/`, `backend/src/app.module.ts`, `backend/src/auth/auth.service.ts`, `backend/src/makers/makers.controller.ts`, `backend/src/products/products.controller.ts`, `.env.example`
+**Commit:** `8e90d6d`
+
+### Co bylo změněno
+- **EmailService** (`common/email/`) — Resend.com integrace; posílá HTML emaily při registraci (ověření) a reset hesla. Bez `RESEND_API_KEY` fallback na console.log.
+- **S3Service** (`common/s3/`) — upload/delete souborů na Hetzner Object Storage (S3-compatible)
+- **POST /products/:id/images** — multer multi-file upload, ukládá URL do `product_images`
+- **POST /makers/profile/image** — single file upload profilové fotky
+- **CharityModule** — entita `charity_records`, public GET endpointy, admin-only POST
+- **AdminModule** — GET/PATCH uživatelů, GET statistik (pouze role=admin)
+- **AffiliateModule** — public GET + click tracking, admin CRUD (entita existovala, modul chyběl)
+- **AppModule** — registrovány všechny nové moduly + `CharityRecord` entita
+- **.env.example** — přidána sekce `RESEND_API_KEY`
+
+### Proč
+Kritické blokkery před launchem: registrace bez ověřovacího emailu a reset hesla bez emailu byly nefunkční. S3 upload je nutný pro produktové fotky. Charity/Admin/Affiliate moduly jsou požadavky ze specifikace.
+
+### Instrukce pro deploy
+```bash
+# 1. Přidat RESEND_API_KEY do .env na serveru
+# 2. Na serveru:
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## [2026-05-14] Vytvoření CLAUDE.md a CHANGELOG.md
 
 **Typ:** docs

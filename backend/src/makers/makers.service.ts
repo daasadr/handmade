@@ -46,4 +46,10 @@ export class MakersService {
   async findById(id: string) {
     return this.profileRepo.findOne({ where: { id } });
   }
+
+  async updateProfileImage(user: User, imageUrl: string) {
+    const profile = await this.getProfile(user);
+    profile.profileImageUrl = imageUrl;
+    return this.profileRepo.save(profile);
+  }
 }

@@ -4,6 +4,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
+import { ProductImage } from './product-image.entity';
 import { User } from '../users/user.entity';
 import { MakersService } from '../makers/makers.service';
 
@@ -30,16 +31,10 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
+    @InjectRepository(ProductImage)
+    private imageRepo: Repository<ProductImage>,
     private makersService: MakersService,
   ) {}
-
-  private async getMakerProfile(user: User) {
-    const profile = await this.makersService.findById(user.id);
-    // Hledáme profil dle userId
-    const found = await this.makersService.getProfile(user).catch(() => null);
-    if (!found) throw new NotFoundException('Nejdříve si vytvořte maker profil');
-    return found;
-  }
 
   async findAll(user: User) {
     const profile = await this.makersService.getProfile(user);
@@ -77,5 +72,16 @@ export class ProductsService {
     const product = await this.findOne(id, user);
     await this.productRepo.remove(product);
     return { message: 'Produkt byl smazán' };
+  }
+
+  async addImages(productId: string, urls: string[]) {
+    const images = urls.map((imageUrl, index) =>
+      this.imageRepo.create({ productId, imageUrl, orderIndex: index }),
+    );
+    await this.imageRepo.save(images);
+    return this.productRepo.findOne({
+      where: { id: productId },
+      relations: ['images', 'optimizations'],
+    });
   }
 }

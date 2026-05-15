@@ -12,6 +12,7 @@ import { randomBytes } from 'crypto';
 import { User } from '../users/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { EmailService } from '../common/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -35,9 +37,7 @@ export class AuthService {
     });
     await this.usersRepo.save(user);
 
-    // TODO: odeslat ověřovací email
-    // Pro vývoj logujeme token do konzole
-    console.log(`[DEV] Email verification token for ${dto.email}: ${emailVerificationToken}`);
+    await this.emailService.sendVerificationEmail(dto.email, emailVerificationToken);
 
     return { message: 'Registrace proběhla úspěšně. Zkontrolujte svůj email.' };
   }
@@ -86,8 +86,7 @@ export class AuthService {
     user.passwordResetExpires = new Date(Date.now() + 3600 * 1000); // 1 hodina
     await this.usersRepo.save(user);
 
-    // TODO: odeslat reset email
-    console.log(`[DEV] Password reset token for ${email}: ${token}`);
+    await this.emailService.sendPasswordResetEmail(email, token);
 
     return { message: 'Pokud účet existuje, byl odeslán reset e-mail.' };
   }

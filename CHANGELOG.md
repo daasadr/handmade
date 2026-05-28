@@ -28,6 +28,29 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-05-28] Frontend image upload + AI vision podpora
+
+**Typ:** feat
+**Soubory:** `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `backend/src/ai/ai.service.ts`
+**Commit:** `d632ada`
+
+### Co bylo změněno
+- **`api.ts`** — přidán `requestFile` helper pro multipart upload; `products.uploadImages(id, files[])`, `makers.uploadProfileImage(file)`
+- **`products/[id]/page.tsx`** — sekce "Fotografie produktu": grid zobrazení fotek, upload zona (prázdný stav + tlačítko "+ Přidat fotky"), badge "vidí N fotek" v AI sekci
+- **`ai.service.ts`** — produkt načten s relací `images`; pokud existují fotky, sestaví se vision content (max 4 URL bloky) a předá se Claude — analýza je vizuální
+
+### Proč
+AI analýza probíhala "naslepo" bez fotek produktu. Claude nyní vidí skutečné fotografie a může detekovat materiály, barvy a styl.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## [2026-05-15] Email service, S3 upload, Charity/Admin/Affiliate moduly
 
 **Typ:** feat

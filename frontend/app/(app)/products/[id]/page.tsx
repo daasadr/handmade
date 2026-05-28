@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -16,8 +16,10 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<"etsy" | "amazon">("etsy");
   const [analyzing, setAnalyzing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [latestOpt, setLatestOpt] = useState<AiOptimization | null>(null);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -51,6 +53,22 @@ export default function ProductPage() {
     }
   };
 
+  const handleUploadImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      const updated = await api.products.uploadImages(id, files);
+      setProduct(updated);
+      toast.success(`${files.length} ${files.length === 1 ? "fotka nahrána" : "fotky nahrány"}!`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Nahrání selhalo");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm("Opravdu smazat tento produkt?")) return;
     try {
@@ -76,6 +94,8 @@ export default function ProductPage() {
   }
 
   if (!product) return null;
+
+  const images = product.images || [];
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -105,6 +125,80 @@ export default function ProductPage() {
         </p>
       </div>
 
+      {/* Fotografie produktu */}
+      <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="font-heading text-lg font-normal text-muted-foreground">
+              Fotografie produktu
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {images.length > 0 && (
+                <span className="text-xs text-muted-foreground">{images.length} foto</span>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleUploadImages}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="text-xs px-3 py-1 rounded-full font-medium transition-all disabled:opacity-50"
+                style={{ background: "oklch(0.78 0.11 196 / 0.15)", color: "oklch(0.35 0.10 196)" }}
+              >
+                {uploading ? "Nahrávám…" : "+ Přidat fotky"}
+              </button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {images.length === 0 ? (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full border-2 border-dashed rounded-xl py-8 flex flex-col items-center gap-2 transition-all hover:border-current disabled:opacity-50"
+              style={{ borderColor: "oklch(0.80 0.04 72)", color: "oklch(0.65 0.04 50)" }}
+            >
+              <span className="text-2xl">📷</span>
+              <span className="text-sm">Klikněte pro nahrání fotek</span>
+              <span className="text-xs opacity-70">
+                AI bude fotky vidět při analýze — výsledky budou přesnější
+              </span>
+            </button>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {images
+                .sort((a, b) => a.orderIndex - b.orderIndex)
+                .map((img) => (
+                  <div
+                    key={img.id}
+                    className="aspect-square rounded-lg overflow-hidden"
+                    style={{ background: "oklch(0.88 0.02 72)" }}
+                  >
+                    <img
+                      src={img.imageUrl}
+                      alt="Produkt"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center transition-all hover:border-current disabled:opacity-50"
+                style={{ borderColor: "oklch(0.80 0.04 72)", color: "oklch(0.65 0.04 50)" }}
+              >
+                <span className="text-xl">+</span>
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Původní text */}
       <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
         <CardHeader>
@@ -130,6 +224,14 @@ export default function ProductPage() {
         <CardHeader>
           <CardTitle className="font-heading text-lg font-normal flex items-center gap-2">
             <span style={{ color: "oklch(0.78 0.11 196)" }}>✦</span> AI Optimalizace
+            {images.length > 0 && (
+              <span
+                className="text-xs font-normal px-2 py-0.5 rounded-full ml-1"
+                style={{ background: "oklch(0.65 0.15 155 / 0.12)", color: "oklch(0.45 0.12 155)" }}
+              >
+                vidí {images.length} {images.length === 1 ? "fotku" : "fotky"}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>

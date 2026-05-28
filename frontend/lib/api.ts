@@ -5,6 +5,11 @@ function getToken(): string | null {
   return localStorage.getItem("access_token");
 }
 
+function handleUnauthorized() {
+  localStorage.removeItem("access_token");
+  window.location.href = "/login";
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -19,8 +24,29 @@ async function request<T>(
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
   if (res.status === 401) {
-    localStorage.removeItem("access_token");
-    window.location.href = "/login";
+    handleUnauthorized();
+    throw new Error("Unauthorized");
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data?.message || `Chyba ${res.status}`);
+  }
+
+  return data as T;
+}
+
+async function requestFile<T>(path: string, body: FormData): Promise<T> {
+  const token = getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body,
+  });
+
+  if (res.status === 401) {
+    handleUnauthorized();
     throw new Error("Unauthorized");
   }
 
@@ -69,6 +95,11 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    uploadProfileImage: (file: File) => {
+      const form = new FormData();
+      form.append("image", file);
+      return requestFile<MakerProfile>("/makers/profile/image", form);
+    },
   },
 
   products: {
@@ -86,6 +117,11 @@ export const api = {
       }),
     delete: (id: string) =>
       request(`/products/${id}`, { method: "DELETE" }),
+    uploadImages: (id: string, files: File[]) => {
+      const form = new FormData();
+      files.forEach((f) => form.append("images", f));
+      return requestFile<Product>(`/products/${id}/images`, form);
+    },
   },
 
   ai: {

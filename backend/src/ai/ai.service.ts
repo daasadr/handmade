@@ -46,7 +46,10 @@ export class AiService {
       );
     }
 
-    const product = await this.productRepo.findOne({ where: { id: productId } });
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+      relations: ['images'],
+    });
     if (!product) throw new NotFoundException('Produkt nenalezen');
 
     const platformInstructions =
@@ -54,8 +57,9 @@ export class AiService {
         ? 'Etsy marketplace (focus on handmade, authentic, artisan qualities; use Etsy SEO best practices)'
         : 'Amazon Handmade (focus on quality, materials, dimensions; use Amazon search optimization)';
 
-    const prompt = `You are an expert in optimizing product listings for handmade marketplaces.
-
+    const hasImages = product.images && product.images.length > 0;
+    const promptText = `You are an expert in optimizing product listings for handmade marketplaces.
+${hasImages ? 'I have provided product photos above — use them to identify materials, colors, style, and quality details.' : ''}
 Optimize this handmade product listing for ${platformInstructions}:
 - Title: ${product.titleOriginal}
 - Description: ${product.descriptionOriginal}
@@ -71,10 +75,20 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
   "competitiveness_score": 75
 }`;
 
+    // Přidáme obrázky jako vision content pokud existují (max 4)
+    const imageBlocks = (product.images || []).slice(0, 4).map((img) => ({
+      type: 'image' as const,
+      source: { type: 'url' as const, url: img.imageUrl },
+    }));
+
+    const messageContent = hasImages
+      ? [...imageBlocks, { type: 'text' as const, text: promptText }]
+      : promptText;
+
     const message = await this.anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: messageContent as any }],
     });
 
     const content = message.content[0];

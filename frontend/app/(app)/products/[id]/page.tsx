@@ -19,7 +19,9 @@ export default function ProductPage() {
   const [uploading, setUploading] = useState(false);
   const [latestOpt, setLatestOpt] = useState<AiOptimization | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -46,6 +48,7 @@ export default function ProductPage() {
       setLatestOpt(result.optimization);
       setProduct((p) => p ? { ...p, status: "analyzed" } : p);
       toast.success("AI analýza dokončena!");
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Analýza selhala");
     } finally {
@@ -97,8 +100,30 @@ export default function ProductPage() {
 
   const images = product.images || [];
 
+  // Lightbox overlay
+  const Lightbox = lightboxUrl ? (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 cursor-zoom-out"
+      onClick={() => setLightboxUrl(null)}
+    >
+      <img
+        src={lightboxUrl}
+        alt="Náhled"
+        className="max-w-[92vw] max-h-[92vh] object-contain rounded-xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <button
+        className="absolute top-4 right-5 text-white text-3xl leading-none opacity-80 hover:opacity-100"
+        onClick={() => setLightboxUrl(null)}
+      >
+        ×
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {Lightbox}
       {/* Header */}
       <div>
         <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
@@ -176,13 +201,14 @@ export default function ProductPage() {
                 .map((img) => (
                   <div
                     key={img.id}
-                    className="aspect-square rounded-lg overflow-hidden"
+                    className="aspect-square rounded-lg overflow-hidden cursor-zoom-in"
                     style={{ background: "oklch(0.88 0.02 72)" }}
+                    onClick={() => setLightboxUrl(img.imageUrl)}
                   >
                     <img
                       src={img.imageUrl}
                       alt="Produkt"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                     />
                   </div>
                 ))}
@@ -270,7 +296,7 @@ export default function ProductPage() {
 
       {/* Výsledek AI */}
       {latestOpt && (
-        <Card className="border-0 card-mystical overflow-hidden" style={{ background: "oklch(0.94 0.012 75)" }}>
+        <Card ref={resultsRef} className="border-0 card-mystical overflow-hidden" style={{ background: "oklch(0.94 0.012 75)" }}>
           <CardHeader style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196 / 0.12), oklch(0.65 0.15 155 / 0.12))" }}>
             <div className="flex items-center justify-between">
               <CardTitle className="font-heading text-lg font-normal">

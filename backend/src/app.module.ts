@@ -10,6 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { AffiliateModule } from './affiliate/affiliate.module';
 import { EmailModule } from './common/email/email.module';
 import { S3Module } from './common/s3/s3.module';
+import { RemoveBgModule } from './common/removebg/removebg.module';
 
 import { User } from './users/user.entity';
 import { MakerProfile } from './makers/maker-profile.entity';
@@ -31,6 +32,7 @@ import { CharityRecord } from './charity/charity-record.entity';
     }),
     EmailModule,
     S3Module,
+    RemoveBgModule,
     AuthModule,
     MakersModule,
     ProductsModule,

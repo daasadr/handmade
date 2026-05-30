@@ -42,6 +42,19 @@ export class S3Service {
     return `${this.endpoint}/${this.bucket}/${key}`;
   }
 
+  async uploadBuffer(buffer: Buffer, key: string, contentType: string): Promise<string> {
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+        ACL: 'public-read' as any,
+      }),
+    );
+    return `${this.endpoint}/${this.bucket}/${key}`;
+  }
+
   async deleteFile(url: string): Promise<void> {
     try {
       const key = url.replace(`${this.endpoint}/${this.bucket}/`, '');

@@ -57,4 +57,13 @@ export class ProductsController {
     );
     return this.productsService.addImages(product.id, urls);
   }
+
+  @Post(':productId/images/:imageId/remove-bg')
+  removeBg(
+    @Param('productId') productId: string,
+    @Param('imageId') imageId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.productsService.removeBg(productId, imageId, user);
+  }
 }

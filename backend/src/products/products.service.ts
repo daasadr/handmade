@@ -3,10 +3,13 @@ import { Type } from 'class-transformer';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { Product } from './product.entity';
 import { ProductImage } from './product-image.entity';
 import { User } from '../users/user.entity';
 import { MakersService } from '../makers/makers.service';
+import { RemoveBgService } from '../common/removebg/removebg.service';
+import { S3Service } from '../common/s3/s3.service';
 
 export class CreateProductDto {
   @IsString()
@@ -34,6 +37,8 @@ export class ProductsService {
     @InjectRepository(ProductImage)
     private imageRepo: Repository<ProductImage>,
     private makersService: MakersService,
+    private removeBgService: RemoveBgService,
+    private s3Service: S3Service,
   ) {}
 
   async findAll(user: User) {
@@ -79,6 +84,22 @@ export class ProductsService {
       this.imageRepo.create({ productId, imageUrl, orderIndex: index }),
     );
     await this.imageRepo.save(images);
+    return this.productRepo.findOne({
+      where: { id: productId },
+      relations: ['images', 'optimizations'],
+    });
+  }
+
+  async removeBg(productId: string, imageId: string, user: User) {
+    await this.findOne(productId, user);
+    const image = await this.imageRepo.findOne({ where: { id: imageId, productId } });
+    if (!image) throw new NotFoundException('Obrázek nenalezen');
+
+    const buffer = await this.removeBgService.removeBackground(image.imageUrl);
+    const key = `products/${productId}/${randomUUID()}_nobg.png`;
+    image.imageUrl = await this.s3Service.uploadBuffer(buffer, key, 'image/png');
+    await this.imageRepo.save(image);
+
     return this.productRepo.findOne({
       where: { id: productId },
       relations: ['images', 'optimizations'],

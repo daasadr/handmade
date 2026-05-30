@@ -17,6 +17,7 @@ export default function ProductPage() {
   const [platform, setPlatform] = useState<"etsy" | "amazon">("etsy");
   const [analyzing, setAnalyzing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [removingBg, setRemovingBg] = useState<string | null>(null);
   const [latestOpt, setLatestOpt] = useState<AiOptimization | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -53,6 +54,19 @@ export default function ProductPage() {
       toast.error(err instanceof Error ? err.message : "Analýza selhala");
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleRemoveBg = async (imageId: string) => {
+    setRemovingBg(imageId);
+    try {
+      const updated = await api.products.removeBg(id, imageId);
+      setProduct(updated);
+      toast.success("Pozadí odstraněno!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Odstranění pozadí selhalo");
+    } finally {
+      setRemovingBg(null);
     }
   };
 
@@ -201,15 +215,29 @@ export default function ProductPage() {
                 .map((img) => (
                   <div
                     key={img.id}
-                    className="aspect-square rounded-lg overflow-hidden cursor-zoom-in"
+                    className="relative aspect-square rounded-lg overflow-hidden group"
                     style={{ background: "oklch(0.88 0.02 72)" }}
-                    onClick={() => setLightboxUrl(img.imageUrl)}
                   >
                     <img
                       src={img.imageUrl}
                       alt="Produkt"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                      className="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-200"
+                      onClick={() => setLightboxUrl(img.imageUrl)}
                     />
+                    {removingBg === img.id ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+                        <span className="text-white text-xs animate-pulse">Odstraňuji…</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleRemoveBg(img.id)}
+                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
+                        style={{ background: "oklch(0.15 0.02 50 / 0.85)", color: "white" }}
+                        title="Odstranit pozadí fotky"
+                      >
+                        ✂ Bez pozadí
+                      </button>
+                    )}
                   </div>
                 ))}
               <button

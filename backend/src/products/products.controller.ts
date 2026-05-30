@@ -63,7 +63,8 @@ export class ProductsController {
     @Param('productId') productId: string,
     @Param('imageId') imageId: string,
     @CurrentUser() user: User,
+    @Body('bgColor') bgColor?: string,
   ) {
-    return this.productsService.removeBg(productId, imageId, user);
+    return this.productsService.removeBg(productId, imageId, user, bgColor);
   }
 }

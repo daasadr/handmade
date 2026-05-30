@@ -57,10 +57,17 @@ export default function ProductPage() {
     }
   };
 
-  const handleRemoveBg = async (imageId: string) => {
+  const BG_PRESETS: { label: string; color: string | undefined; display: string; pattern?: boolean }[] = [
+    { label: "Průhledné", color: undefined, display: "transparent", pattern: true },
+    { label: "Bílé", color: "ffffff", display: "#ffffff" },
+    { label: "Slonová kost", color: "f5f0e8", display: "#f5f0e8" },
+    { label: "Světle šedé", color: "e8e4df", display: "#e8e4df" },
+  ];
+
+  const handleRemoveBg = async (imageId: string, bgColor?: string) => {
     setRemovingBg(imageId);
     try {
-      const updated = await api.products.removeBg(id, imageId);
+      const updated = await api.products.removeBg(id, imageId, bgColor);
       setProduct(updated);
       toast.success("Pozadí odstraněno!");
     } catch (err: unknown) {
@@ -229,14 +236,26 @@ export default function ProductPage() {
                         <span className="text-white text-xs animate-pulse">Odstraňuji…</span>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => handleRemoveBg(img.id)}
-                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
-                        style={{ background: "oklch(0.15 0.02 50 / 0.85)", color: "white" }}
-                        title="Odstranit pozadí fotky"
-                      >
-                        ✂ Bez pozadí
-                      </button>
+                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: "oklch(0.15 0.02 50 / 0.75)", color: "white" }}>
+                          ✂ Pozadí
+                        </span>
+                        <div className="flex gap-1">
+                          {BG_PRESETS.map((preset) => (
+                            <button
+                              key={preset.label}
+                              onClick={() => handleRemoveBg(img.id, preset.color)}
+                              title={preset.label}
+                              className="w-5 h-5 rounded-full border-2 border-white/70 hover:border-white hover:scale-110 transition-all shadow-sm"
+                              style={
+                                preset.pattern
+                                  ? { background: "conic-gradient(#ccc 90deg, white 90deg 180deg, #ccc 180deg 270deg, white 270deg)" }
+                                  : { background: preset.display }
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 ))}

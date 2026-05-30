@@ -122,8 +122,11 @@ export const api = {
       files.forEach((f) => form.append("images", f));
       return requestFile<Product>(`/products/${id}/images`, form);
     },
-    removeBg: (productId: string, imageId: string) =>
-      request<Product>(`/products/${productId}/images/${imageId}/remove-bg`, { method: "POST" }),
+    removeBg: (productId: string, imageId: string, bgColor?: string) =>
+      request<Product>(`/products/${productId}/images/${imageId}/remove-bg`, {
+        method: "POST",
+        body: JSON.stringify({ bgColor }),
+      }),
   },
 
   ai: {

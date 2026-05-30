@@ -90,12 +90,12 @@ export class ProductsService {
     });
   }
 
-  async removeBg(productId: string, imageId: string, user: User) {
+  async removeBg(productId: string, imageId: string, user: User, bgColor?: string) {
     await this.findOne(productId, user);
     const image = await this.imageRepo.findOne({ where: { id: imageId, productId } });
     if (!image) throw new NotFoundException('Obrázek nenalezen');
 
-    const buffer = await this.removeBgService.removeBackground(image.imageUrl);
+    const buffer = await this.removeBgService.removeBackground(image.imageUrl, bgColor);
     const key = `products/${productId}/${randomUUID()}_nobg.png`;
     image.imageUrl = await this.s3Service.uploadBuffer(buffer, key, 'image/png');
     await this.imageRepo.save(image);

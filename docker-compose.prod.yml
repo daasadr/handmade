@@ -37,6 +37,8 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_REGION: ${S3_REGION:-eu-central}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      REMOVE_BG_API_KEY: ${REMOVE_BG_API_KEY}
       NODE_ENV: production
       PORT: 3001
       FRONTEND_URL: ${FRONTEND_URL}

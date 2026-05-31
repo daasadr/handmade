@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { api, Product } from "@/lib/api";
@@ -21,6 +22,8 @@ const PLAN_LIMITS: Record<string, number> = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const upgradeSuccess = searchParams.get("upgrade") === "success";
   const [products, setProducts] = useState<Product[]>([]);
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +58,20 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Upgrade success banner */}
+      {upgradeSuccess && (
+        <div className="rounded-xl px-5 py-4 flex items-center gap-3"
+          style={{ background: "oklch(0.65 0.15 155 / 0.12)", border: "1px solid oklch(0.65 0.15 155 / 0.3)" }}>
+          <span className="text-xl">✦</span>
+          <div>
+            <p className="font-medium text-sm" style={{ color: "oklch(0.40 0.12 155)" }}>
+              Předplatné aktivováno!
+            </p>
+            <p className="text-xs text-muted-foreground">Váš plán byl úspěšně upgradován. Nová kvóta je okamžitě aktivní.</p>
+          </div>
+        </div>
+      )}
+
       {/* Uvítání */}
       <div>
         <h1 className="font-heading text-4xl font-light heading-accent">

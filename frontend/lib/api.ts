@@ -137,6 +137,15 @@ export const api = {
     getOptimizations: (productId: string) =>
       request<AiOptimization[]>(`/products/${productId}/optimizations`),
   },
+
+  billing: {
+    createCheckout: (plan: "mini" | "midi" | "max") =>
+      request<{ url: string }>("/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ plan }),
+      }),
+    portal: () => request<{ url: string }>("/billing/portal"),
+  },
 };
 
 // Typy

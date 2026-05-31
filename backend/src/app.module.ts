@@ -11,6 +11,7 @@ import { AffiliateModule } from './affiliate/affiliate.module';
 import { EmailModule } from './common/email/email.module';
 import { S3Module } from './common/s3/s3.module';
 import { RemoveBgModule } from './common/removebg/removebg.module';
+import { BillingModule } from './billing/billing.module';
 
 import { User } from './users/user.entity';
 import { MakerProfile } from './makers/maker-profile.entity';
@@ -40,6 +41,7 @@ import { CharityRecord } from './charity/charity-record.entity';
     CharityModule,
     AdminModule,
     AffiliateModule,
+    BillingModule,
   ],
 })
 export class AppModule {}

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { api, MakerProfile } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +17,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const PLAN_LABELS: Record<string, string> = { free: "Free", mini: "Mini", midi: "Midi", max: "Max" };
 const PLAN_LIMITS: Record<string, number> = { free: 5, mini: 30, midi: 150, max: 99999 };
+const PLAN_COLORS: Record<string, string> = {
+  free: "oklch(0.65 0.02 60)",
+  mini: "oklch(0.40 0.10 196)",
+  midi: "oklch(0.45 0.12 155)",
+  max: "oklch(0.40 0.12 145)",
+};
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -21,6 +30,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ brandName: "", bio: "", videoUrl: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
@@ -37,6 +47,17 @@ export default function ProfilePage() {
     }
     load();
   }, []);
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { url } = await api.billing.portal();
+      window.location.href = url;
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Chyba při otevírání portálu");
+      setPortalLoading(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,10 +136,29 @@ export default function ProfilePage() {
             </div>
             <div
               className="px-3 py-1 rounded-full text-sm font-medium"
-              style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.40 0.10 196)" }}
+              style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: PLAN_COLORS[user?.plan || "free"] }}
             >
               {PLAN_LABELS[user?.plan || "free"]} plán
             </div>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            {user?.plan === "free" ? (
+              <>
+                <p className="text-sm text-muted-foreground">Chcete více optimalizací?</p>
+                <Link href="/tarify" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}
+                  style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))", color: "white", border: "none" }}>
+                  Upgradovat plán
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">Spravujte nebo zrušte předplatné</p>
+                <Button size="sm" variant="ghost" onClick={handlePortal} disabled={portalLoading}>
+                  {portalLoading ? "Otevírám…" : "Spravovat předplatné"}
+                </Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -52,6 +52,9 @@ export class User {
   @Column({ nullable: true, type: 'timestamptz' })
   passwordResetExpires?: Date;
 
+  @Column({ nullable: true })
+  stripeCustomerId?: string;
+
   // Měsíční kvóta AI optimalizací
   @Column({ default: 0 })
   aiUsageThisMonth: number;

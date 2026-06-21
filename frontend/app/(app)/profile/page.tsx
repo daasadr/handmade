@@ -154,7 +154,21 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <p className="font-medium">{user?.email}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium">{user?.email}</p>
+                {user?.isFoundingMember && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      background: "oklch(0.88 0.10 85 / 0.25)",
+                      color: "oklch(0.50 0.14 75)",
+                      border: "1px solid oklch(0.75 0.12 80 / 0.4)",
+                    }}
+                  >
+                    ✦ Founding Member
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">
                 Tarif:{" "}
                 <span

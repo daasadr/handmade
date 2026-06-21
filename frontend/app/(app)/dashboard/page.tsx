@@ -74,9 +74,23 @@ export default function DashboardPage() {
 
       {/* Uvítání */}
       <div>
-        <h1 className="font-heading text-4xl font-light heading-accent">
-          Dobrý den
-        </h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="font-heading text-4xl font-light heading-accent">
+            Dobrý den
+          </h1>
+          {user?.isFoundingMember && (
+            <span
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium self-center"
+              style={{
+                background: "oklch(0.88 0.10 85 / 0.25)",
+                color: "oklch(0.50 0.14 75)",
+                border: "1px solid oklch(0.75 0.12 80 / 0.4)",
+              }}
+            >
+              ✦ Founding Member
+            </span>
+          )}
+        </div>
         <p className="text-muted-foreground mt-3">
           {user?.email}
         </p>

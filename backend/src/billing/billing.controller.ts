@@ -1,8 +1,9 @@
 import {
-  Controller, Post, Get, Body, Headers, RawBodyRequest,
+  Controller, Post, Get, Body, Headers,
   UseGuards, Req, HttpCode, BadRequestException, Res,
+  type RawBodyRequest,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { BillingService } from './billing.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';

@@ -18,17 +18,15 @@ const STRIPE_PLAN_MAP: Record<string, UserPlan> = {
 
 @Injectable()
 export class BillingService {
-  private stripe: Stripe;
+  private readonly stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
+    apiVersion: '2026-05-27.dahlia',
+  });
   private readonly logger = new Logger(BillingService.name);
 
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-      apiVersion: '2025-05-28.basil',
-    });
-  }
+  ) {}
 
   private async getOrCreateCustomer(user: User): Promise<string> {
     if (user.stripeCustomerId) return user.stripeCustomerId;
@@ -77,38 +75,32 @@ export class BillingService {
   }
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
-    let event: Stripe.Event;
-
+    let event;
     try {
       event = this.stripe.webhooks.constructEvent(
         rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET || '',
+        process.env.STRIPE_WEBHOOK_SECRET ?? '',
       );
     } catch {
       throw new BadRequestException('Neplatný webhook podpis');
     }
 
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await this.handleCheckoutCompleted(session);
+      case 'checkout.session.completed':
+        await this.handleCheckoutCompleted(event.data.object);
         break;
-      }
-      case 'customer.subscription.updated': {
-        const sub = event.data.object as Stripe.Subscription;
-        await this.handleSubscriptionChange(sub);
+      case 'customer.subscription.updated':
+        await this.handleSubscriptionChange(event.data.object);
         break;
-      }
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription;
-        await this.handleSubscriptionDeleted(sub);
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeleted(event.data.object);
         break;
-      }
     }
   }
 
-  private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async handleCheckoutCompleted(session: any) {
     const userId = session.metadata?.userId;
     if (!userId) return;
 
@@ -117,14 +109,15 @@ export class BillingService {
       { expand: ['items.data.price'] },
     );
 
-    const priceId = (subscription.items.data[0].price as Stripe.Price).id;
+    const priceId = subscription.items.data[0].price.id;
     const plan = STRIPE_PLAN_MAP[priceId] || UserPlan.FREE;
 
     await this.userRepo.update(userId, { plan });
     this.logger.log(`User ${userId} upgraded to ${plan}`);
   }
 
-  private async handleSubscriptionChange(subscription: Stripe.Subscription) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async handleSubscriptionChange(subscription: any) {
     const customerId = subscription.customer as string;
     const user = await this.userRepo.findOne({ where: { stripeCustomerId: customerId } });
     if (!user) return;
@@ -136,7 +129,8 @@ export class BillingService {
     this.logger.log(`User ${user.id} plan changed to ${plan}`);
   }
 
-  private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async handleSubscriptionDeleted(subscription: any) {
     const customerId = subscription.customer as string;
     const user = await this.userRepo.findOne({ where: { stripeCustomerId: customerId } });
     if (!user) return;

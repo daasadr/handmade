@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api, MakerProfile } from "@/lib/api";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const PLAN_LABELS: Record<string, string> = { free: "Free", mini: "Mini", midi: "Midi", max: "Max" };
 const PLAN_LIMITS: Record<string, number> = { free: 5, mini: 30, midi: 150, max: 99999 };
@@ -31,7 +31,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -47,6 +49,22 @@ export default function ProfilePage() {
     }
     load();
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const updated = await api.makers.uploadProfileImage(file);
+      setProfile(updated);
+      toast.success("Fotka profilu aktualizována!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Nahrávání selhalo");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
 
   const handlePortal = async () => {
     setPortalLoading(true);
@@ -105,14 +123,36 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-              <AvatarFallback
-                className="text-lg font-medium"
-                style={{ background: "oklch(0.85 0.02 72)", color: "oklch(0.35 0.04 50)" }}
+            <div className="relative group">
+              <Avatar className="h-16 w-16">
+                {profile?.profileImageUrl && (
+                  <AvatarImage src={profile.profileImageUrl} alt="Profilová fotka" />
+                )}
+                <AvatarFallback
+                  className="text-xl font-medium"
+                  style={{ background: "oklch(0.85 0.02 72)", color: "oklch(0.35 0.04 50)" }}
+                >
+                  {user?.email?.[0]?.toUpperCase() ?? "M"}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                style={{ background: "oklch(0.22 0.04 48 / 0.6)" }}
+                title="Změnit fotku"
               >
-                {user?.email?.[0]?.toUpperCase() ?? "M"}
-              </AvatarFallback>
-            </Avatar>
+                <span className="text-white text-xs">{uploadingAvatar ? "…" : "✎"}</span>
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </div>
             <div>
               <p className="font-medium">{user?.email}</p>
               <p className="text-sm text-muted-foreground">
@@ -126,6 +166,14 @@ export default function ProfilePage() {
                 {" · "}
                 {limit === 99999 ? "Neomezené" : `${limit} optimalizací/měsíc`}
               </p>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="text-xs text-muted-foreground hover:underline mt-0.5 cursor-pointer"
+              >
+                {uploadingAvatar ? "Nahrávám…" : "Změnit fotku"}
+              </button>
             </div>
           </div>
           <Separator />

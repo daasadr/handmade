@@ -18,20 +18,32 @@ const STRIPE_PLAN_MAP: Record<string, UserPlan> = {
 
 @Injectable()
 export class BillingService {
-  private readonly stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-    apiVersion: '2026-05-27.dahlia',
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly stripe: any;
   private readonly logger = new Logger(BillingService.name);
 
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) {
+    if (process.env.STRIPE_SECRET_KEY) {
+      this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2026-05-27.dahlia',
+      });
+    }
+  }
+
+  private ensureStripe() {
+    if (!this.stripe) {
+      throw new BadRequestException('Platební brána není nakonfigurována. Kontaktujte správce.');
+    }
+    return this.stripe as InstanceType<typeof Stripe>;
+  }
 
   private async getOrCreateCustomer(user: User): Promise<string> {
     if (user.stripeCustomerId) return user.stripeCustomerId;
 
-    const customer = await this.stripe.customers.create({
+    const customer = await this.ensureStripe().customers.create({
       email: user.email,
       metadata: { userId: user.id },
     });
@@ -47,7 +59,7 @@ export class BillingService {
     const customerId = await this.getOrCreateCustomer(user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-    const session = await this.stripe.checkout.sessions.create({
+    const session = await this.ensureStripe().checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
@@ -66,7 +78,7 @@ export class BillingService {
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const session = await this.stripe.billingPortal.sessions.create({
+    const session = await this.ensureStripe().billingPortal.sessions.create({
       customer: user.stripeCustomerId,
       return_url: `${frontendUrl}/profile`,
     });
@@ -77,7 +89,7 @@ export class BillingService {
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
     let event;
     try {
-      event = this.stripe.webhooks.constructEvent(
+      event = this.ensureStripe().webhooks.constructEvent(
         rawBody,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET ?? '',
@@ -104,7 +116,7 @@ export class BillingService {
     const userId = session.metadata?.userId;
     if (!userId) return;
 
-    const subscription = await this.stripe.subscriptions.retrieve(
+    const subscription = await this.ensureStripe().subscriptions.retrieve(
       session.subscription as string,
       { expand: ['items.data.price'] },
     );

@@ -44,7 +44,7 @@ services:
       STRIPE_PRICE_MINI: ${STRIPE_PRICE_MINI}
       STRIPE_PRICE_MIDI: ${STRIPE_PRICE_MIDI}
       STRIPE_PRICE_MAX: ${STRIPE_PRICE_MAX}
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
       FRONTEND_URL: ${FRONTEND_URL}
     ports:

@@ -28,6 +28,8 @@ import { CharityRecord } from './charity/charity-record.entity';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord],
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
+      migrationsRun: process.env.NODE_ENV === 'production',
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
     }),

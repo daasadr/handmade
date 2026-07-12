@@ -12,7 +12,7 @@ const PLANS = [
   {
     id: "free" as const,
     name: "Free",
-    price: "0 €",
+    price: "0 Kč",
     period: "navždy",
     desc: "Pro vyzkoušení platformy",
     limit: "5 optimalizací / měsíc",
@@ -30,7 +30,7 @@ const PLANS = [
   {
     id: "mini" as const,
     name: "Mini",
-    price: "9 €",
+    price: "199 Kč",
     period: "měsíčně",
     desc: "Pro aktivní výrobce",
     limit: "30 optimalizací / měsíc",
@@ -49,7 +49,7 @@ const PLANS = [
   {
     id: "midi" as const,
     name: "Midi",
-    price: "24 €",
+    price: "599 Kč",
     period: "měsíčně",
     desc: "Pro větší shopy",
     limit: "150 optimalizací / měsíc",
@@ -69,7 +69,7 @@ const PLANS = [
   {
     id: "max" as const,
     name: "Max",
-    price: "59 €",
+    price: "1 499 Kč",
     period: "měsíčně",
     desc: "Pro profíky a agentury",
     limit: "Neomezené optimalizace",

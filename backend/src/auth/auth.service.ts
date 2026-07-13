@@ -42,9 +42,44 @@ export class AuthService {
     return { message: 'Registrace proběhla úspěšně. Zkontrolujte svůj email.' };
   }
 
+  async loginOrRegisterWithGoogle(googleId: string, email: string) {
+    let user = await this.usersRepo.findOne({ where: { googleId } });
+
+    if (!user && email) {
+      user = await this.usersRepo.findOne({ where: { email } });
+      if (user) {
+        user.googleId = googleId;
+        user.emailVerified = true;
+        await this.usersRepo.save(user);
+      }
+    }
+
+    if (!user) {
+      user = this.usersRepo.create({ email, googleId, emailVerified: true });
+      await this.usersRepo.save(user);
+    }
+
+    const token = this.jwtService.sign({ sub: user.id, email: user.email });
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        plan: user.plan,
+        isFoundingMember: user.isFoundingMember,
+        emailVerified: user.emailVerified,
+      },
+    };
+  }
+
   async login(dto: LoginDto) {
     const user = await this.usersRepo.findOne({ where: { email: dto.email } });
     if (!user) throw new UnauthorizedException('Neplatné přihlašovací údaje');
+
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Tento účet používá přihlášení přes Google');
+    }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Neplatné přihlašovací údaje');

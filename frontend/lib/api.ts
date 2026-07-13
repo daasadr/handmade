@@ -81,6 +81,17 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ email }),
       }),
+
+    verifyEmail: (token: string) =>
+      request(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
+        method: "POST",
+      }),
+
+    resetPassword: (token: string, password: string) =>
+      request("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      }),
   },
 
   makers: {

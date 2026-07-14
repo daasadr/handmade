@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -26,7 +26,15 @@ export default function NewProductPage() {
     category: "",
   });
   const [loading, setLoading] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    api.makers.getProfile()
+      .then(() => { setHasProfile(true); setProfileChecked(true); })
+      .catch(() => { setHasProfile(false); setProfileChecked(true); });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +54,42 @@ export default function NewProductPage() {
       setLoading(false);
     }
   };
+
+  if (!profileChecked) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <span className="text-3xl animate-pulse">✦</span>
+      </div>
+    );
+  }
+
+  if (!hasProfile) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+            ← Zpět na přehled
+          </Link>
+          <h1 className="font-heading text-4xl font-light mt-3 heading-accent">
+            Nový produkt
+          </h1>
+        </div>
+
+        <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
+          <CardContent className="py-10 text-center space-y-4">
+            <p className="text-3xl">✦</p>
+            <p className="font-heading text-xl font-light">Nejdřív vyplňte profil</p>
+            <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+              Před přidáním produktů je potřeba vyplnit základní informace o vašem studiu — název značky a bio.
+            </p>
+            <Link href="/profile" className={cn(buttonVariants(), "mt-2")}>
+              Vytvořit profil
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

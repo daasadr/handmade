@@ -46,7 +46,7 @@ export default function ProductPage() {
     setAnalyzing(true);
     try {
       const result = await api.ai.analyze(id, platform);
-      setLatestOpt(result.optimization);
+      setLatestOpt(result);
       setProduct((p) => p ? { ...p, status: "analyzed" } : p);
       toast.success("AI analýza dokončena!");
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -378,6 +378,12 @@ export default function ProductPage() {
                 </button>
               </div>
               <p className="font-medium leading-relaxed">{latestOpt.titleOptimized}</p>
+              {latestOpt.titleCzech && (
+                <div className="mt-2 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
+                  <span className="text-sm text-muted-foreground">{latestOpt.titleCzech}</span>
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -395,6 +401,12 @@ export default function ProductPage() {
                 </button>
               </div>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{latestOpt.descriptionOptimized}</p>
+              {latestOpt.descriptionCzech && (
+                <div className="mt-3 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
+                  <span className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{latestOpt.descriptionCzech}</span>
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -431,6 +443,12 @@ export default function ProductPage() {
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Cenové doporučení</p>
               <p className="text-sm leading-relaxed">{latestOpt.pricingRecommendation}</p>
+              {latestOpt.pricingRecommendationCzech && (
+                <div className="mt-2 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
+                  <span className="text-sm text-muted-foreground">{latestOpt.pricingRecommendationCzech}</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

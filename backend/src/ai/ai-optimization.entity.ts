@@ -32,6 +32,15 @@ export class AiOptimization {
   @Column({ nullable: true, type: 'text' })
   pricingRecommendation: string;
 
+  @Column({ nullable: true })
+  titleCzech: string;
+
+  @Column({ nullable: true, type: 'text' })
+  descriptionCzech: string;
+
+  @Column({ nullable: true, type: 'text' })
+  pricingRecommendationCzech: string;
+
   @Column({ nullable: true, type: 'int', default: 0 })
   competitivenessScore: number;
 

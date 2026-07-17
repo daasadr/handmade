@@ -142,7 +142,7 @@ export const api = {
 
   ai: {
     analyze: (productId: string, platform: "etsy" | "amazon" = "etsy") =>
-      request<AiResult>(`/products/${productId}/analyze?platform=${platform}`, {
+      request<AiOptimization>(`/products/${productId}/analyze?platform=${platform}`, {
         method: "POST",
       }),
     getOptimizations: (productId: string) =>
@@ -201,16 +201,14 @@ export interface CreateProductData {
 export interface AiOptimization {
   id: string;
   titleOptimized: string;
+  titleCzech?: string;
   descriptionOptimized: string;
+  descriptionCzech?: string;
   keywords: string[];
   pricingRecommendation: string;
+  pricingRecommendationCzech?: string;
   competitivenessScore: number;
   aiModelUsed: string;
   platform: string;
   createdAt: string;
-}
-
-export interface AiResult {
-  optimization: AiOptimization;
-  newUsage: number;
 }

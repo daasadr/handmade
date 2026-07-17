@@ -68,10 +68,13 @@ Optimize this handmade product listing for ${platformInstructions}:
 
 Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
-  "optimized_title": "SEO-optimized title, max 140 chars",
-  "optimized_description": "Natural, authentic description with keywords, 150-300 words",
+  "optimized_title": "SEO-optimized title in English, max 140 chars",
+  "title_czech": "Český překlad optimalizovaného názvu",
+  "optimized_description": "Natural, authentic description with keywords in English, 150-300 words",
+  "description_czech": "Český překlad optimalizovaného popisu, stejná délka",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10", "keyword11", "keyword12", "keyword13"],
-  "pricing_recommendation": "Brief pricing strategy advice in 2-3 sentences",
+  "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",
+  "pricing_recommendation_czech": "Český překlad cenového doporučení",
   "competitiveness_score": 75
 }`;
 
@@ -107,9 +110,12 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
     const optimization = this.optimizationRepo.create({
       productId,
       titleOptimized: parsed.optimized_title,
+      titleCzech: parsed.title_czech,
       descriptionOptimized: parsed.optimized_description,
+      descriptionCzech: parsed.description_czech,
       keywords: parsed.keywords || [],
       pricingRecommendation: parsed.pricing_recommendation,
+      pricingRecommendationCzech: parsed.pricing_recommendation_czech,
       competitivenessScore: parsed.competitiveness_score,
       aiModelUsed: 'claude-haiku-4-5',
       platform,

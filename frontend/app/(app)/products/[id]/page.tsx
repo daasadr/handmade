@@ -6,9 +6,18 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { api, Product, AiOptimization } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+
+const CATEGORIES = [
+  "Šperky", "Oblečení & Doplňky", "Domov & Zahrada", "Hračky & Hry",
+  "Umění & Sběratelství", "Svíčky & Vonné produkty", "Papírnictví",
+  "Keramika & Hrnčířství", "Textil & Tkaní", "Dřevěné výrobky", "Jiné",
+];
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +30,9 @@ export default function ProductPage() {
   const [latestOpt, setLatestOpt] = useState<AiOptimization | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({ titleOriginal: "", descriptionOriginal: "", priceOriginal: "", category: "" });
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +113,36 @@ export default function ProductPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Smazání selhalo");
+    }
+  };
+
+  const openEdit = () => {
+    if (!product) return;
+    setEditForm({
+      titleOriginal: product.titleOriginal,
+      descriptionOriginal: product.descriptionOriginal,
+      priceOriginal: product.priceOriginal?.toString() ?? "",
+      category: product.category ?? "",
+    });
+    setEditMode(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await api.products.update(id, {
+        titleOriginal: editForm.titleOriginal,
+        descriptionOriginal: editForm.descriptionOriginal,
+        priceOriginal: editForm.priceOriginal ? parseFloat(editForm.priceOriginal) : undefined,
+        category: editForm.category || undefined,
+      });
+      setProduct(updated);
+      setEditMode(false);
+      toast.success("Produkt byl uložen!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Uložení selhalo");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -275,20 +317,111 @@ export default function ProductPage() {
       {/* Původní text */}
       <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
         <CardHeader>
-          <CardTitle className="font-heading text-lg font-normal text-muted-foreground">
-            Původní listing
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="font-heading text-lg font-normal text-muted-foreground">
+              Původní listing
+            </CardTitle>
+            {!editMode ? (
+              <button
+                onClick={openEdit}
+                className="text-xs px-3 py-1 rounded-full font-medium transition-all"
+                style={{ background: "oklch(0.88 0.02 72)", color: "oklch(0.52 0.04 50)" }}
+              >
+                Upravit
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditMode(false)}
+                  className="text-xs px-3 py-1 rounded-full font-medium"
+                  style={{ background: "oklch(0.88 0.02 72)", color: "oklch(0.52 0.04 50)" }}
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-xs px-3 py-1 rounded-full font-medium disabled:opacity-50"
+                  style={{ background: "oklch(0.78 0.11 196)", color: "oklch(0.15 0.03 200)" }}
+                >
+                  {saving ? "Ukládám…" : "Uložit"}
+                </button>
+              </div>
+            )}
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Název</p>
-            <p className="font-medium">{product.titleOriginal}</p>
-          </div>
-          <Separator />
-          <div>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Popis</p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{product.descriptionOriginal}</p>
-          </div>
+        <CardContent className="space-y-4">
+          {editMode ? (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-title">Název produktu</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.titleOriginal}
+                  onChange={(e) => setEditForm({ ...editForm, titleOriginal: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-desc">Popis produktu</Label>
+                <Textarea
+                  id="edit-desc"
+                  value={editForm.descriptionOriginal}
+                  onChange={(e) => setEditForm({ ...editForm, descriptionOriginal: e.target.value })}
+                  rows={6}
+                  className="resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-price">Cena (EUR)</Label>
+                  <Input
+                    id="edit-price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.priceOriginal}
+                    onChange={(e) => setEditForm({ ...editForm, priceOriginal: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-cat">Kategorie</Label>
+                  <select
+                    id="edit-cat"
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    className="flex h-10 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    style={{ background: "oklch(0.97 0.008 80)", borderColor: "oklch(0.85 0.02 72)" }}
+                  >
+                    <option value="">Vyberte kategorii</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Název</p>
+                <p className="font-medium">{product.titleOriginal}</p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Popis</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{product.descriptionOriginal}</p>
+              </div>
+              {(product.priceOriginal || product.category) && (
+                <>
+                  <Separator />
+                  <div className="flex gap-6 text-sm text-muted-foreground">
+                    {product.priceOriginal && <span>{product.priceOriginal} EUR</span>}
+                    {product.category && <span>{product.category}</span>}
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

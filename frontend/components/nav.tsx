@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
@@ -17,6 +19,15 @@ export function Nav() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      api.makers.getProfile()
+        .then((p) => setProfileImageUrl(p.profileImageUrl || null))
+        .catch(() => {});
+    }
+  }, [user]);
 
   const links = [
     { href: "/dashboard", label: "Přehled" },
@@ -72,6 +83,7 @@ export function Nav() {
             className="h-8 w-8 cursor-pointer"
             onClick={() => router.push("/profile")}
           >
+            {profileImageUrl && <AvatarImage src={profileImageUrl} alt="Profil" />}
             <AvatarFallback
               className="text-sm font-medium"
               style={{ background: "oklch(0.85 0.02 72)", color: "oklch(0.35 0.04 50)" }}

@@ -58,19 +58,33 @@ export class AiService {
         : 'Amazon Handmade (focus on quality, materials, dimensions; use Amazon search optimization)';
 
     const hasImages = product.images && product.images.length > 0;
+    const imageAnalysisInstruction = hasImages
+      ? `IMPORTANT: I have attached product photo(s). Before writing anything, carefully examine each photo and extract:
+- Exact materials and textures visible (fabric type, clay, wood grain, metal, paint medium, etc.)
+- Specific colors and color combinations
+- Dimensions cues and scale (if objects like hands, cups, coins are visible for reference)
+- Artistic technique or craftsmanship details (brushstrokes, stitching, joinery, glaze, etc.)
+- Style (rustic, minimalist, bohemian, art deco, etc.)
+- Condition and finish quality
+- Any unique design elements, patterns, or motifs
+Use ONLY what you can actually see — do not invent details not visible in the photos.`
+      : '';
+
     const promptText = `You are an expert in optimizing product listings for handmade marketplaces.
-${hasImages ? 'I have provided product photos above — use them to identify materials, colors, style, and quality details.' : ''}
+${imageAnalysisInstruction}
 Optimize this handmade product listing for ${platformInstructions}:
 - Title: ${product.titleOriginal}
 - Description: ${product.descriptionOriginal}
 - Category: ${product.category || 'not specified'}
 - Current Price: ${product.priceOriginal ? `${product.priceOriginal} EUR` : 'not specified'}
 
+${hasImages ? 'Ground the optimized title and description in the specific visual details you observed in the photos. Mention specific colors, materials, and techniques you can actually see.' : ''}
+
 Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
-  "optimized_title": "SEO-optimized title in English, max 140 chars",
+  "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
   "title_czech": "Český překlad optimalizovaného názvu",
-  "optimized_description": "Natural, authentic description with keywords in English, 150-300 words",
+  "optimized_description": "Vivid, specific description with SEO keywords in English, 150-300 words. Describe what makes this piece unique based on what is visible.",
   "description_czech": "Český překlad optimalizovaného popisu, stejná délka",
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10", "keyword11", "keyword12", "keyword13"],
   "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",

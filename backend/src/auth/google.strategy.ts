@@ -13,6 +13,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         process.env.GOOGLE_CALLBACK_URL ||
         'http://localhost:3001/api/auth/google/callback',
       scope: ['email', 'profile'],
+      // JWT app has no server-side sessions — state CSRF check would
+      // always fail on the first attempt because Passport can't store
+      // the generated state anywhere between the two redirects.
+      state: false,
     });
   }
 

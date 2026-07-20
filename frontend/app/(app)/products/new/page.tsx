@@ -82,7 +82,7 @@ export default function NewProductPage() {
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               Před přidáním produktů je potřeba vyplnit základní informace o vašem studiu — název značky a bio.
             </p>
-            <Link href="/profile" className={cn(buttonVariants(), "mt-2")}>
+            <Link href="/profile/edit" className={cn(buttonVariants(), "mt-2")}>
               Vytvořit profil
             </Link>
           </CardContent>

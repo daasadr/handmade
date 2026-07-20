@@ -14,7 +14,7 @@ export class CreateMakerProfileDto {
   bio?: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_protocol: false })
   videoUrl?: string;
 }
 

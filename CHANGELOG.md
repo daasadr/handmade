@@ -28,6 +28,39 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] HOTFIX: chybějící migrace pro VIP sloupce shodila přihlášení
+
+**Typ:** fix
+**Soubory:** `backend/src/migrations/1753100000000-AddVipAccounts.ts` (nový)
+**Commit:** nepushováno
+
+### Co bylo změněno
+Přidána migrace, která vytvoří sloupce `users.isVip` a `users.vipUntil`.
+
+### Proč
+Commit `94aca93` přidal tyto sloupce do entity `User`, **ale bez migrace**. Na produkci běží `NODE_ENV=production`, takže `synchronize` je vypnuté a sloupce se nevytvořily. TypeORM je přesto vkládal do každého SELECTu nad `users` — a protože přihlášení začíná načtením uživatele, **spadlo přihlášení včetně Google OAuth** na `column User.isVip does not exist` (HTTP 500 na `/api/auth/google/callback`).
+
+Chyba vznikla tím, že CLAUDE.md (sekce 4 a bod 2 v TODO) uvádí `synchronize: true` a migrace jako nedodělek — ve skutečnosti už projekt migrace používá (`src/migrations/`, `migrationsRun: true`) a server na produkčním NODE_ENV běží. **Sekce 4 a bod 2 v CLAUDE.md je proto potřeba opravit**, jinak se to zopakuje.
+
+### Způsob provedení
+Raw SQL s `ADD COLUMN IF NOT EXISTS` místo `queryRunner.addColumns()` — sloupce mohly být doplněny ručně při hašení výpadku a `addColumns()` by pak selhalo. Migrace je tak idempotentní.
+
+Ověřeno, že jiná drift neexistuje: od poslední migrace (`bd30275`) sahal do entit jen commit `94aca93`.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Migrace se spustí sama při startu backendu (`migrationsRun: true`). Ověření:
+```bash
+docker compose -f docker-compose.prod.yml exec postgres \
+  psql -U handmade -d handmade -c '\d users' | grep -i vip
+```
+
+---
+
 ## [2026-07-21] Srozumitelné chyby AI analýzy místo „Internal server error"
 
 **Typ:** fix

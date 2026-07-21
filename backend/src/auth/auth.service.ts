@@ -68,6 +68,8 @@ export class AuthService {
         role: user.role,
         plan: user.plan,
         isFoundingMember: user.isFoundingMember,
+        isVip: user.isVip,
+        vipUntil: user.vipUntil,
         emailVerified: user.emailVerified,
       },
     };
@@ -93,6 +95,8 @@ export class AuthService {
         role: user.role,
         plan: user.plan,
         isFoundingMember: user.isFoundingMember,
+        isVip: user.isVip,
+        vipUntil: user.vipUntil,
         emailVerified: user.emailVerified,
       },
     };
@@ -149,6 +153,8 @@ export class AuthService {
       role: user.role,
       plan: user.plan,
       isFoundingMember: user.isFoundingMember,
+      isVip: user.isVip,
+      vipUntil: user.vipUntil,
       emailVerified: user.emailVerified,
       aiUsageThisMonth: user.aiUsageThisMonth,
     };

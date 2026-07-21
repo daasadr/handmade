@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import Anthropic from '@anthropic-ai/sdk';
 import { AiOptimization } from './ai-optimization.entity';
 import { Product, ProductStatus } from '../products/product.entity';
-import { User, UserPlan } from '../users/user.entity';
+import { User, UserPlan, isVipActive } from '../users/user.entity';
 
 // Měsíční limity dle tarifu
 const PLAN_LIMITS: Record<UserPlan, number> = {
@@ -40,7 +40,9 @@ export class AiService {
 
     const currentUsage = needsReset ? 0 : user.aiUsageThisMonth;
 
-    if (currentUsage >= limit) {
+    // VIP kvótu neřeší. Čítač se ale počítá dál — potřebujeme vědět, kolik
+    // nás komplimentární účty stojí na API.
+    if (!isVipActive(user) && currentUsage >= limit) {
       throw new BadRequestException(
         `Dosáhli jste měsíčního limitu ${limit} optimalizací pro váš tarif. Upgradujte plán pro více optimalizací.`,
       );

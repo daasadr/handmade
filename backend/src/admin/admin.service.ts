@@ -16,8 +16,8 @@ export class AdminService {
 
   getUsers() {
     return this.usersRepo.find({
-      select: ['id', 'email', 'role', 'plan', 'isFoundingMember', 'emailVerified',
-               'aiUsageThisMonth', 'createdAt'],
+      select: ['id', 'email', 'role', 'plan', 'isFoundingMember', 'isVip', 'vipUntil',
+               'emailVerified', 'aiUsageThisMonth', 'createdAt'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -42,6 +42,9 @@ export class AdminService {
       .groupBy('u.plan')
       .getRawMany();
 
-    return { totalUsers, totalProducts, planCounts };
+    // VIP účty se ve statistikách nesmí míchat s platícími — jsou zdarma.
+    const vipCount = await this.usersRepo.count({ where: { isVip: true } });
+
+    return { totalUsers, totalProducts, planCounts, vipCount };
   }
 }

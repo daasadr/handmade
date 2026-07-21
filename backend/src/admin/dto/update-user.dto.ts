@@ -1,4 +1,4 @@
-import { IsEnum, IsBoolean, IsOptional } from 'class-validator';
+import { IsEnum, IsBoolean, IsOptional, IsDateString } from 'class-validator';
 import { UserRole, UserPlan } from '../../users/user.entity';
 
 export class UpdateUserDto {
@@ -13,4 +13,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isFoundingMember?: boolean;
+
+  /** VIP = neomezené optimalizace zdarma (testovací účty, výhry v soutěži). */
+  @IsOptional()
+  @IsBoolean()
+  isVip?: boolean;
+
+  /** ISO datum expirace VIP. `null` = neomezeně. */
+  @IsOptional()
+  @IsDateString()
+  vipUntil?: string | null;
 }

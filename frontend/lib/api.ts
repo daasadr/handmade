@@ -172,8 +172,19 @@ export interface User {
   role: "admin" | "maker";
   plan: "free" | "mini" | "midi" | "max";
   isFoundingMember: boolean;
+  /** VIP = neomezené optimalizace zdarma. Nezávislé na `plan`. */
+  isVip?: boolean;
+  /** Expirace VIP; `null`/chybí = neomezeně. */
+  vipUntil?: string | null;
   emailVerified: boolean;
   aiUsageThisMonth?: number;
+}
+
+/** VIP platí, jen pokud příznak sedí a případná expirace ještě neuplynula. */
+export function isVipActive(user?: Pick<User, "isVip" | "vipUntil"> | null): boolean {
+  if (!user?.isVip) return false;
+  if (!user.vipUntil) return true;
+  return new Date(user.vipUntil).getTime() > Date.now();
 }
 
 export interface MakerProfile {

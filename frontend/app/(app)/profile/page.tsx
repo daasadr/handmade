@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api, MakerProfile } from "@/lib/api";
+import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ export default function ProfilePage() {
     );
   }
 
+  const vip = isVipActive(user);
   const limit = PLAN_LIMITS[user?.plan || "free"];
   const embedUrl = profile?.videoUrl ? getYouTubeEmbedUrl(profile.videoUrl) : null;
 
@@ -159,10 +160,18 @@ export default function ProfilePage() {
                   {PLAN_LABELS[user?.plan || "free"]}
                 </span>
                 {" · "}
-                {user?.aiUsageThisMonth || 0} / {limit === 99999 ? "∞" : limit} optimalizací tento měsíc
+                {user?.aiUsageThisMonth || 0} / {vip || limit === 99999 ? "∞" : limit} optimalizací tento měsíc
+                {vip && (
+                  <>
+                    {" · "}
+                    <span className="font-medium" style={{ color: "oklch(0.40 0.12 155)" }}>
+                      VIP{user?.vipUntil ? ` do ${new Date(user.vipUntil).toLocaleDateString("cs-CZ")}` : ""}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
-            {user?.plan === "free" && (
+            {user?.plan === "free" && !vip && (
               <Link
                 href="/tarify"
                 className={cn(buttonVariants({ size: "sm" }))}

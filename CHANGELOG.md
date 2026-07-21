@@ -28,6 +28,45 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] VIP účty — neomezené optimalizace zdarma
+
+**Typ:** feat
+**Soubory:** `backend/src/users/user.entity.ts`, `backend/src/ai/ai.service.ts`, `backend/src/auth/auth.service.ts`, `backend/src/admin/dto/update-user.dto.ts`, `backend/src/admin/admin.service.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/dashboard/page.tsx`, `frontend/app/(app)/profile/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **`user.entity.ts`** — nová pole `isVip: boolean` a `vipUntil: Date | null` (null = neomezeně) + exportovaná funkce `isVipActive(user)`
+- **`ai.service.ts`** — aktivní VIP obchází kontrolu měsíční kvóty. Čítač `aiUsageThisMonth` se ale **počítá dál**, abychom věděli, kolik nás komplimentární účty stojí na Anthropic API.
+- **`auth.service.ts`** — `isVip` a `vipUntil` přidány do odpovědí `login`, Google OAuth i `getMe` (všechny tři whitelistují pole ručně)
+- **Admin** — `PATCH /api/admin/users/:id` umí nastavit `isVip` a `vipUntil`; `GET /api/admin/stats` vrací `vipCount`
+- **Frontend** — odznak „★ VIP" na dashboardu, kvóta se zobrazí jako `∞`, v profilu i s datem expirace; VIP nevidí tlačítko „Upgradovat"
+
+### Proč
+Potřeba účtů s neomezenými optimalizacemi bez placení — interní testování a plánovaná soutěž o VIP účet pro uživatele.
+
+### Způsob provedení
+**Záměrně NENÍ řešeno přes `plan = max`.** `BillingService.handleSubscriptionDeleted` přepisuje `plan` na `free` u každého uživatele s odpovídajícím `stripeCustomerId` — VIP status by tak kdykoliv nenávratně zmizel. Navíc by komplimentární účty splynuly s platícími zákazníky v `getStats().planCounts` a rozbily přehled o tržbách. Samostatný příznak je na obojí imunní.
+
+`vipUntil` pokrývá oba scénáře naráz: interní účty dostanou `null` (napořád), výhry v soutěži konkrétní datum.
+
+### Instrukce pro deploy
+Nová DB pole se vytvoří automaticky (`synchronize: true` na serveru). Po nasazení udělit VIP:
+```bash
+# přes API (vyžaduje účet s role=admin)
+curl -X PATCH http://46.224.46.43/api/admin/users/<USER_ID> \
+  -H "Authorization: Bearer <ADMIN_JWT>" \
+  -H "Content-Type: application/json" \
+  -d '{"isVip": true}'                                  # napořád
+  # -d '{"isVip": true, "vipUntil": "2027-07-21T00:00:00Z"}'   # na rok
+
+# nebo přímo v DB
+docker compose -f docker-compose.prod.yml exec postgres \
+  psql -U handmade -d handmade -c \
+  "UPDATE users SET \"isVip\" = true WHERE email = 'test@handmade.net';"
+```
+
+---
+
 ## [2026-07-21] Fotky lze přidat už při zakládání produktu
 
 **Typ:** feat

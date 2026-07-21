@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { api, Product } from "@/lib/api";
+import { api, Product, isVipActive } from "@/lib/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ export default function DashboardPage() {
     load();
   }, []);
 
+  const vip = isVipActive(user);
   const limit = PLAN_LIMITS[user?.plan || "free"];
   const usage = user?.aiUsageThisMonth || 0;
   const usagePct = Math.min((usage / limit) * 100, 100);
@@ -88,6 +89,18 @@ export default function DashboardPage() {
               }}
             >
               ✦ Founding Member
+            </span>
+          )}
+          {vip && (
+            <span
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium self-center"
+              style={{
+                background: "oklch(0.65 0.15 155 / 0.18)",
+                color: "oklch(0.40 0.12 155)",
+                border: "1px solid oklch(0.65 0.15 155 / 0.4)",
+              }}
+            >
+              ★ VIP
             </span>
           )}
         </div>
@@ -149,20 +162,26 @@ export default function DashboardPage() {
             <p className="font-heading text-4xl font-light">
               {usage}
               <span className="text-lg text-muted-foreground font-sans font-light">
-                /{limit === 99999 ? "∞" : limit}
+                /{vip || limit === 99999 ? "∞" : limit}
               </span>
             </p>
-            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(0.85 0.02 72)" }}>
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${usagePct}%`,
-                  background: usagePct > 80
-                    ? "oklch(0.577 0.245 27.325)"
-                    : "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))",
-                }}
-              />
-            </div>
+            {vip ? (
+              <p className="mt-2 text-xs" style={{ color: "oklch(0.45 0.12 155)" }}>
+                VIP účet — optimalizace bez omezení
+              </p>
+            ) : (
+              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "oklch(0.85 0.02 72)" }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${usagePct}%`,
+                    background: usagePct > 80
+                      ? "oklch(0.577 0.245 27.325)"
+                      : "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))",
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

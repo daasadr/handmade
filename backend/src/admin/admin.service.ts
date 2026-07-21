@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { User, UserRole } from '../users/user.entity';
 import { Product } from '../products/product.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -25,6 +25,19 @@ export class AdminService {
   async updateUser(id: string, dto: UpdateUserDto) {
     const user = await this.usersRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Uživatel nenalezen');
+
+    // Degradace posledního admina by uzavřela administraci všem a šla by
+    // vrátit jen zásahem do databáze.
+    if (
+      dto.role === UserRole.MAKER &&
+      user.role === UserRole.ADMIN &&
+      (await this.usersRepo.count({ where: { role: UserRole.ADMIN } })) <= 1
+    ) {
+      throw new BadRequestException(
+        'Nelze odebrat roli poslednímu administrátorovi. Nejdřív povyšte jiného uživatele.',
+      );
+    }
+
     Object.assign(user, dto);
     return this.usersRepo.save(user);
   }

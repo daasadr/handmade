@@ -33,6 +33,8 @@ export function Nav() {
     { href: "/dashboard", label: "Přehled" },
     { href: "/products", label: "Produkty" },
     { href: "/profile", label: "Profil" },
+    // Stránka si oprávnění hlídá sama; tohle jen skrývá odkaz běžným uživatelům.
+    ...(user?.role === "admin" ? [{ href: "/admin", label: "Administrace" }] : []),
   ];
 
   return (

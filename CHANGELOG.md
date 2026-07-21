@@ -28,6 +28,43 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] Admin UI — správa uživatelů
+
+**Typ:** feat
+**Soubory:** `frontend/app/(app)/admin/page.tsx` (nový), `frontend/components/nav.tsx`, `frontend/lib/api.ts`, `backend/src/admin/admin.service.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **`/admin`** — nová stránka: statistiky (uživatelé, produkty, VIP účty, platící), rozpad tarifů, seznam uživatelů s vyhledáváním podle e-mailu
+- Na každém uživateli lze měnit **tarif, roli, VIP (vč. data expirace) a Founding Member** — vše jedním kliknutím s optimistickým updatem
+- **`nav.tsx`** — odkaz „Administrace" se zobrazí jen účtům s `role=admin`
+- **`admin.service.ts`** — `updateUser` odmítne degradovat posledního administrátora
+
+### Proč
+VIP účty a tarify šlo dosud měnit jen curlem nebo přímo v DB. Projekt poroste, takže admin rozhraní bude potřeba tak jako tak.
+
+### Způsob provedení
+Stránka staví na existujícím admin API (`GET /admin/users`, `PATCH /admin/users/:id`, `GET /admin/stats`), backend se měnit nemusel — kromě pojistky níže.
+
+**Ochrana proti vyzamčení:** admin si přes UI mohl odebrat vlastní roli a ztratit přístup. Řešeno dvěma vrstvami — v UI potvrzovací dialog (jiné znění, pokud jde o posledního admina), na backendu tvrdá kontrola, která degradaci posledního administrátora odmítne. Samotný UI dialog by nestačil, protože `PATCH` jde zavolat i curlem.
+
+Přístup na stránku si hlídá komponenta sama podle `user.role`; odkaz v navigaci se běžným uživatelům jen skrývá. Autoritativní kontrola je na backendu (`RolesGuard` + `@Roles(ADMIN)`), takže skrytí odkazu není bezpečnostní opatření.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Pokud ještě nemáte admin účet, povyšte se v DB:
+```bash
+docker compose -f docker-compose.prod.yml exec postgres \
+  psql -U handmade -d handmade -c \
+  "UPDATE users SET role = 'admin' WHERE email = 'vas@email.cz';"
+```
+
+---
+
 ## [2026-07-21] VIP účty — neomezené optimalizace zdarma
 
 **Typ:** feat

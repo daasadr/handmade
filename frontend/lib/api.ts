@@ -155,6 +155,16 @@ export const api = {
       request<AiOptimization[]>(`/products/${productId}/optimizations`),
   },
 
+  admin: {
+    getUsers: () => request<AdminUser[]>("/admin/users"),
+    updateUser: (id: string, data: UpdateAdminUserData) =>
+      request<AdminUser>(`/admin/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    getStats: () => request<AdminStats>("/admin/stats"),
+  },
+
   billing: {
     createCheckout: (plan: "mini" | "midi" | "max") =>
       request<{ url: string }>("/billing/checkout", {
@@ -185,6 +195,34 @@ export function isVipActive(user?: Pick<User, "isVip" | "vipUntil"> | null): boo
   if (!user?.isVip) return false;
   if (!user.vipUntil) return true;
   return new Date(user.vipUntil).getTime() > Date.now();
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: "admin" | "maker";
+  plan: "free" | "mini" | "midi" | "max";
+  isFoundingMember: boolean;
+  isVip: boolean;
+  vipUntil?: string | null;
+  emailVerified: boolean;
+  aiUsageThisMonth: number;
+  createdAt: string;
+}
+
+export interface UpdateAdminUserData {
+  role?: "admin" | "maker";
+  plan?: "free" | "mini" | "midi" | "max";
+  isFoundingMember?: boolean;
+  isVip?: boolean;
+  vipUntil?: string | null;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalProducts: number;
+  vipCount: number;
+  planCounts: { plan: string; count: string }[];
 }
 
 export interface MakerProfile {

@@ -3,8 +3,8 @@ import {
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { MakersService, CreateMakerProfileDto } from './makers.service';
+import { imageUploadOptions } from '../common/upload/image-upload.options';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/user.entity';
@@ -34,7 +34,7 @@ export class MakersController {
   }
 
   @Post('profile/image')
-  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor('image', imageUploadOptions))
   async uploadProfileImage(
     @CurrentUser() user: User,
     @UploadedFile() file: Express.Multer.File,

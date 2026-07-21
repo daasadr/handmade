@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, MakerProfile } from "@/lib/api";
+import { compressImage, ImageUploadError } from "@/lib/image-upload";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
@@ -45,11 +46,13 @@ export default function ProfileEditPage() {
     if (!file) return;
     setUploadingAvatar(true);
     try {
-      const updated = await api.makers.uploadProfileImage(file);
+      const compressed = await compressImage(file);
+      const updated = await api.makers.uploadProfileImage(compressed);
       setProfile(updated);
       toast.success("Fotka profilu aktualizována!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Nahrávání selhalo");
+      if (err instanceof ImageUploadError) toast.error(err.fullMessage);
+      else toast.error(err instanceof Error ? err.message : "Nahrávání selhalo");
     } finally {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";

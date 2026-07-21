@@ -3,8 +3,8 @@ import {
   UseInterceptors, UploadedFiles, BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { ProductsService, CreateProductDto } from './products.service';
+import { IMAGE_UPLOAD, imageUploadOptions } from '../common/upload/image-upload.options';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/user.entity';
@@ -44,7 +44,7 @@ export class ProductsController {
   }
 
   @Post(':id/images')
-  @UseInterceptors(FilesInterceptor('images', 10, { storage: memoryStorage() }))
+  @UseInterceptors(FilesInterceptor('images', IMAGE_UPLOAD.maxFiles, imageUploadOptions))
   async uploadImages(
     @Param('id') id: string,
     @CurrentUser() user: User,

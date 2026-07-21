@@ -53,6 +53,12 @@ async function requestFile<T>(path: string, body: FormData): Promise<T> {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    // 413 od nginx nemá JSON tělo — bez tohohle by uživatel viděl jen „Chyba 413".
+    if (res.status === 413 && !data?.message) {
+      throw new Error(
+        "Fotka je pro server příliš velká. Zkuste ji zmenšit — např. na squoosh.app — a nahrát znovu.",
+      );
+    }
     throw new Error(data?.message || `Chyba ${res.status}`);
   }
 

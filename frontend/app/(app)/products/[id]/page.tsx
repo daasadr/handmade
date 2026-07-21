@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api, Product, AiOptimization } from "@/lib/api";
+import { prepareImages, formatBytes } from "@/lib/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,13 +91,23 @@ export default function ProductPage() {
   };
 
   const handleUploadImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
     setUploading(true);
     try {
+      const { files, errors, originalBytes, compressedBytes } = await prepareImages(selected);
+      errors.forEach((msg) => toast.error(msg));
+
+      if (!files.length) return;
+
       const updated = await api.products.uploadImages(id, files);
       setProduct(updated);
-      toast.success(`${files.length} ${files.length === 1 ? "fotka nahrána" : "fotky nahrány"}!`);
+
+      const saved = originalBytes - compressedBytes;
+      toast.success(
+        `${files.length} ${files.length === 1 ? "fotka nahrána" : "fotky nahrány"}!` +
+          (saved > 0 ? ` Zmenšeno o ${formatBytes(saved)}.` : ""),
+      );
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Nahrání selhalo");
     } finally {
@@ -255,6 +266,9 @@ export default function ProductPage() {
               <span className="text-sm">Klikněte pro nahrání fotek</span>
               <span className="text-xs opacity-70">
                 AI bude fotky vidět při analýze — výsledky budou přesnější
+              </span>
+              <span className="text-xs opacity-50">
+                JPG, PNG nebo WebP · až 10 fotek · velké fotky zmenšíme automaticky
               </span>
             </button>
           ) : (

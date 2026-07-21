@@ -28,6 +28,39 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] Automatická komprese fotek + limity a chybové hlášky uploadu
+
+**Typ:** feat
+**Soubory:** `frontend/lib/image-upload.ts` (nový), `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/app/(app)/profile/page.tsx`, `backend/src/common/upload/image-upload.options.ts` (nový), `backend/src/common/upload/upload-exception.filter.ts` (nový), `backend/src/products/products.controller.ts`, `backend/src/makers/makers.controller.ts`, `backend/src/main.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **`lib/image-upload.ts`** — klientská komprese: zmenšení na 2000 px delší strany + překódování do WebP q0.82 (fallback JPEG pro starší Safari). Respektuje EXIF rotaci (`imageOrientation: "from-image"`), GIF vynechává (canvas by zabil animaci), při zvětšení výsledku vrací originál. `ImageUploadError` nese hlášku i radu, co má uživatel udělat.
+- **`common/upload/image-upload.options.ts`** — sdílené multer limity: 12 MB/soubor, 10 souborů, whitelist MIME typů.
+- **`common/upload/upload-exception.filter.ts`** — překládá multer chyby (`File too large`, `Too many files`, `Unexpected field`) do češtiny včetně rady. Ostatní `BadRequestException` propouští beze změny, aby zůstaly validační chyby z `ValidationPipe`.
+- **`api.ts`** — fallback hláška pro 413 bez JSON těla (odpověď od nginx).
+- **Upload UI** — dávkový upload nepadá kvůli jedné vadné fotce; chybné se vypíšou jako toast, zbytek se nahraje. Doplněna nápověda o formátech a limitu.
+
+### Proč
+Uživatel dostával při nahrávání fotek **HTTP 413** — nginx má výchozí `client_max_body_size` 1 MB a fotka z mobilu má 3–8 MB. Backend navíc neměl **žádný** limit velikosti a soubory pufruje přes `memoryStorage()` do RAM, což na CX22 (2 GB) hrozilo pádem kontejneru. Chybové hlášky byly buď anglické (`File too large`), nebo holé `Chyba 413` bez rady.
+
+### Způsob provedení
+Komprese probíhá v prohlížeči přes `createImageBitmap` + `canvas.toBlob()`, takže na server jde ~400 kB místo ~6 MB. Server-side komprese (`sharp`) záměrně nepřidána — nativní závislost a těžší Docker build; klientská komprese pokrývá reálný tok, backend limity slouží jako pojistka.
+
+### Instrukce pro deploy
+**Nutný ruční zásah do nginx** — bez něj 413 přetrvá pro klienty mimo prohlížeč:
+```bash
+sudo nano /etc/nginx/sites-available/handmade
+# do server { ... } bloku přidat:  client_max_body_size 25M;
+sudo nginx -t && sudo systemctl reload nginx
+
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## [2026-05-28] Frontend image upload + AI vision podpora
 
 **Typ:** feat

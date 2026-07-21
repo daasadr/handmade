@@ -28,6 +28,45 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] Srozumitelné chyby AI analýzy místo „Internal server error"
+
+**Typ:** fix
+**Soubory:** `backend/src/ai/ai.service.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Volání Anthropic API je obalené v try/catch a chyby překládá nová metoda `translateAnthropicError()`:
+
+| Příčina | HTTP | Co uvidí uživatel |
+|---|---|---|
+| Vyčerpaný kredit / neplatný API klíč | 503 | „AI analýza je dočasně nedostupná kvůli technickému problému na naší straně… Kvóta se vám nestrhla." |
+| Rate limit (429) | 429 | „Právě teď probíhá hodně analýz naráz…" |
+| Přetížení (500/529) | 503 | „AI služba je momentálně přetížená…" |
+| Výpadek sítě | 503 | „Nepodařilo se spojit s AI službou…" |
+
+Skutečná příčina jde přes `Logger` do server logu, uživateli se neukazuje.
+
+### Proč
+Když došel kredit na Anthropic API, SDK vyhodilo výjimku, kterou nikdo nechytal — NestJS ji převedl na **500 „Internal server error"**. Uživatel neměl šanci zjistit, co se děje, a klikal na „Spustit znovu" dokola (viz opakované 500 v konzoli).
+
+### Způsob provedení
+Použity typované třídy z `@anthropic-ai/sdk` (`APIError`, `RateLimitError`, `AuthenticationError`, `APIConnectionError`) místo porovnávání textu chyby.
+
+Dvě věci, na kterých záleží:
+- **Nikdy nevracíme 401.** Frontend na 401 maže token a odhlašuje (`lib/api.ts`), takže vypršelý API klíč *platformy* by uživatele vyhodil z jeho vlastního účtu. Auth chyby proto mapujeme na 503.
+- **`APIConnectionError` se kontroluje před `APIError`** — v TS SDK je jeho podtřídou, při opačném pořadí by větev pro výpadek sítě byla mrtvý kód.
+
+Kvóta se při selhání nestrhne — čítač zvyšuje až `ai.controller.ts` po úspěšném návratu, takže výjimka ho přeskočí. Hlášky to uživateli explicitně říkají.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## [2026-07-21] Admin UI — správa uživatelů
 
 **Typ:** feat

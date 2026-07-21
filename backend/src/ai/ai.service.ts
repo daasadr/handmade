@@ -1,4 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ServiceUnavailableException,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Anthropic from '@anthropic-ai/sdk';
@@ -17,6 +25,7 @@ const PLAN_LIMITS: Record<UserPlan, number> = {
 @Injectable()
 export class AiService {
   private anthropic: Anthropic;
+  private readonly logger = new Logger(AiService.name);
 
   constructor(
     @InjectRepository(AiOptimization)
@@ -104,11 +113,16 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       ? [...imageBlocks, { type: 'text' as const, text: promptText }]
       : promptText;
 
-    const message = await this.anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: messageContent as any }],
-    });
+    let message: Anthropic.Message;
+    try {
+      message = await this.anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: messageContent as any }],
+      });
+    } catch (err) {
+      throw this.translateAnthropicError(err);
+    }
 
     const content = message.content[0];
     if (content.type !== 'text') throw new BadRequestException('Neočekávaná odpověď AI');
@@ -145,6 +159,79 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       needsReset,
       newUsage: currentUsage + 1,
     };
+  }
+
+  /**
+   * Chyby z Anthropic API se bez tohoto překladu zobrazí uživateli jako holé
+   * „Internal server error" — a přitom skoro žádnou z nich nemůže sám vyřešit.
+   *
+   * DŮLEŽITÉ: nikdy nevracíme 401. Frontend na 401 maže token a odhlašuje
+   * uživatele (`lib/api.ts`), takže vypršelý API klíč platformy by uživatele
+   * vyhodil z účtu.
+   */
+  private translateAnthropicError(err: unknown): HttpException {
+    // Skutečnou příčinu potřebuje správce v logu — uživateli ji neukazujeme.
+    this.logger.error(
+      `Anthropic API selhalo: ${err instanceof Error ? err.message : String(err)}`,
+      err instanceof Error ? err.stack : undefined,
+    );
+
+    const kontaktujteSpravce =
+      'Zkuste to prosím za chvíli znovu. Pokud potíže potrvají, napište nám — kvóta se vám nestrhla.';
+
+    // POZOR na pořadí: v TS SDK je APIConnectionError podtřída APIError,
+    // takže musí jít první — jinak ji odchytí obecná větev níž.
+    if (err instanceof Anthropic.APIConnectionError) {
+      return new ServiceUnavailableException(
+        `Nepodařilo se spojit s AI službou. ${kontaktujteSpravce}`,
+      );
+    }
+
+    if (err instanceof Anthropic.APIError) {
+      // Vyčerpaný kredit platformy. Uživatel s tím nic nezmůže, ať to nezkouší dokola.
+      const isBilling =
+        err.type === 'billing_error' ||
+        /credit balance|billing|insufficient/i.test(err.message ?? '');
+      if (isBilling) {
+        return new ServiceUnavailableException(
+          'AI analýza je dočasně nedostupná kvůli technickému problému na naší straně. ' +
+            'Pracujeme na tom — zkuste to prosím později. Kvóta se vám nestrhla.',
+        );
+      }
+
+      if (err instanceof Anthropic.RateLimitError) {
+        return new HttpException(
+          `Právě teď probíhá hodně analýz naráz. ${kontaktujteSpravce}`,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      // 401/403 = špatný nebo chybějící klíč platformy — opět nic pro uživatele.
+      if (
+        err instanceof Anthropic.AuthenticationError ||
+        err instanceof Anthropic.PermissionDeniedError
+      ) {
+        return new ServiceUnavailableException(
+          'AI analýza je dočasně nedostupná kvůli technickému problému na naší straně. ' +
+            'Pracujeme na tom — zkuste to prosím později. Kvóta se vám nestrhla.',
+        );
+      }
+
+      // 500 i 529 (overloaded_error) — přechodné, opakování má smysl.
+      if (err.status && err.status >= 500) {
+        return new ServiceUnavailableException(
+          `AI služba je momentálně přetížená. ${kontaktujteSpravce}`,
+        );
+      }
+
+      return new ServiceUnavailableException(
+        `AI analýzu se nepodařilo dokončit. ${kontaktujteSpravce}`,
+      );
+    }
+
+    return new ServiceUnavailableException(
+      `AI analýzu se nepodařilo dokončit. ${kontaktujteSpravce}`,
+    );
   }
 
   async getOptimizations(productId: string) {

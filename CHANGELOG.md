@@ -28,6 +28,34 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-21] Fotky lze přidat už při zakládání produktu
+
+**Typ:** feat
+**Soubory:** `frontend/app/(app)/products/new/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Formulář nového produktu má sekci „Fotografie produktu" — výběr fotek, mřížka náhledů s tlačítkem pro odebrání, limit 10 fotek. Fotky se komprimují hned při výběru (viz `lib/image-upload.ts`), takže odeslání formuláře je rychlé.
+
+### Proč
+Fotky šlo dosud přidat až na detailu produktu po jeho uložení — zbytečný druhý krok. Uživatel navíc nemusel tušit, že AI analýza funguje lépe s fotkami.
+
+### Způsob provedení
+Klientsky dvoufázově, **beze změny API**: `POST /products` vytvoří produkt, hned nato `POST /products/:id/images` nahraje fotky. Upload endpoint potřebuje ID produktu, takže atomicky to jinak nejde.
+
+Pokud upload fotek selže, produkt zůstane uložený a uživatel je přesměrován na detail s hláškou „Produkt byl uložen, ale fotky se nepodařilo nahrát… Zkuste je přidat na detailu produktu." Selhání fotek tedy neshodí celé uložení.
+
+Zvažovanou alternativou bylo přijímat multipart přímo na `POST /products` — zamítnuto, znamenalo by změnu API kontraktu a jeden velký křehký request.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## [2026-07-21] Automatická komprese fotek + limity a chybové hlášky uploadu
 
 **Typ:** feat

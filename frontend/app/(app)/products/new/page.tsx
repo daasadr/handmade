@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { prepareImages, formatBytes, IMAGE_LIMITS } from "@/lib/image-upload";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,12 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [profileChecked, setProfileChecked] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  // Fotky se komprimují hned při výběru, aby uživatel viděl náhled a odeslání
+  // formuláře pak bylo rychlé. Nahrají se až po vytvoření produktu — endpoint
+  // pro upload potřebuje jeho ID.
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+  const [compressing, setCompressing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,9 +43,58 @@ export default function NewProductPage() {
       .catch(() => { setHasProfile(false); setProfileChecked(true); });
   }, []);
 
+  // Náhledy drží objectURL — bez uvolnění by při odchodu ze stránky zůstaly v paměti.
+  useEffect(() => {
+    return () => images.forEach((img) => URL.revokeObjectURL(img.preview));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSelectImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!selected.length) return;
+
+    const free = IMAGE_LIMITS.maxFiles - images.length;
+    if (free <= 0) {
+      toast.error(`K produktu lze přidat nejvýš ${IMAGE_LIMITS.maxFiles} fotek.`);
+      return;
+    }
+    if (selected.length > free) {
+      toast.error(`Přidat lze ještě ${free} ${free === 1 ? "fotku" : "fotky"} — zbytek jsme vynechali.`);
+    }
+
+    setCompressing(true);
+    try {
+      const { files, errors, originalBytes, compressedBytes } = await prepareImages(
+        selected.slice(0, free),
+      );
+      errors.forEach((msg) => toast.error(msg));
+      if (!files.length) return;
+
+      setImages((prev) => [
+        ...prev,
+        ...files.map((file) => ({ file, preview: URL.createObjectURL(file) })),
+      ]);
+
+      const saved = originalBytes - compressedBytes;
+      if (saved > 0) toast.success(`Fotky připraveny — zmenšeno o ${formatBytes(saved)}.`);
+    } finally {
+      setCompressing(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    let productId: string;
     try {
       const product = await api.products.create({
         titleOriginal: form.titleOriginal,
@@ -46,13 +102,31 @@ export default function NewProductPage() {
         priceOriginal: form.priceOriginal ? parseFloat(form.priceOriginal) : undefined,
         category: form.category || undefined,
       });
-      toast.success("Produkt byl vytvořen!");
-      router.push(`/products/${product.id}`);
+      productId = product.id;
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Vytvoření selhalo");
-    } finally {
       setLoading(false);
+      return;
     }
+
+    // Produkt už existuje. Když upload fotek selže, nepovažujeme to za selhání
+    // celého uložení — uživatele pustíme na detail, kde je může přidat znovu.
+    if (images.length) {
+      try {
+        await api.products.uploadImages(productId, images.map((img) => img.file));
+        toast.success("Produkt byl vytvořen i s fotkami!");
+      } catch (err: unknown) {
+        toast.error(
+          `Produkt byl uložen, ale fotky se nepodařilo nahrát: ${
+            err instanceof Error ? err.message : "neznámá chyba"
+          } Zkuste je prosím přidat na detailu produktu.`,
+        );
+      }
+    } else {
+      toast.success("Produkt byl vytvořen!");
+    }
+
+    router.push(`/products/${productId}`);
   };
 
   if (!profileChecked) {
@@ -172,8 +246,65 @@ export default function NewProductPage() {
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <Label>Fotografie produktu</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleSelectImages}
+              />
+
+              {images.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 pb-1">
+                  {images.map((img, i) => (
+                    <div key={img.preview} className="relative group aspect-square">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.preview}
+                        alt={`Náhled ${i + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: "oklch(0.22 0.04 48 / 0.75)", color: "white" }}
+                        title="Odebrat fotku"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={compressing || images.length >= IMAGE_LIMITS.maxFiles}
+                className="w-full border-2 border-dashed rounded-xl py-5 flex flex-col items-center gap-1 transition-all hover:border-current disabled:opacity-50"
+                style={{ borderColor: "oklch(0.80 0.04 72)", color: "oklch(0.65 0.04 50)" }}
+              >
+                <span className="text-xl">📷</span>
+                <span className="text-sm">
+                  {compressing
+                    ? "Připravuji fotky…"
+                    : images.length
+                      ? "Přidat další fotky"
+                      : "Klikněte pro přidání fotek"}
+                </span>
+              </button>
+              <p className="text-xs text-muted-foreground">
+                Nepovinné — AI bude fotky vidět při analýze a výsledky budou přesnější.
+                JPG, PNG nebo WebP · až {IMAGE_LIMITS.maxFiles} fotek · velké fotky zmenšíme automaticky.
+              </p>
+            </div>
+
             <div className="flex gap-3 pt-2">
-              <Button type="submit" disabled={loading} className="flex-1">
+              <Button type="submit" disabled={loading || compressing} className="flex-1">
                 {loading ? "Ukládám…" : "Uložit produkt"}
               </Button>
               <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }))}>

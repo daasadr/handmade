@@ -48,24 +48,13 @@ export class AiOptimization {
   @Column({ nullable: true })
   scoreSource: 'ai' | 'market';
 
-  // --- Snímek konkurence (jen když je nakonfigurováno Etsy API a platform=etsy) ---
-  @Column({ nullable: true, type: 'int' })
-  competitorCount: number;
-
-  @Column({ nullable: true, type: 'real' })
-  priceMin: number;
-
-  @Column({ nullable: true, type: 'real' })
-  priceMedian: number;
-
-  @Column({ nullable: true, type: 'real' })
-  priceMax: number;
-
-  @Column({ nullable: true })
-  priceCurrency: string;
-
-  @Column({ type: 'jsonb', default: '[]' })
-  competitorTags: string[];
+  /**
+   * Textový závěr z dat konkurence (ukládá se). Surová data z Etsy (ceny, tagy,
+   * počty) se ZÁMĚRNĚ neukládají — kvůli Etsy API Terms. Uživateli se ukážou
+   * jen jednou, přechodně v odpovědi na analýzu.
+   */
+  @Column({ nullable: true, type: 'text' })
+  marketConclusion: string;
 
   @Column({ nullable: true })
   aiModelUsed: string;

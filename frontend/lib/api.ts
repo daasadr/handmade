@@ -261,6 +261,16 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
   fler: "Fler",
 };
 
+/** Surová data konkurence — PŘECHODNÁ, jen v odpovědi na analýzu. Neukládá se. */
+export interface CompetitionSnapshot {
+  competitorCount: number;
+  priceMin: number;
+  priceMedian: number;
+  priceMax: number;
+  priceCurrency: string;
+  topTags: string[];
+}
+
 export interface AiOptimization {
   id: string;
   titleOptimized: string;
@@ -273,12 +283,10 @@ export interface AiOptimization {
   competitivenessScore: number;
   /** 'market' = z reálné konkurence (Etsy), 'ai' = odhad AI. */
   scoreSource?: "ai" | "market";
-  competitorCount?: number | null;
-  priceMin?: number | null;
-  priceMedian?: number | null;
-  priceMax?: number | null;
-  priceCurrency?: string | null;
-  competitorTags?: string[];
+  /** Uložený textový závěr z dat konkurence (surová data se neukládají). */
+  marketConclusion?: string | null;
+  /** Surová data konkurence — jen v čerstvé odpovědi na analýzu, po reloadu mizí. */
+  competition?: CompetitionSnapshot | null;
   aiModelUsed: string;
   platform: string;
   createdAt: string;

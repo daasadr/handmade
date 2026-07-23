@@ -28,6 +28,38 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-23] Etsy compliance: obchodní podmínky, doložka, neukládání dat konkurence
+
+**Typ:** feat
+**Soubory:** `frontend/app/podminky/page.tsx` (nový), `backend/src/migrations/1753300000000-SlimCompetitionStorage.ts` (nový), `backend/src/ai/ai-optimization.entity.ts`, `backend/src/ai/market-score.ts`, `backend/src/ai/ai.service.ts`, `backend/src/ai/ai.controller.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/app/page.tsx`, `frontend/app/(app)/napoveda/page.tsx`, `CLAUDE.md`
+
+### Co bylo změněno
+- **Surová data konkurence se už neukládají.** Kvůli Etsy API Terms (zákaz skladovat obsah Etsy a zobrazovat data starší 6 h) se do DB ukládá jen odvozené skóre a nový **textový závěr** `marketConclusion` (`buildMarketConclusion()`). Konkrétní čísla (počty, ceny, tagy) se vrací přechodně v odpovědi na analýzu a uživateli se ukážou **jednou** s upozorněním „tato data neukládáme". Po reloadu zmizí, zůstane závěr.
+- **Migrace** zrušila sloupce `competitorCount/priceMin/Median/Max/priceCurrency/competitorTags`, přidala `marketConclusion`.
+- **Obchodní podmínky** — nová veřejná stránka `/podminky` (ToS + ochrana soukromí + tržiště třetích stran + kontakt). Místa s právními údaji provozovatele označena `[DOPLŇTE …]`.
+- **Povinná doložka Etsy** („…not endorsed or certified by Etsy, Inc.") pod každou Etsy optimalizací, v patičce landing page a v podmínkách.
+- Patička landing page doplněna o odkazy Obchodní podmínky + Kontakt.
+
+### Proč
+Etsy API Terms (přečteny na žádost uživatele) vyžadují: neukládat obsah Etsy natrvalo, uvádět atribuční doložku, mít viditelné ToS, privacy policy a kontaktní e-mail. Uživatelka zvolila řešení „data ukázat jednou + uložit jen závěr".
+
+### Způsob provedení
+Surová data cestují jako `competition` v odpovědi na `POST /analyze` (controller je přilepí k entitě v odpovědi, do DB se neukládají). Frontend je zobrazí jen z čerstvé odpovědi; uložený `marketConclusion` se ukazuje vždy.
+
+### ⚠️ Potřeba od uživatele
+1. V `/podminky` doplnit `[DOPLŇTE …]` — provozovatel (jméno/firma, IČO, sídlo) a skutečný kontaktní e-mail; pak smazat žlutou poznámku.
+2. Zajistit funkční schránku `podpora@handmade.net` (nebo změnit e-mail v patičce, podmínkách a doložkách).
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Migrace proběhne sama.
+
+---
+
 ## [2026-07-23] Analýzy zvlášť pro každou platformu + přidán český Fler
 
 **Typ:** feat

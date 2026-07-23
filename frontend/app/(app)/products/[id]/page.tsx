@@ -548,72 +548,74 @@ export default function ProductPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
-            {/* Přehled konkurence — jen když máme reálná data z Etsy */}
-            {displayedOpt.scoreSource === "market" && (
+            {/* Závěr z konkurence — UKLÁDÁ SE, zobrazuje se vždy */}
+            {displayedOpt.scoreSource === "market" && displayedOpt.marketConclusion && (
               <div
                 className="rounded-xl p-4"
                 style={{ background: "oklch(0.65 0.15 155 / 0.08)", border: "1px solid oklch(0.65 0.15 155 / 0.25)" }}
               >
-                <p className="text-xs uppercase tracking-wider mb-3" style={{ color: "oklch(0.40 0.12 155)" }}>
-                  Přehled konkurence na Etsy
+                <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "oklch(0.40 0.12 155)" }}>
+                  Závěr z analýzy konkurence
                 </p>
+                <p className="text-sm leading-relaxed" style={{ color: "oklch(0.35 0.04 50)" }}>
+                  {displayedOpt.marketConclusion}
+                </p>
+              </div>
+            )}
 
-                {(displayedOpt.competitorCount ?? 0) > 0 ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Konkurenčních nabídek</p>
-                        <p className="font-heading text-2xl font-light">
-                          {displayedOpt.competitorCount?.toLocaleString("cs-CZ")}
-                        </p>
-                      </div>
-                      {displayedOpt.priceMedian ? (
-                        <div>
-                          <p className="text-xs text-muted-foreground">Cena konkurence (medián)</p>
-                          <p className="font-heading text-2xl font-light">
-                            {Math.round(displayedOpt.priceMedian)} {displayedOpt.priceCurrency}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            rozpětí {Math.round(displayedOpt.priceMin ?? 0)}–{Math.round(displayedOpt.priceMax ?? 0)} {displayedOpt.priceCurrency}
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {displayedOpt.priceMedian && product.priceOriginal ? (
-                      <p className="text-sm mt-3" style={{ color: "oklch(0.40 0.04 50)" }}>
-                        Vaše cena <strong>{product.priceOriginal} EUR</strong>{" "}
-                        {product.priceOriginal <= displayedOpt.priceMedian
-                          ? "je pod mediánem trhu — cenově konkurenceschopná."
-                          : (product.priceOriginal <= (displayedOpt.priceMax ?? Infinity)
-                              ? "je nad mediánem, ale stále v rozpětí trhu."
-                              : "je nad celým rozpětím konkurence — zvažte, zda ji obhájí kvalita a příběh.")}
+            {/* Surová data konkurence — PŘECHODNĚ, jen v čerstvé odpovědi. Neukládá se. */}
+            {displayedOpt.competition && displayedOpt.competition.competitorCount > 0 && (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "oklch(0.94 0.012 75)", border: "1px dashed oklch(0.80 0.04 72)" }}
+              >
+                <p className="text-xs uppercase tracking-wider mb-3 text-muted-foreground">
+                  Aktuální data konkurence na Etsy
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Konkurenčních nabídek</p>
+                    <p className="font-heading text-2xl font-light">
+                      {displayedOpt.competition.competitorCount.toLocaleString("cs-CZ")}
+                    </p>
+                  </div>
+                  {displayedOpt.competition.priceMedian ? (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Cena konkurence (medián)</p>
+                      <p className="font-heading text-2xl font-light">
+                        {Math.round(displayedOpt.competition.priceMedian)} {displayedOpt.competition.priceCurrency}
                       </p>
-                    ) : null}
+                      <p className="text-xs text-muted-foreground">
+                        rozpětí {Math.round(displayedOpt.competition.priceMin)}–{Math.round(displayedOpt.competition.priceMax)} {displayedOpt.competition.priceCurrency}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
 
-                    {(displayedOpt.competitorTags?.length ?? 0) > 0 && (
-                      <div className="mt-3">
-                        <p className="text-xs text-muted-foreground mb-1.5">Nejčastější tagy konkurence:</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {displayedOpt.competitorTags!.slice(0, 12).map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs px-2 py-0.5 rounded-full"
-                              style={{ background: "oklch(0.94 0.012 75)", color: "oklch(0.40 0.04 50)" }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-sm" style={{ color: "oklch(0.40 0.04 50)" }}>
-                    Na tato klíčová slova jsme na Etsy nenašli téměř žádnou konkurenci — může to být
-                    nevyužitá nika, nebo termín, který zákazníci nehledají. Zvažte i obecnější klíčová slova.
-                  </p>
+                {displayedOpt.competition.topTags.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-muted-foreground mb-1.5">Nejčastější tagy konkurence:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {displayedOpt.competition.topTags.slice(0, 12).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: "oklch(0.88 0.02 72)", color: "oklch(0.40 0.04 50)" }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
+
+                <p className="text-xs mt-3 flex items-start gap-1.5" style={{ color: "oklch(0.50 0.04 50)" }}>
+                  <span>ℹ️</span>
+                  <span>
+                    Tato konkrétní data <strong>neukládáme</strong> — slouží jen pro vaši aktuální
+                    představu při této analýze. Po opuštění stránky zmizí; zůstane vám náš závěr výše.
+                  </span>
+                </p>
               </div>
             )}
 
@@ -702,6 +704,14 @@ export default function ProductPage() {
                 </div>
               )}
             </div>
+
+            {/* Povinná doložka Etsy API Terms — u Etsy optimalizací */}
+            {displayedOpt.platform === "etsy" && (
+              <p className="text-[11px] leading-relaxed text-muted-foreground pt-1 border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }}>
+                The term „Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API
+                but is not endorsed or certified by Etsy, Inc.
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

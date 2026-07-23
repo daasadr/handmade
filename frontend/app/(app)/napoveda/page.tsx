@@ -183,9 +183,10 @@ export default function NapovedaPage() {
             <p className="font-medium" style={{ color: EMERALD }}>★ z reálného trhu (Etsy)</p>
             <p style={{ color: MUTED }}>
               Skóre je spočítané z <strong>reálné konkurence na Etsy</strong> — kolik podobných nabídek
-              existuje, jak jsou naceněné a jaká klíčová slova používají. U analýzy navíc uvidíte přehled:
-              počet konkurenčních nabídek, cenové rozpětí a zda vaše cena sedí do trhu. Tohle je tvrdé číslo
-              opřené o data.
+              existuje, jak jsou naceněné a jaká klíčová slova používají. Tohle je tvrdé číslo opřené o data.
+              Konkrétní aktuální data (počty, ceny, tagy) vám ukážeme <strong>jednou u analýzy</strong> a
+              neukládáme je; natrvalo vám zůstane náš <strong>závěr</strong>, který jsme z nich vyvodili pro
+              váš produkt.
             </p>
           </div>
 

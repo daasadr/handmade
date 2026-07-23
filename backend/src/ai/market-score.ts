@@ -51,3 +51,62 @@ function scoreKeywords(keywords: string[], topTags: string[]): number {
   const hits = keywords.filter((k) => tagSet.has(k.trim().toLowerCase())).length;
   return Math.round((hits / keywords.length) * 30);
 }
+
+/**
+ * Textový závěr z dat konkurence — TOHLE se ukládá (na rozdíl od surových dat).
+ * Deterministické, žádné další volání AI: honest a bez halucinací.
+ */
+export function buildMarketConclusion(
+  productPrice: number | undefined,
+  keywords: string[],
+  snapshot: CompetitionSnapshot,
+): string {
+  if (snapshot.competitorCount <= 0) {
+    return 'Na tato klíčová slova jsme na Etsy nenašli téměř žádnou konkurenci — může jít o nevyužitou niku, nebo o termín, který zákazníci nehledají. Zvažte i obecnější klíčová slova.';
+  }
+
+  const parts: string[] = [];
+
+  // Nasycenost trhu
+  const c = snapshot.competitorCount;
+  const nasycenost =
+    c < 100 ? 'málo nasycený' : c < 2000 ? 'středně nasycený' : 'silně nasycený';
+  parts.push(
+    `Trh je ${nasycenost} (${c.toLocaleString('cs-CZ')} konkurenčních nabídek).`,
+  );
+
+  // Cenová pozice
+  if (productPrice && snapshot.priceMedian) {
+    const cur = snapshot.priceCurrency || '';
+    if (productPrice <= snapshot.priceMedian) {
+      parts.push(
+        `Vaše cena je pod mediánem trhu (${Math.round(snapshot.priceMedian)} ${cur}) — cenově konkurenceschopná.`,
+      );
+    } else if (productPrice <= snapshot.priceMax) {
+      parts.push(
+        `Vaše cena je nad mediánem trhu (${Math.round(snapshot.priceMedian)} ${cur}), ale stále v rozpětí konkurence.`,
+      );
+    } else {
+      parts.push(
+        'Vaše cena je nad celým rozpětím konkurence — bude ji muset obhájit kvalita a příběh produktu.',
+      );
+    }
+  }
+
+  // Relevance klíčových slov
+  if (keywords.length && snapshot.topTags.length) {
+    const tagSet = new Set(snapshot.topTags.map((t) => t.toLowerCase()));
+    const hits = keywords.filter((k) => tagSet.has(k.trim().toLowerCase())).length;
+    if (hits >= keywords.length / 2) {
+      parts.push(
+        `Vaše klíčová slova dobře odpovídají tomu, co používá konkurence (shoda u ${hits} z ${keywords.length}).`,
+      );
+    } else {
+      parts.push(
+        `Jen ${hits} z ${keywords.length} vašich klíčových slov používá i konkurence — zvažte přiblížit se běžněji hledaným výrazům.`,
+      );
+    }
+  }
+
+  return parts.join(' ');
+}

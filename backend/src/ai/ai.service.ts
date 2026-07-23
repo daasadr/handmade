@@ -14,7 +14,7 @@ import { AiOptimization } from './ai-optimization.entity';
 import { Product, ProductStatus } from '../products/product.entity';
 import { User, UserPlan, isVipActive } from '../users/user.entity';
 import { EtsyService } from '../common/etsy/etsy.service';
-import { computeMarketScore } from './market-score';
+import { computeMarketScore, buildMarketConclusion } from './market-score';
 
 export type Platform = 'etsy' | 'amazon' | 'fler';
 
@@ -170,6 +170,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
     let scoreSource: 'ai' | 'market' = 'ai';
     let competitivenessScore: number = parsed.competitiveness_score ?? 0;
     let competition: Awaited<ReturnType<EtsyService['searchCompetition']>> = null;
+    let marketConclusion: string | undefined;
 
     if (platform === 'etsy' && this.etsyService.isEnabled()) {
       // Dotaz na trh = pár hlavních klíčových slov (co by zákazník opravdu hledal),
@@ -179,6 +180,12 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
 
       if (competition) {
         competitivenessScore = computeMarketScore(
+          product.priceOriginal,
+          keywords,
+          competition,
+        );
+        // Ukládáme JEN tento textový závěr, ne surová data z Etsy (Terms).
+        marketConclusion = buildMarketConclusion(
           product.priceOriginal,
           keywords,
           competition,
@@ -198,13 +205,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       pricingRecommendationCzech: parsed.pricing_recommendation_czech,
       competitivenessScore,
       scoreSource,
-      // undefined → TypeORM uloží NULL; null neprojde přes DeepPartial<number>.
-      competitorCount: competition?.competitorCount,
-      priceMin: competition?.priceMin,
-      priceMedian: competition?.priceMedian,
-      priceMax: competition?.priceMax,
-      priceCurrency: competition?.priceCurrency,
-      competitorTags: competition?.topTags ?? [],
+      marketConclusion,
       aiModelUsed: 'claude-haiku-4-5',
       platform,
     });
@@ -214,6 +215,9 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
 
     return {
       optimization,
+      // Surová data konkurence — PŘECHODNĚ, jen pro jednorázové zobrazení
+      // uživateli. Neukládá se (viz Etsy Terms), po reloadu stránky zmizí.
+      competition,
       needsReset,
       newUsage: currentUsage + 1,
     };

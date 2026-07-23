@@ -293,9 +293,11 @@ export default function LandingPage() {
               handmade.net
             </span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap justify-center">
             {[
               { href: "/tarify", label: "Tarify" },
+              { href: "/podminky", label: "Obchodní podmínky" },
+              { href: "mailto:podpora@handmade.net", label: "Kontakt" },
               { href: "/login", label: "Přihlásit se" },
               { href: "/register", label: "Registrace" },
             ].map((l) => (
@@ -310,6 +312,9 @@ export default function LandingPage() {
             © 2026 Handmade.net
           </p>
         </div>
+        <p className="max-w-6xl mx-auto mt-6 text-[11px] text-center" style={{ color: "oklch(0.72 0.02 60)" }}>
+          The term „Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+        </p>
       </footer>
     </div>
   );

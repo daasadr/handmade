@@ -28,7 +28,9 @@ export class AiController {
       aiUsageResetAt: result.needsReset ? new Date() : user.aiUsageResetAt,
     });
 
-    return result.optimization;
+    // Surová data konkurence jen přechodně k jednorázovému zobrazení — neukládá
+    // se do DB, takže je vracíme přilepená k odpovědi (ne součást entity).
+    return { ...result.optimization, competition: result.competition };
   }
 
   @Get(':id/optimizations')

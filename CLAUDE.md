@@ -196,9 +196,17 @@ GET    /products/:id/optimizations   JWT required
 **Skóre konkurenceschopnosti — dva zdroje (`scoreSource`):**
 - `market` — spočítáno z REÁLNÉ konkurence na Etsy (`ai/market-score.ts`) z dat
   `common/etsy/etsy.service.ts`. Jen když je `ETSY_API_KEY` v env **a** `platform=etsy`.
-  K analýze se uloží i snímek: `competitorCount`, `priceMin/Median/Max`, `competitorTags`.
 - `ai` — odhad AI z JSON výstupu (fallback). Amazon nemá veřejné vyhledávací API,
   takže tam je vždy `ai`. Etsy bez klíče nebo při chybě API taky spadne na `ai`.
+
+**⚠️ Etsy Terms — surová data konkurence se NEUKLÁDAJÍ.** Etsy API Terms zakazují
+skladovat obsah Etsy a zobrazovat produktová data starší než 6 h. Proto:
+- Do DB se ukládá jen `competitivenessScore` (odvozené číslo) a `marketConclusion`
+  (náš textový závěr, `buildMarketConclusion()`).
+- Surová data (ceny, tagy, počty) se vrací **přechodně** v odpovědi na analýzu
+  (`analyze()` → `competition`, controller je přilepí k odpovědi) a zobrazí uživateli
+  jednou s upozorněním „neukládáme". Po reloadu stránky zmizí.
+- Povinná doložka Etsy je pod Etsy optimalizací, v patičce landing page a v `/podminky`.
 
 `EtsyService` je fail-safe: bez klíče / při jakékoliv chybě vrací `null` a analýza
 proběhne s AI skóre. Konkurence je bonus, ne blokující závislost.

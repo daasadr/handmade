@@ -28,6 +28,43 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-23] Přehled konkurence z Etsy + skóre z reálného trhu
+
+**Typ:** feat
+**Soubory:** `backend/src/common/etsy/etsy.service.ts` (nový), `backend/src/common/etsy/etsy.module.ts` (nový), `backend/src/ai/market-score.ts` (nový), `backend/src/migrations/1753200000000-AddCompetitionData.ts` (nový), `backend/src/ai/ai-optimization.entity.ts`, `backend/src/ai/ai.service.ts`, `backend/src/ai/ai.module.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/app/(app)/napoveda/page.tsx`, `.env.example`, `CLAUDE.md`
+
+### Co bylo změněno
+- **`EtsyService`** — vyhledá aktivní konkurenční listingy na Etsy Open API v3 a vrátí snímek: počet nabídek, cenové rozpětí (min/medián/max) a nejčastější tagy.
+- **`market-score.ts`** — spočítá skóre konkurenceschopnosti 0–100 z reálných dat: cenová pozice (0–40) + nasycenost trhu (0–30) + relevance klíčových slov vůči tagům konkurence (0–30).
+- **`ai.service.ts`** — u Etsy analýz (a jen když je klíč) nahradí odhad AI skóre z trhu a uloží snímek konkurence. Pole `scoreSource` = `'market'` / `'ai'`.
+- **Frontend** — u výsledku štítek zdroje skóre („★ z reálného trhu" / „odhad AI") a přehled konkurence (počet, ceny, porovnání vlastní ceny, tagy). Nápověda aktualizována.
+- **Migrace** pro nové sloupce na `ai_optimizations`.
+
+### Proč
+Skóre bylo dosud jen subjektivní odhad AI bez reálných dat (viz předchozí diskuze). Výrobci potřebují skutečný přehled o konkurenci — kolik jí je a za kolik prodává — a skóre opřené o data.
+
+### Způsob provedení
+**Fail-safe a additivní.** Bez `ETSY_API_KEY` nebo při jakékoliv chybě Etsy API vrací `EtsyService` `null` a analýza proběhne se stávajícím AI skóre — nic se nerozbije. Veškerá znalost Etsy je izolovaná v `EtsyService`, zbytek aplikace pracuje s neutrálním `CompetitionSnapshot`.
+
+**Amazon záměrně vynechán** — nemá veřejné vyhledávací API, takže tam zůstává odhad AI (v UI i nápovědě přiznáno).
+
+Nová DB pole mají **migraci** (na rozdíl od minulé chyby s VIP).
+
+### ⚠️ Potřeba od uživatele
+1. Zaregistrovat aplikaci na https://www.etsy.com/developers a získat „Keystring".
+2. Doplnit `ETSY_API_KEY=...` do `.env` na serveru.
+3. **Ověřit proti reálnému API** (nešlo otestovat bez klíče): endpoint `/listings/active`, tvar ceny `{amount, divisor, currency_code}`, pole `count`/`results`/`tags`. Vše je v jediné metodě `EtsyService.searchCompetition()`, případná úprava je lokální.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Migrace proběhne sama. Bez `ETSY_API_KEY` funguje vše jako dosud (AI skóre); po doplnění klíče se u Etsy analýz objeví reálný přehled.
+
+---
+
 ## [2026-07-21] HOTFIX: chybějící migrace pro VIP sloupce shodila přihlášení
 
 **Typ:** fix

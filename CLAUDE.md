@@ -26,6 +26,7 @@
 | Databáze | PostgreSQL | 16 |
 | ORM | TypeORM | 0.3.x |
 | AI | Anthropic API — Claude Haiku 4.5 | claude-haiku-4-5-20251001 |
+| Konkurence | Etsy Open API v3 (volitelné, `ETSY_API_KEY`) | — |
 | Storage | Hetzner Object Storage (S3-compatible) | — |
 | Queue | Bull/BullMQ | v deps, zatím nepoužito |
 | Auth | JWT (passport-jwt) | — |
@@ -191,6 +192,16 @@ GET    /products/:id/optimizations   JWT required
   "competitiveness_score": 0-100
 }
 ```
+
+**Skóre konkurenceschopnosti — dva zdroje (`scoreSource`):**
+- `market` — spočítáno z REÁLNÉ konkurence na Etsy (`ai/market-score.ts`) z dat
+  `common/etsy/etsy.service.ts`. Jen když je `ETSY_API_KEY` v env **a** `platform=etsy`.
+  K analýze se uloží i snímek: `competitorCount`, `priceMin/Median/Max`, `competitorTags`.
+- `ai` — odhad AI z JSON výstupu (fallback). Amazon nemá veřejné vyhledávací API,
+  takže tam je vždy `ai`. Etsy bez klíče nebo při chybě API taky spadne na `ai`.
+
+`EtsyService` je fail-safe: bez klíče / při jakékoliv chybě vrací `null` a analýza
+proběhne s AI skóre. Konkurence je bonus, ne blokující závislost.
 
 ---
 

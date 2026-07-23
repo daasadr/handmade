@@ -44,6 +44,29 @@ export class AiOptimization {
   @Column({ nullable: true, type: 'int', default: 0 })
   competitivenessScore: number;
 
+  /** Zdroj skóre: 'market' = spočítáno z reálné konkurence (Etsy), 'ai' = odhad AI. */
+  @Column({ nullable: true })
+  scoreSource: 'ai' | 'market';
+
+  // --- Snímek konkurence (jen když je nakonfigurováno Etsy API a platform=etsy) ---
+  @Column({ nullable: true, type: 'int' })
+  competitorCount: number;
+
+  @Column({ nullable: true, type: 'real' })
+  priceMin: number;
+
+  @Column({ nullable: true, type: 'real' })
+  priceMedian: number;
+
+  @Column({ nullable: true, type: 'real' })
+  priceMax: number;
+
+  @Column({ nullable: true })
+  priceCurrency: string;
+
+  @Column({ type: 'jsonb', default: '[]' })
+  competitorTags: string[];
+
   @Column({ nullable: true })
   aiModelUsed: string;
 

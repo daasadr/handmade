@@ -13,6 +13,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { AiOptimization } from './ai-optimization.entity';
 import { Product, ProductStatus } from '../products/product.entity';
 import { User, UserPlan, isVipActive } from '../users/user.entity';
+import { EtsyService } from '../common/etsy/etsy.service';
+import { computeMarketScore } from './market-score';
 
 // Měsíční limity dle tarifu
 const PLAN_LIMITS: Record<UserPlan, number> = {
@@ -32,6 +34,7 @@ export class AiService {
     private optimizationRepo: Repository<AiOptimization>,
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
+    private etsyService: EtsyService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -137,16 +140,49 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       throw new BadRequestException('AI vrátila neplatný formát odpovědi');
     }
 
+    const keywords: string[] = parsed.keywords || [];
+
+    // Reálná konkurence z Etsy — jen když je API nakonfigurováno a jde o Etsy.
+    // Amazon nemá veřejné vyhledávací API (viz nápověda), takže tam zůstává odhad AI.
+    // Selhání Etsy nesmí shodit analýzu — proto se skóre z AI použije jako fallback.
+    let scoreSource: 'ai' | 'market' = 'ai';
+    let competitivenessScore: number = parsed.competitiveness_score ?? 0;
+    let competition: Awaited<ReturnType<EtsyService['searchCompetition']>> = null;
+
+    if (platform === 'etsy' && this.etsyService.isEnabled()) {
+      // Dotaz na trh = pár hlavních klíčových slov (co by zákazník opravdu hledal),
+      // fallback na původní název, kdyby AI klíčová slova nevrátila.
+      const query = keywords.slice(0, 3).join(' ') || product.titleOriginal;
+      competition = await this.etsyService.searchCompetition(query);
+
+      if (competition) {
+        competitivenessScore = computeMarketScore(
+          product.priceOriginal,
+          keywords,
+          competition,
+        );
+        scoreSource = 'market';
+      }
+    }
+
     const optimization = this.optimizationRepo.create({
       productId,
       titleOptimized: parsed.optimized_title,
       titleCzech: parsed.title_czech,
       descriptionOptimized: parsed.optimized_description,
       descriptionCzech: parsed.description_czech,
-      keywords: parsed.keywords || [],
+      keywords,
       pricingRecommendation: parsed.pricing_recommendation,
       pricingRecommendationCzech: parsed.pricing_recommendation_czech,
-      competitivenessScore: parsed.competitiveness_score,
+      competitivenessScore,
+      scoreSource,
+      // undefined → TypeORM uloží NULL; null neprojde přes DeepPartial<number>.
+      competitorCount: competition?.competitorCount,
+      priceMin: competition?.priceMin,
+      priceMedian: competition?.priceMedian,
+      priceMax: competition?.priceMax,
+      priceCurrency: competition?.priceCurrency,
+      competitorTags: competition?.topTags ?? [],
       aiModelUsed: 'claude-haiku-4-5',
       platform,
     });

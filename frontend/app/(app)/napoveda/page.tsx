@@ -168,26 +168,36 @@ export default function NapovedaPage() {
 
       <Section id="skore" emoji="📊" title="Co znamená skóre konkurenceschopnosti">
         <p>
-          Je to <strong>odhad AI (0–100)</strong>, jak silný váš optimalizovaný listing je — jak dobře
-          napsaný název a klíčová slova pro vyhledávání, jak bohatý popis a jak dobře sedí na zvyklosti
-          dané platformy. Nad 70 se skóre zbarví zeleně jako „tohle je dobré".
+          Skóre (0–100) říká, jak silný váš optimalizovaný listing je. Nad 70 se zbarví zeleně jako
+          „tohle je dobré". U každého skóre je štítek, který prozradí, odkud číslo pochází:
         </p>
-        <div
-          className="rounded-xl px-4 py-3 text-sm space-y-2"
-          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
-        >
-          <p className="font-medium" style={{ color: "oklch(0.45 0.14 75)" }}>
-            Berte skóre jako orientační ukazatel, ne jako přesné měření.
-          </p>
-          <p style={{ color: MUTED }}>
-            Je to subjektivní úsudek AI, ne výpočet z reálných dat. AI nevidí konkrétní konkurenční
-            listingy, jejich ceny ani objem hledání — odhaduje z toho, co obecně ví o handmade tržištích.
-            Skóre „72" u jednoho produktu a „78" u jiného proto nemusí být přesně srovnatelné.
-          </p>
-          <p style={{ color: MUTED }}>
-            Slouží hlavně jako signál „tenhle listing je slušný / má ještě mezery" — ne jako záruka
-            umístění ve vyhledávání.
-          </p>
+
+        <div className="space-y-2">
+          <div
+            className="rounded-xl px-4 py-3 text-sm"
+            style={{ background: "oklch(0.65 0.15 155 / 0.10)", border: "1px solid oklch(0.65 0.15 155 / 0.30)" }}
+          >
+            <p className="font-medium" style={{ color: EMERALD }}>★ z reálného trhu (Etsy)</p>
+            <p style={{ color: MUTED }}>
+              Skóre je spočítané z <strong>reálné konkurence na Etsy</strong> — kolik podobných nabídek
+              existuje, jak jsou naceněné a jaká klíčová slova používají. U analýzy navíc uvidíte přehled:
+              počet konkurenčních nabídek, cenové rozpětí a zda vaše cena sedí do trhu. Tohle je tvrdé číslo
+              opřené o data.
+            </p>
+          </div>
+
+          <div
+            className="rounded-xl px-4 py-3 text-sm"
+            style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
+          >
+            <p className="font-medium" style={{ color: "oklch(0.45 0.14 75)" }}>odhad AI</p>
+            <p style={{ color: MUTED }}>
+              Když reálná data nejsou k dispozici (analýza pro Amazon Handmade, který veřejné vyhledávání
+              nenabízí), je skóre <strong>subjektivní odhad AI</strong> z toho, co obecně ví o handmade tržištích —
+              orientační ukazatel „listing je slušný / má mezery", ne přesné měření. Dvě taková čísla mezi sebou
+              nemusí být přesně srovnatelná.
+            </p>
+          </div>
         </div>
       </Section>
 

@@ -263,6 +263,14 @@ export interface AiOptimization {
   pricingRecommendation: string;
   pricingRecommendationCzech?: string;
   competitivenessScore: number;
+  /** 'market' = z reálné konkurence (Etsy), 'ai' = odhad AI. */
+  scoreSource?: "ai" | "market";
+  competitorCount?: number | null;
+  priceMin?: number | null;
+  priceMedian?: number | null;
+  priceMax?: number | null;
+  priceCurrency?: string | null;
+  competitorTags?: string[];
   aiModelUsed: string;
   platform: string;
   createdAt: string;

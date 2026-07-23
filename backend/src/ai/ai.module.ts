@@ -5,9 +5,10 @@ import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { Product } from '../products/product.entity';
 import { User } from '../users/user.entity';
+import { EtsyModule } from '../common/etsy/etsy.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AiOptimization, Product, User])],
+  imports: [TypeOrmModule.forFeature([AiOptimization, Product, User]), EtsyModule],
   controllers: [AiController],
   providers: [AiService],
 })

@@ -496,15 +496,32 @@ export default function ProductPage() {
               <CardTitle className="font-heading text-lg font-normal">
                 Optimalizovaný listing
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Skóre:</span>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Skóre:</span>
+                  <span
+                    className="font-heading text-2xl font-light"
+                    style={{ color: latestOpt.competitivenessScore > 70 ? "oklch(0.55 0.12 155)" : "oklch(0.52 0.04 50)" }}
+                  >
+                    {latestOpt.competitivenessScore}
+                  </span>
+                  <span className="text-xs text-muted-foreground">/100</span>
+                </div>
                 <span
-                  className="font-heading text-2xl font-light"
-                  style={{ color: latestOpt.competitivenessScore > 70 ? "oklch(0.55 0.12 155)" : "oklch(0.52 0.04 50)" }}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full mt-0.5"
+                  style={
+                    latestOpt.scoreSource === "market"
+                      ? { background: "oklch(0.65 0.15 155 / 0.18)", color: "oklch(0.38 0.12 155)" }
+                      : { background: "oklch(0.85 0.02 72)", color: "oklch(0.45 0.04 50)" }
+                  }
+                  title={
+                    latestOpt.scoreSource === "market"
+                      ? "Spočítáno z reálné konkurence na Etsy"
+                      : "Odhad AI — bez reálných dat konkurence"
+                  }
                 >
-                  {latestOpt.competitivenessScore}
+                  {latestOpt.scoreSource === "market" ? "★ z reálného trhu" : "odhad AI"}
                 </span>
-                <span className="text-xs text-muted-foreground">/100</span>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -512,6 +529,75 @@ export default function ProductPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
+            {/* Přehled konkurence — jen když máme reálná data z Etsy */}
+            {latestOpt.scoreSource === "market" && (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "oklch(0.65 0.15 155 / 0.08)", border: "1px solid oklch(0.65 0.15 155 / 0.25)" }}
+              >
+                <p className="text-xs uppercase tracking-wider mb-3" style={{ color: "oklch(0.40 0.12 155)" }}>
+                  Přehled konkurence na Etsy
+                </p>
+
+                {(latestOpt.competitorCount ?? 0) > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Konkurenčních nabídek</p>
+                        <p className="font-heading text-2xl font-light">
+                          {latestOpt.competitorCount?.toLocaleString("cs-CZ")}
+                        </p>
+                      </div>
+                      {latestOpt.priceMedian ? (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Cena konkurence (medián)</p>
+                          <p className="font-heading text-2xl font-light">
+                            {Math.round(latestOpt.priceMedian)} {latestOpt.priceCurrency}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            rozpětí {Math.round(latestOpt.priceMin ?? 0)}–{Math.round(latestOpt.priceMax ?? 0)} {latestOpt.priceCurrency}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {latestOpt.priceMedian && product.priceOriginal ? (
+                      <p className="text-sm mt-3" style={{ color: "oklch(0.40 0.04 50)" }}>
+                        Vaše cena <strong>{product.priceOriginal} EUR</strong>{" "}
+                        {product.priceOriginal <= latestOpt.priceMedian
+                          ? "je pod mediánem trhu — cenově konkurenceschopná."
+                          : (product.priceOriginal <= (latestOpt.priceMax ?? Infinity)
+                              ? "je nad mediánem, ale stále v rozpětí trhu."
+                              : "je nad celým rozpětím konkurence — zvažte, zda ji obhájí kvalita a příběh.")}
+                      </p>
+                    ) : null}
+
+                    {(latestOpt.competitorTags?.length ?? 0) > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-muted-foreground mb-1.5">Nejčastější tagy konkurence:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {latestOpt.competitorTags!.slice(0, 12).map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-xs px-2 py-0.5 rounded-full"
+                              style={{ background: "oklch(0.94 0.012 75)", color: "oklch(0.40 0.04 50)" }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm" style={{ color: "oklch(0.40 0.04 50)" }}>
+                    Na tato klíčová slova jsme na Etsy nenašli téměř žádnou konkurenci — může to být
+                    nevyužitá nika, nebo termín, který zákazníci nehledají. Zvažte i obecnější klíčová slova.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Název */}
             <div>
               <div className="flex items-center justify-between mb-1">

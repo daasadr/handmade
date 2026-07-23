@@ -38,17 +38,6 @@ export default function PodminkyPage() {
           </p>
         </div>
 
-        {/* Upozornění pro provozovatele — doplnit právní údaje */}
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
-        >
-          <strong>⚠️ Před spuštěním doplňte:</strong> na místa označená{" "}
-          <code>[DOPLŇTE …]</code> vložte skutečné údaje provozovatele (jméno / firma, IČO,
-          sídlo, kontaktní e-mail). Tuto poznámku pak smažte. Doporučujeme nechat podmínky
-          zkontrolovat právníkem — tohle je poctivý základ, ne právní posudek.
-        </div>
-
         <div className="space-y-5">
           <Section n={1} title="Úvod a provozovatel">
             <p>

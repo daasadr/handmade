@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(npm --version)",
-      "Bash(npx --yes @nestjs/cli new backend --package-manager npm --skip-git --language typescript)"
+      "Bash(npx --yes @nestjs/cli new backend --package-manager npm --skip-git --language typescript)",
+      "Bash(cd backend *)",
+      "Read(//d/Users/Dasa/frontend/**)",
+      "Bash(node -p \"require\\('./node_modules/next/package.json'\\).version\")",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npx next *)"
     ]
   }
 }

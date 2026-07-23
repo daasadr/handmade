@@ -38,19 +38,9 @@ export default function GdprPage() {
           </p>
         </div>
 
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
-        >
-          <strong>⚠️ Před spuštěním doplňte:</strong> na místa <code>[DOPLŇTE …]</code> vložte
-          údaje správce (jméno / firma, IČO, sídlo). U předání do USA (bod 4) nechte ověřit
-          právní mechanismus (standardní smluvní doložky). Tuto poznámku pak smažte.
-        </div>
-
         <div className="space-y-5">
           <Section n={1} title="Správce údajů">
             <p>
-              Správcem osobních údajů je <strong>[DOPLŇTE: jméno / firma, IČO, sídlo]</strong>,
               provozovatel služby Handmade.net. Kontakt:{" "}
               <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
                 info@handmade.net

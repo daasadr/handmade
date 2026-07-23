@@ -28,6 +28,36 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-23] GDPR, cookie lišta a kontaktní e-mail
+
+**Typ:** feat
+**Soubory:** `frontend/app/gdpr/page.tsx` (nový), `frontend/components/cookie-consent.tsx` (nový), `frontend/app/layout.tsx`, `frontend/app/page.tsx`, `frontend/app/podminky/page.tsx`, `frontend/app/(auth)/register/page.tsx`
+
+### Co bylo změněno
+- **GDPR** — nová veřejná stránka `/gdpr` (zásady zpracování osobních údajů): jaké údaje, účel a právní základ, zpracovatelé (vč. předání do USA k Anthropic AI), doba uchování, práva subjektu + stížnost u ÚOOÚ, cookies, kontakt.
+- **Cookie lišta** (`cookie-consent.tsx`) — v root layoutu, na všech stránkách. Poctivá: aplikace používá jen technicky nezbytné místní úložiště (přihlašovací token), žádné sledovací/analytické cookies — proto je to informace s potvrzením „Rozumím" (uloží se do localStorage), ne falešný accept/reject souhlas.
+- **Kontaktní e-mail** sjednocen na `info@handmade.net` (patička, podmínky, GDPR).
+- **Odkazy** GDPR doplněny do patičky, podmínek a k registraci („vytvořením účtu souhlasíte s…").
+
+### Proč
+Etsy i obecně EU provoz vyžadují zásady zpracování osobních údajů a informaci o cookies. Uživatelka dodala kontaktní e-mail `info@handmade.net`.
+
+### Způsob provedení
+Audit potvrdil, že appka ukládá jen `access_token` v localStorage (JWT), backend nenastavuje žádné cookies, žádná analytika — cookie lišta proto nelže a nenabízí odmítnutí něčeho, co neexistuje. GDPR text čerpá z reálného stavu zpracovatelů (Anthropic USA, Hetzner EU, Resend, Stripe, Etsy bez osobních údajů).
+
+### ⚠️ Potřeba od uživatele
+V `/gdpr` a `/podminky` doplnit `[DOPLŇTE …]` (správce: jméno/firma, IČO, sídlo) a u předání do USA nechat právně ověřit mechanismus (standardní smluvní doložky). Pak smazat žluté poznámky. Zprovoznit schránku `info@handmade.net`.
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Bez DB změn (jen frontend).
+
+---
+
 ## [2026-07-23] Etsy compliance: obchodní podmínky, doložka, neukládání dat konkurence
 
 **Typ:** feat

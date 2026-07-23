@@ -102,6 +102,18 @@ export default function RegisterPage() {
           <Button type="submit" className="w-full mt-2" disabled={loading}>
             {loading ? "Vytvářím účet…" : "Vytvořit účet"}
           </Button>
+
+          <p className="text-xs text-center text-muted-foreground">
+            Vytvořením účtu souhlasíte s{" "}
+            <Link href="/podminky" className="underline hover:opacity-80" style={{ color: "oklch(0.40 0.10 196)" }}>
+              obchodními podmínkami
+            </Link>{" "}
+            a{" "}
+            <Link href="/gdpr" className="underline hover:opacity-80" style={{ color: "oklch(0.40 0.10 196)" }}>
+              zpracováním osobních údajů
+            </Link>
+            .
+          </p>
         </form>
 
         <div className="relative my-5">

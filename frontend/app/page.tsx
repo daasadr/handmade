@@ -297,7 +297,8 @@ export default function LandingPage() {
             {[
               { href: "/tarify", label: "Tarify" },
               { href: "/podminky", label: "Obchodní podmínky" },
-              { href: "mailto:podpora@handmade.net", label: "Kontakt" },
+              { href: "/gdpr", label: "GDPR" },
+              { href: "mailto:info@handmade.net", label: "Kontakt" },
               { href: "/login", label: "Přihlásit se" },
               { href: "/register", label: "Registrace" },
             ].map((l) => (

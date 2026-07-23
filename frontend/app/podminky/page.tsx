@@ -122,7 +122,9 @@ export default function PodminkyPage() {
               Data používáme výhradně k provozu služby. <strong>Neprodáváme</strong> je ani
               nesdílíme s třetími stranami s výjimkou zpracovatelů nezbytných k provozu (AI
               model pro analýzu, úložiště, e-mailová a platební služba). Pro vygenerování
-              výstupu předáváme text a fotky vašeho produktu poskytovateli AI.
+              výstupu předáváme text a fotky vašeho produktu poskytovateli AI. Podrobnosti
+              o zpracování včetně vašich práv najdete v{" "}
+              <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>zásadách GDPR</Link>.
             </p>
             <p>
               O smazání účtu a souvisejících dat můžete kdykoliv požádat na kontaktním e-mailu
@@ -171,10 +173,10 @@ export default function PodminkyPage() {
           <Section n={12} title="Kontakt">
             <p>
               S dotazy i žádostmi o smazání dat se obraťte na{" "}
-              <a href="mailto:podpora@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
-                podpora@handmade.net
-              </a>{" "}
-              <strong>[DOPLŇTE: skutečný kontaktní e-mail]</strong>.
+              <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
+                info@handmade.net
+              </a>. Zásady zpracování osobních údajů najdete v{" "}
+              <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>dokumentu GDPR</Link>.
             </p>
           </Section>
         </div>

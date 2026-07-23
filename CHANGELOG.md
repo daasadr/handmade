@@ -28,6 +28,35 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-07-23] Analýzy zvlášť pro každou platformu + přidán český Fler
+
+**Typ:** feat
+**Soubory:** `backend/src/ai/ai.service.ts`, `backend/src/ai/ai.controller.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/app/(app)/napoveda/page.tsx`
+
+### Co bylo změněno
+- **Analýzy pro různé platformy se už nepřekrývají v zobrazení.** Produkt může mít analýzu pro Etsy, Amazon i Fler zároveň a všechny zůstanou. Detail produktu zobrazuje analýzu pro právě vybranou platformu; u platforem s hotovou analýzou je na přepínači fajfka ✓.
+- **Přidán český marketplace Fler** jako třetí platforma. Výstup analýzy je pro Fler **rovnou česky** (název, popis, klíčová slova i cenové doporučení) — bez anglického originálu a překladu.
+
+### Proč
+Data se ve skutečnosti nikdy nepřepisovala — `ai.service` vždy vytváří nový řádek. Problém byl jen v UI: `latestOpt` ukazoval poslední analýzu bez ohledu na platformu, takže po analýze pro Amazon „zmizela" ta pro Etsy. Uživatelé potřebují mít obě/všechny.
+
+Fler byl přidán na zkoušku jako lokální varianta pro český trh.
+
+### Způsob provedení
+- Frontend drží **všechny** analýzy (`optimizations[]`) a odvozuje zobrazenou podle vybrané platformy (`displayedOpt = find(platform)`, seznam řazen od nejnovější). Backend se v ukládání neměnil.
+- Prompt v `ai.service` se pro Fler větví: JSON schéma i jazyk jsou české, pole `title_czech`/`description_czech`/`pricing_recommendation_czech` zůstanou prázdná (frontend český blok zobrazuje jen když je neprázdný, takže žádná redundance).
+- Nový typ `Platform = 'etsy' | 'amazon' | 'fler'` sdílený backend/frontend. Konkurence z Etsy zůstává jen pro Etsy (Fler i Amazon mají AI skóre).
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade
+git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Bez DB změn (analýzy se ukládaly po řádcích už dřív).
+
+---
+
 ## [2026-07-23] Přehled konkurence z Etsy + skóre z reálného trhu
 
 **Typ:** feat

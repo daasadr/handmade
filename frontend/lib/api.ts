@@ -147,7 +147,7 @@ export const api = {
   },
 
   ai: {
-    analyze: (productId: string, platform: "etsy" | "amazon" = "etsy") =>
+    analyze: (productId: string, platform: Platform = "etsy") =>
       request<AiOptimization>(`/products/${productId}/analyze?platform=${platform}`, {
         method: "POST",
       }),
@@ -252,6 +252,14 @@ export interface CreateProductData {
   priceOriginal?: number;
   category?: string;
 }
+
+export type Platform = "etsy" | "amazon" | "fler";
+
+export const PLATFORM_LABELS: Record<Platform, string> = {
+  etsy: "Etsy",
+  amazon: "Amazon Handmade",
+  fler: "Fler",
+};
 
 export interface AiOptimization {
   id: string;

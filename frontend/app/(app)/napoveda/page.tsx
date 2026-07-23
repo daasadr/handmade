@@ -107,8 +107,11 @@ export default function NapovedaPage() {
               t: "Spusťte analýzu",
               d: (
                 <>
-                  Na detailu produktu vyberte platformu (<strong>Etsy</strong> nebo <strong>Amazon Handmade</strong>)
-                  a klikněte na <strong>Spustit analýzu</strong>. AI si produkt i fotky projde a za pár vteřin vrátí výsledek.
+                  Na detailu produktu vyberte platformu (<strong>Etsy</strong>, <strong>Amazon Handmade</strong> nebo
+                  český <strong>Fler</strong>) a klikněte na <strong>Spustit analýzu</strong>. AI si produkt i fotky
+                  projde a za pár vteřin vrátí výsledek. Analýzu můžete udělat pro každou platformu zvlášť —
+                  <strong>všechny vám zůstanou uložené</strong> a mezi platformami se přepínáte tlačítky (u hotové
+                  je fajfka ✓). Fler vrací výstup <strong>rovnou česky</strong>, Etsy a Amazon anglicky s českým překladem.
                 </>
               ),
             },

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { api, Product, AiOptimization } from "@/lib/api";
+import { api, Product, AiOptimization, Platform, PLATFORM_LABELS } from "@/lib/api";
 import { prepareImages, formatBytes } from "@/lib/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +24,13 @@ export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
-  const [platform, setPlatform] = useState<"etsy" | "amazon">("etsy");
+  const [platform, setPlatform] = useState<Platform>("etsy");
   const [analyzing, setAnalyzing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [removingBg, setRemovingBg] = useState<string | null>(null);
-  const [latestOpt, setLatestOpt] = useState<AiOptimization | null>(null);
+  // Všechny analýzy produktu (napříč platformami) — zobrazujeme vždy tu pro
+  // vybranou platformu, aby si člověk mohl nechat analýzu pro Etsy i Amazon zvlášť.
+  const [optimizations, setOptimizations] = useState<AiOptimization[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -42,9 +44,11 @@ export default function ProductPage() {
       try {
         const p = await api.products.get(id);
         setProduct(p);
-        if (p.optimizations && p.optimizations.length > 0) {
-          setLatestOpt(p.optimizations[0]);
-        }
+        setOptimizations(
+          [...(p.optimizations ?? [])].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          ),
+        );
       } catch {
         toast.error("Produkt nenalezen");
         router.push("/dashboard");
@@ -59,7 +63,9 @@ export default function ProductPage() {
     setAnalyzing(true);
     try {
       const result = await api.ai.analyze(id, platform);
-      setLatestOpt(result);
+      // Nová analýza se přidá; stará pro tutéž platformu zůstane v historii,
+      // ale zobrazíme tu nejnovější (`displayedOpt` bere první shodu).
+      setOptimizations((prev) => [result, ...prev]);
       setProduct((p) => p ? { ...p, status: "analyzed" } : p);
       toast.success("AI analýza dokončena!");
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
@@ -173,6 +179,11 @@ export default function ProductPage() {
   if (!product) return null;
 
   const images = product.images || [];
+
+  // Analýza pro právě vybranou platformu (nejnovější, seznam je řazen sestupně).
+  const displayedOpt = optimizations.find((o) => o.platform === platform) ?? null;
+  // Platformy, pro které už analýza existuje — pro odznak na přepínači.
+  const analyzedPlatforms = new Set(optimizations.map((o) => o.platform));
 
   // Lightbox overlay
   const Lightbox = lightboxUrl ? (
@@ -457,18 +468,26 @@ export default function ProductPage() {
         <CardContent>
           <div className="flex items-center gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">Platforma:</p>
-            <div className="flex gap-2">
-              {(["etsy", "amazon"] as const).map((p) => (
+            <div className="flex gap-2 flex-wrap">
+              {(["etsy", "amazon", "fler"] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPlatform(p)}
-                  className="px-3 py-1 rounded-full text-sm font-medium transition-all"
+                  className="px-3 py-1 rounded-full text-sm font-medium transition-all flex items-center gap-1.5"
                   style={{
                     background: platform === p ? "oklch(0.78 0.11 196)" : "oklch(0.88 0.02 72)",
                     color: platform === p ? "oklch(0.15 0.03 200)" : "oklch(0.52 0.04 50)",
                   }}
                 >
-                  {p === "etsy" ? "Etsy" : "Amazon Handmade"}
+                  {PLATFORM_LABELS[p]}
+                  {analyzedPlatforms.has(p) && (
+                    <span
+                      title="Analýza hotová"
+                      style={{ color: platform === p ? "oklch(0.15 0.03 200)" : "oklch(0.45 0.12 155)" }}
+                    >
+                      ✓
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -482,14 +501,14 @@ export default function ProductPage() {
                 <span className="flex items-center gap-2">
                   <span className="animate-spin">✦</span> Analyzuji…
                 </span>
-              ) : latestOpt ? "Spustit znovu" : "Spustit analýzu"}
+              ) : displayedOpt ? `Spustit znovu (${PLATFORM_LABELS[platform]})` : `Spustit analýzu (${PLATFORM_LABELS[platform]})`}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Výsledek AI */}
-      {latestOpt && (
+      {displayedOpt && (
         <Card ref={resultsRef} className="border-0 card-mystical overflow-hidden" style={{ background: "oklch(0.94 0.012 75)" }}>
           <CardHeader style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196 / 0.12), oklch(0.65 0.15 155 / 0.12))" }}>
             <div className="flex items-center justify-between">
@@ -501,36 +520,36 @@ export default function ProductPage() {
                   <span className="text-xs text-muted-foreground">Skóre:</span>
                   <span
                     className="font-heading text-2xl font-light"
-                    style={{ color: latestOpt.competitivenessScore > 70 ? "oklch(0.55 0.12 155)" : "oklch(0.52 0.04 50)" }}
+                    style={{ color: displayedOpt.competitivenessScore > 70 ? "oklch(0.55 0.12 155)" : "oklch(0.52 0.04 50)" }}
                   >
-                    {latestOpt.competitivenessScore}
+                    {displayedOpt.competitivenessScore}
                   </span>
                   <span className="text-xs text-muted-foreground">/100</span>
                 </div>
                 <span
                   className="text-[10px] px-1.5 py-0.5 rounded-full mt-0.5"
                   style={
-                    latestOpt.scoreSource === "market"
+                    displayedOpt.scoreSource === "market"
                       ? { background: "oklch(0.65 0.15 155 / 0.18)", color: "oklch(0.38 0.12 155)" }
                       : { background: "oklch(0.85 0.02 72)", color: "oklch(0.45 0.04 50)" }
                   }
                   title={
-                    latestOpt.scoreSource === "market"
+                    displayedOpt.scoreSource === "market"
                       ? "Spočítáno z reálné konkurence na Etsy"
                       : "Odhad AI — bez reálných dat konkurence"
                   }
                 >
-                  {latestOpt.scoreSource === "market" ? "★ z reálného trhu" : "odhad AI"}
+                  {displayedOpt.scoreSource === "market" ? "★ z reálného trhu" : "odhad AI"}
                 </span>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              {latestOpt.platform === "etsy" ? "Etsy" : "Amazon Handmade"} · Claude AI
+              {PLATFORM_LABELS[displayedOpt.platform as Platform] ?? displayedOpt.platform} · Claude AI
             </p>
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
             {/* Přehled konkurence — jen když máme reálná data z Etsy */}
-            {latestOpt.scoreSource === "market" && (
+            {displayedOpt.scoreSource === "market" && (
               <div
                 className="rounded-xl p-4"
                 style={{ background: "oklch(0.65 0.15 155 / 0.08)", border: "1px solid oklch(0.65 0.15 155 / 0.25)" }}
@@ -539,44 +558,44 @@ export default function ProductPage() {
                   Přehled konkurence na Etsy
                 </p>
 
-                {(latestOpt.competitorCount ?? 0) > 0 ? (
+                {(displayedOpt.competitorCount ?? 0) > 0 ? (
                   <>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground">Konkurenčních nabídek</p>
                         <p className="font-heading text-2xl font-light">
-                          {latestOpt.competitorCount?.toLocaleString("cs-CZ")}
+                          {displayedOpt.competitorCount?.toLocaleString("cs-CZ")}
                         </p>
                       </div>
-                      {latestOpt.priceMedian ? (
+                      {displayedOpt.priceMedian ? (
                         <div>
                           <p className="text-xs text-muted-foreground">Cena konkurence (medián)</p>
                           <p className="font-heading text-2xl font-light">
-                            {Math.round(latestOpt.priceMedian)} {latestOpt.priceCurrency}
+                            {Math.round(displayedOpt.priceMedian)} {displayedOpt.priceCurrency}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            rozpětí {Math.round(latestOpt.priceMin ?? 0)}–{Math.round(latestOpt.priceMax ?? 0)} {latestOpt.priceCurrency}
+                            rozpětí {Math.round(displayedOpt.priceMin ?? 0)}–{Math.round(displayedOpt.priceMax ?? 0)} {displayedOpt.priceCurrency}
                           </p>
                         </div>
                       ) : null}
                     </div>
 
-                    {latestOpt.priceMedian && product.priceOriginal ? (
+                    {displayedOpt.priceMedian && product.priceOriginal ? (
                       <p className="text-sm mt-3" style={{ color: "oklch(0.40 0.04 50)" }}>
                         Vaše cena <strong>{product.priceOriginal} EUR</strong>{" "}
-                        {product.priceOriginal <= latestOpt.priceMedian
+                        {product.priceOriginal <= displayedOpt.priceMedian
                           ? "je pod mediánem trhu — cenově konkurenceschopná."
-                          : (product.priceOriginal <= (latestOpt.priceMax ?? Infinity)
+                          : (product.priceOriginal <= (displayedOpt.priceMax ?? Infinity)
                               ? "je nad mediánem, ale stále v rozpětí trhu."
                               : "je nad celým rozpětím konkurence — zvažte, zda ji obhájí kvalita a příběh.")}
                       </p>
                     ) : null}
 
-                    {(latestOpt.competitorTags?.length ?? 0) > 0 && (
+                    {(displayedOpt.competitorTags?.length ?? 0) > 0 && (
                       <div className="mt-3">
                         <p className="text-xs text-muted-foreground mb-1.5">Nejčastější tagy konkurence:</p>
                         <div className="flex flex-wrap gap-1.5">
-                          {latestOpt.competitorTags!.slice(0, 12).map((tag) => (
+                          {displayedOpt.competitorTags!.slice(0, 12).map((tag) => (
                             <span
                               key={tag}
                               className="text-xs px-2 py-0.5 rounded-full"
@@ -603,18 +622,18 @@ export default function ProductPage() {
               <div className="flex items-center justify-between mb-1">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Optimalizovaný název</p>
                 <button
-                  onClick={() => copyToClipboard(latestOpt.titleOptimized, "Název")}
+                  onClick={() => copyToClipboard(displayedOpt.titleOptimized, "Název")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
                   Kopírovat
                 </button>
               </div>
-              <p className="font-medium leading-relaxed">{latestOpt.titleOptimized}</p>
-              {latestOpt.titleCzech && (
+              <p className="font-medium leading-relaxed">{displayedOpt.titleOptimized}</p>
+              {displayedOpt.titleCzech && (
                 <div className="mt-2 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
-                  <span className="text-sm text-muted-foreground">{latestOpt.titleCzech}</span>
+                  <span className="text-sm text-muted-foreground">{displayedOpt.titleCzech}</span>
                 </div>
               )}
             </div>
@@ -626,18 +645,18 @@ export default function ProductPage() {
               <div className="flex items-center justify-between mb-1">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Optimalizovaný popis</p>
                 <button
-                  onClick={() => copyToClipboard(latestOpt.descriptionOptimized, "Popis")}
+                  onClick={() => copyToClipboard(displayedOpt.descriptionOptimized, "Popis")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
                   Kopírovat
                 </button>
               </div>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{latestOpt.descriptionOptimized}</p>
-              {latestOpt.descriptionCzech && (
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayedOpt.descriptionOptimized}</p>
+              {displayedOpt.descriptionCzech && (
                 <div className="mt-3 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
-                  <span className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{latestOpt.descriptionCzech}</span>
+                  <span className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{displayedOpt.descriptionCzech}</span>
                 </div>
               )}
             </div>
@@ -649,7 +668,7 @@ export default function ProductPage() {
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Klíčová slova</p>
                 <button
-                  onClick={() => copyToClipboard(latestOpt.keywords.join(", "), "Klíčová slova")}
+                  onClick={() => copyToClipboard(displayedOpt.keywords.join(", "), "Klíčová slova")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
@@ -657,7 +676,7 @@ export default function ProductPage() {
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {latestOpt.keywords.map((kw) => (
+                {displayedOpt.keywords.map((kw) => (
                   <span
                     key={kw}
                     className="px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80"
@@ -675,11 +694,11 @@ export default function ProductPage() {
             {/* Cenové doporučení */}
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Cenové doporučení</p>
-              <p className="text-sm leading-relaxed">{latestOpt.pricingRecommendation}</p>
-              {latestOpt.pricingRecommendationCzech && (
+              <p className="text-sm leading-relaxed">{displayedOpt.pricingRecommendation}</p>
+              {displayedOpt.pricingRecommendationCzech && (
                 <div className="mt-2 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded mr-2" style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>CZ</span>
-                  <span className="text-sm text-muted-foreground">{latestOpt.pricingRecommendationCzech}</span>
+                  <span className="text-sm text-muted-foreground">{displayedOpt.pricingRecommendationCzech}</span>
                 </div>
               )}
             </div>

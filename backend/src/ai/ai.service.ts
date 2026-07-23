@@ -16,6 +16,8 @@ import { User, UserPlan, isVipActive } from '../users/user.entity';
 import { EtsyService } from '../common/etsy/etsy.service';
 import { computeMarketScore } from './market-score';
 
+export type Platform = 'etsy' | 'amazon' | 'fler';
+
 // Měsíční limity dle tarifu
 const PLAN_LIMITS: Record<UserPlan, number> = {
   [UserPlan.FREE]: 5,
@@ -41,7 +43,7 @@ export class AiService {
     });
   }
 
-  async analyze(productId: string, user: User, platform: 'etsy' | 'amazon' = 'etsy') {
+  async analyze(productId: string, user: User, platform: Platform = 'etsy') {
     // Kontrola měsíční kvóty
     const limit = PLAN_LIMITS[user.plan];
     const now = new Date();
@@ -66,10 +68,15 @@ export class AiService {
     });
     if (!product) throw new NotFoundException('Produkt nenalezen');
 
+    // Fler.cz je český marketplace — výstup má být rovnou v češtině, ne v angličtině.
+    const isFler = platform === 'fler';
+
     const platformInstructions =
       platform === 'etsy'
         ? 'Etsy marketplace (focus on handmade, authentic, artisan qualities; use Etsy SEO best practices)'
-        : 'Amazon Handmade (focus on quality, materials, dimensions; use Amazon search optimization)';
+        : platform === 'amazon'
+          ? 'Amazon Handmade (focus on quality, materials, dimensions; use Amazon search optimization)'
+          : 'Fler.cz — český handmade marketplace (důraz na ruční výrobu, český jazyk a lokální kontext; česká SEO klíčová slova, jak je Češi opravdu hledají)';
 
     const hasImages = product.images && product.images.length > 0;
     const imageAnalysisInstruction = hasImages
@@ -94,7 +101,21 @@ Optimize this handmade product listing for ${platformInstructions}:
 
 ${hasImages ? 'Ground the optimized title and description in the specific visual details you observed in the photos. Mention specific colors, materials, and techniques you can actually see.' : ''}
 
+${
+  isFler
+    ? `Fler.cz je český trh a čeští zákazníci hledají česky. Napiš celý výstup POUZE ČESKY.
 Respond ONLY with a valid JSON object (no markdown, no explanation):
+{
+  "optimized_title": "SEO optimalizovaný název ČESKY, max 140 znaků — s konkrétními materiály/barvami/technikou z fotky",
+  "title_czech": "",
+  "optimized_description": "Poutavý, konkrétní popis ČESKY se SEO klíčovými slovy, 150–300 slov. Popiš, čím je kus výjimečný.",
+  "description_czech": "",
+  "keywords": ["české klíčové slovo 1", "české klíčové slovo 2", "...celkem 13 českých klíčových slov, jak je Češi opravdu hledají"],
+  "pricing_recommendation": "Stručná cenová strategie ČESKY, 2–3 věty",
+  "pricing_recommendation_czech": "",
+  "competitiveness_score": 75
+}`
+    : `Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
   "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
   "title_czech": "Český překlad optimalizovaného názvu",
@@ -104,6 +125,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
   "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",
   "pricing_recommendation_czech": "Český překlad cenového doporučení",
   "competitiveness_score": 75
+}`
 }`;
 
     // Přidáme obrázky jako vision content pokud existují (max 4)

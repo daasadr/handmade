@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
+import { useT } from "@/lib/i18n";
+import { LangToggle } from "@/components/lang-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -17,6 +19,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 export function Nav() {
   const { user, logout } = useAuth();
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -30,12 +33,12 @@ export function Nav() {
   }, [user]);
 
   const links = [
-    { href: "/dashboard", label: "Přehled" },
-    { href: "/products", label: "Produkty" },
-    { href: "/napoveda", label: "Nápověda" },
-    { href: "/profile", label: "Profil" },
+    { href: "/dashboard", label: t("nav.dashboard") },
+    { href: "/products", label: t("nav.products") },
+    { href: "/napoveda", label: t("nav.help") },
+    { href: "/profile", label: t("nav.profile") },
     // Stránka si oprávnění hlídá sama; tohle jen skrývá odkaz běžným uživatelům.
-    ...(user?.role === "admin" ? [{ href: "/admin", label: "Administrace" }] : []),
+    ...(user?.role === "admin" ? [{ href: "/admin", label: t("nav.admin") }] : []),
   ];
 
   return (
@@ -74,6 +77,7 @@ export function Nav() {
 
         {/* User */}
         <div className="flex items-center gap-3">
+          <LangToggle />
           {user && (
             <span
               className="hidden sm:block text-xs px-2 py-0.5 rounded-full font-medium"
@@ -100,7 +104,7 @@ export function Nav() {
             onClick={logout}
             className="text-muted-foreground hover:text-foreground text-sm"
           >
-            Odhlásit
+            {t("nav.logout")}
           </Button>
         </div>
       </div>

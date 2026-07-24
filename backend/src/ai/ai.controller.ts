@@ -19,9 +19,10 @@ export class AiController {
   async analyze(
     @Param('id') productId: string,
     @Query('platform') platform: Platform = 'etsy',
+    @Query('lang') lang: 'cs' | 'en' = 'cs',
     @CurrentUser() user: User,
   ) {
-    const result = await this.aiService.analyze(productId, user, platform);
+    const result = await this.aiService.analyze(productId, user, platform, lang);
 
     await this.usersRepo.update(user.id, {
       aiUsageThisMonth: result.newUsage,

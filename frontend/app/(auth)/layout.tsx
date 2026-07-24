@@ -1,9 +1,13 @@
 import { AuthProvider } from "@/lib/auth-context";
+import { LangToggle } from "@/components/lang-toggle";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
+        <div className="fixed top-4 right-4 z-20">
+          <LangToggle />
+        </div>
         {/* Dekorativní kulečky — mystické kameny v rohu */}
         <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
           <div

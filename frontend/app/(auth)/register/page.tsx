@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,25 +20,26 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useT();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== password2) {
-      toast.error("Hesla se neshodují");
+      toast.error(t("err.passwordMismatch"));
       return;
     }
     if (password.length < 8) {
-      toast.error("Heslo musí mít alespoň 8 znaků");
+      toast.error(t("err.passwordMin"));
       return;
     }
     setLoading(true);
     try {
       await api.auth.register(email, password);
-      toast.success("Účet vytvořen! Zkontrolujte e-mail pro ověření.");
+      toast.success(t("auth.accountCreated"));
       router.push("/login");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Registrace selhala");
+      toast.error(err instanceof Error ? err.message : t("err.registerFailed"));
     } finally {
       setLoading(false);
     }
@@ -53,18 +55,18 @@ export default function RegisterPage() {
           </span>
         </div>
         <CardTitle className="font-heading text-3xl font-light">
-          Začněte zdarma
+          {t("auth.registerTitle2")}
         </CardTitle>
         <div className="w-10 h-0.5 mt-2 rounded-full" style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
         <CardDescription className="mt-3 text-base">
-          5 AI optimalizací měsíčně bez poplatku
+          {t("auth.registerSubtitle")}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="px-8 pt-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <Input
               id="email"
               type="email"
@@ -76,7 +78,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Heslo</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <Input
               id="password"
               type="password"
@@ -88,7 +90,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password2">Heslo znovu</Label>
+            <Label htmlFor="password2">{t("auth.passwordAgain")}</Label>
             <Input
               id="password2"
               type="password"
@@ -100,17 +102,17 @@ export default function RegisterPage() {
             />
           </div>
           <Button type="submit" className="w-full mt-2" disabled={loading}>
-            {loading ? "Vytvářím účet…" : "Vytvořit účet"}
+            {loading ? t("auth.registering") : t("auth.register")}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            Vytvořením účtu souhlasíte s{" "}
+            {t("auth.agreeBefore")}{" "}
             <Link href="/podminky" className="underline hover:opacity-80" style={{ color: "oklch(0.40 0.10 196)" }}>
-              obchodními podmínkami
+              {t("auth.agreeTerms")}
             </Link>{" "}
-            a{" "}
+            {t("auth.agreeAnd")}{" "}
             <Link href="/gdpr" className="underline hover:opacity-80" style={{ color: "oklch(0.40 0.10 196)" }}>
-              zpracováním osobních údajů
+              {t("auth.agreeGdpr")}
             </Link>
             .
           </p>
@@ -121,7 +123,7 @@ export default function RegisterPage() {
             <span className="w-full border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }} />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-2 text-muted-foreground" style={{ background: "oklch(0.97 0.008 80)" }}>nebo</span>
+            <span className="px-2 text-muted-foreground" style={{ background: "oklch(0.97 0.008 80)" }}>{t("auth.or")}</span>
           </div>
         </div>
 
@@ -136,19 +138,19 @@ export default function RegisterPage() {
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             <path fill="none" d="M0 0h48v48H0z"/>
           </svg>
-          Registrovat se přes Google
+          {t("auth.google")}
         </a>
       </CardContent>
 
       <CardFooter className="px-8 pb-8 justify-center">
         <p className="text-sm text-muted-foreground">
-          Již máte účet?{" "}
+          {t("auth.hasAccount")}{" "}
           <Link
             href="/login"
             className="font-medium hover:underline"
             style={{ color: "oklch(0.65 0.15 155)" }}
           >
-            Přihlaste se
+            {t("auth.loginLink")}
           </Link>
         </p>
       </CardFooter>

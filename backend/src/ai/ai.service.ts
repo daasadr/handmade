@@ -43,7 +43,12 @@ export class AiService {
     });
   }
 
-  async analyze(productId: string, user: User, platform: Platform = 'etsy') {
+  async analyze(
+    productId: string,
+    user: User,
+    platform: Platform = 'etsy',
+    lang: 'cs' | 'en' = 'cs',
+  ) {
     // Kontrola měsíční kvóty
     const limit = PLAN_LIMITS[user.plan];
     const now = new Date();
@@ -115,7 +120,19 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
   "pricing_recommendation_czech": "",
   "competitiveness_score": 75
 }`
-    : `Respond ONLY with a valid JSON object (no markdown, no explanation):
+    : lang === 'en'
+      ? `Respond ONLY with a valid JSON object (no markdown, no explanation). Output English only — no Czech translations:
+{
+  "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
+  "title_czech": "",
+  "optimized_description": "Vivid, specific description with SEO keywords in English, 150-300 words. Describe what makes this piece unique based on what is visible.",
+  "description_czech": "",
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10", "keyword11", "keyword12", "keyword13"],
+  "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",
+  "pricing_recommendation_czech": "",
+  "competitiveness_score": 75
+}`
+      : `Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
   "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
   "title_czech": "Český překlad optimalizovaného názvu",

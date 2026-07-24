@@ -147,8 +147,8 @@ export const api = {
   },
 
   ai: {
-    analyze: (productId: string, platform: Platform = "etsy") =>
-      request<AiOptimization>(`/products/${productId}/analyze?platform=${platform}`, {
+    analyze: (productId: string, platform: Platform = "etsy", lang: "cs" | "en" = "cs") =>
+      request<AiOptimization>(`/products/${productId}/analyze?platform=${platform}&lang=${lang}`, {
         method: "POST",
       }),
     getOptimizations: (productId: string) =>

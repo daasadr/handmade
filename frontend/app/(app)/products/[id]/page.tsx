@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { api, Product, AiOptimization, Platform, PLATFORM_LABELS } from "@/lib/api";
 import { prepareImages, formatBytes } from "@/lib/image-upload";
+import { useT, useLocale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,10 @@ const CATEGORIES = [
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useT();
+  const { locale } = useLocale();
+  // Fler je jen pro českou verzi (český trh). V EN nabízíme Etsy + Amazon.
+  const availablePlatforms: Platform[] = locale === "en" ? ["etsy", "amazon"] : ["etsy", "amazon", "fler"];
   const [product, setProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<Platform>("etsy");
   const [analyzing, setAnalyzing] = useState(false);
@@ -50,7 +55,7 @@ export default function ProductPage() {
           ),
         );
       } catch {
-        toast.error("Produkt nenalezen");
+        toast.error(t("prod.notFound"));
         router.push("/dashboard");
       } finally {
         setLoading(false);
@@ -62,19 +67,24 @@ export default function ProductPage() {
   const handleAnalyze = async () => {
     setAnalyzing(true);
     try {
-      const result = await api.ai.analyze(id, platform);
+      const result = await api.ai.analyze(id, platform, locale);
       // Nová analýza se přidá; stará pro tutéž platformu zůstane v historii,
       // ale zobrazíme tu nejnovější (`displayedOpt` bere první shodu).
       setOptimizations((prev) => [result, ...prev]);
       setProduct((p) => p ? { ...p, status: "analyzed" } : p);
-      toast.success("AI analýza dokončena!");
+      toast.success(t("prod.analysisDone"));
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Analýza selhala");
+      toast.error(err instanceof Error ? err.message : t("err.analysisFailed"));
     } finally {
       setAnalyzing(false);
     }
   };
+
+  // Kdyby uživatel přepnul na EN, když má vybraný Fler (jen CS) — vrať na Etsy.
+  useEffect(() => {
+    if (locale === "en" && platform === "fler") setPlatform("etsy");
+  }, [locale, platform]);
 
   const BG_PRESETS: { label: string; color: string | undefined; display: string; pattern?: boolean }[] = [
     { label: "Průhledné", color: undefined, display: "transparent", pattern: true },
@@ -88,7 +98,7 @@ export default function ProductPage() {
     try {
       const updated = await api.products.removeBg(id, imageId, bgColor);
       setProduct(updated);
-      toast.success("Pozadí odstraněno!");
+      toast.success(t("prod.bgRemoved"));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Odstranění pozadí selhalo");
     } finally {
@@ -123,10 +133,10 @@ export default function ProductPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Opravdu smazat tento produkt?")) return;
+    if (!confirm(t("prod.deleteConfirm"))) return;
     try {
       await api.products.delete(id);
-      toast.success("Produkt smazán");
+      toast.success(t("prod.deleted"));
       router.push("/dashboard");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Smazání selhalo");
@@ -155,7 +165,7 @@ export default function ProductPage() {
       });
       setProduct(updated);
       setEditMode(false);
-      toast.success("Produkt byl uložen!");
+      toast.success(t("prod.savedOk"));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Uložení selhalo");
     } finally {
@@ -163,9 +173,9 @@ export default function ProductPage() {
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
+  const copyToClipboard = (text: string, _label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} zkopírováno!`);
+    toast.success(t("common.copied"));
   };
 
   if (loading) {
@@ -240,7 +250,7 @@ export default function ProductPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="font-heading text-lg font-normal text-muted-foreground">
-              Fotografie produktu
+              {t("prod.photos")}
             </CardTitle>
             <div className="flex items-center gap-2">
               {images.length > 0 && (
@@ -260,7 +270,7 @@ export default function ProductPage() {
                 className="text-xs px-3 py-1 rounded-full font-medium transition-all disabled:opacity-50"
                 style={{ background: "oklch(0.78 0.11 196 / 0.15)", color: "oklch(0.35 0.10 196)" }}
               >
-                {uploading ? "Nahrávám…" : "+ Přidat fotky"}
+                {uploading ? t("prod.uploading") : t("prod.addPhotos")}
               </button>
             </div>
           </div>
@@ -274,9 +284,9 @@ export default function ProductPage() {
               style={{ borderColor: "oklch(0.80 0.04 72)", color: "oklch(0.65 0.04 50)" }}
             >
               <span className="text-2xl">📷</span>
-              <span className="text-sm">Klikněte pro nahrání fotek</span>
+              <span className="text-sm">{t("prod.photosClickUpload")}</span>
               <span className="text-xs opacity-70">
-                AI bude fotky vidět při analýze — výsledky budou přesnější
+                {t("prod.photosEmptyHint")}
               </span>
               <span className="text-xs opacity-50">
                 JPG, PNG nebo WebP · až 10 fotek · velké fotky zmenšíme automaticky
@@ -344,7 +354,7 @@ export default function ProductPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="font-heading text-lg font-normal text-muted-foreground">
-              Původní listing
+              {t("prod.original")}
             </CardTitle>
             {!editMode ? (
               <button
@@ -352,7 +362,7 @@ export default function ProductPage() {
                 className="text-xs px-3 py-1 rounded-full font-medium transition-all"
                 style={{ background: "oklch(0.88 0.02 72)", color: "oklch(0.52 0.04 50)" }}
               >
-                Upravit
+                {t("common.edit")}
               </button>
             ) : (
               <div className="flex gap-2">
@@ -454,22 +464,22 @@ export default function ProductPage() {
       <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
         <CardHeader>
           <CardTitle className="font-heading text-lg font-normal flex items-center gap-2">
-            <span style={{ color: "oklch(0.78 0.11 196)" }}>✦</span> AI Optimalizace
+            <span style={{ color: "oklch(0.78 0.11 196)" }}>✦</span> {t("prod.aiOptimization")}
             {images.length > 0 && (
               <span
                 className="text-xs font-normal px-2 py-0.5 rounded-full ml-1"
                 style={{ background: "oklch(0.65 0.15 155 / 0.12)", color: "oklch(0.45 0.12 155)" }}
               >
-                vidí {images.length} {images.length === 1 ? "fotku" : "fotky"}
+                {t("prod.sees")} {images.length} {images.length === 1 ? t("prod.photo1") : t("prod.photo2")}
               </span>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3 flex-wrap">
-            <p className="text-sm text-muted-foreground">Platforma:</p>
+            <p className="text-sm text-muted-foreground">{t("prod.platform")}</p>
             <div className="flex gap-2 flex-wrap">
-              {(["etsy", "amazon", "fler"] as const).map((p) => (
+              {availablePlatforms.map((p) => (
                 <button
                   key={p}
                   onClick={() => setPlatform(p)}
@@ -482,7 +492,7 @@ export default function ProductPage() {
                   {PLATFORM_LABELS[p]}
                   {analyzedPlatforms.has(p) && (
                     <span
-                      title="Analýza hotová"
+                      title={t("prod.analysisDoneHint")}
                       style={{ color: platform === p ? "oklch(0.15 0.03 200)" : "oklch(0.45 0.12 155)" }}
                     >
                       ✓
@@ -499,9 +509,9 @@ export default function ProductPage() {
             >
               {analyzing ? (
                 <span className="flex items-center gap-2">
-                  <span className="animate-spin">✦</span> Analyzuji…
+                  <span className="animate-spin">✦</span> {t("prod.analyzing")}
                 </span>
-              ) : displayedOpt ? `Spustit znovu (${PLATFORM_LABELS[platform]})` : `Spustit analýzu (${PLATFORM_LABELS[platform]})`}
+              ) : displayedOpt ? `${t("prod.runAgain")} (${PLATFORM_LABELS[platform]})` : `${t("prod.runAnalysis")} (${PLATFORM_LABELS[platform]})`}
             </Button>
           </div>
         </CardContent>
@@ -513,11 +523,11 @@ export default function ProductPage() {
           <CardHeader style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196 / 0.12), oklch(0.65 0.15 155 / 0.12))" }}>
             <div className="flex items-center justify-between">
               <CardTitle className="font-heading text-lg font-normal">
-                Optimalizovaný listing
+                {t("prod.result")}
               </CardTitle>
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Skóre:</span>
+                  <span className="text-xs text-muted-foreground">{t("prod.score")}</span>
                   <span
                     className="font-heading text-2xl font-light"
                     style={{ color: displayedOpt.competitivenessScore > 70 ? "oklch(0.55 0.12 155)" : "oklch(0.52 0.04 50)" }}
@@ -535,11 +545,11 @@ export default function ProductPage() {
                   }
                   title={
                     displayedOpt.scoreSource === "market"
-                      ? "Spočítáno z reálné konkurence na Etsy"
-                      : "Odhad AI — bez reálných dat konkurence"
+                      ? t("prod.scoreMarketTitle")
+                      : t("prod.scoreAiTitle")
                   }
                 >
-                  {displayedOpt.scoreSource === "market" ? "★ z reálného trhu" : "odhad AI"}
+                  {displayedOpt.scoreSource === "market" ? t("prod.scoreMarket") : t("prod.scoreAi")}
                 </span>
               </div>
             </div>
@@ -555,7 +565,7 @@ export default function ProductPage() {
                 style={{ background: "oklch(0.65 0.15 155 / 0.08)", border: "1px solid oklch(0.65 0.15 155 / 0.25)" }}
               >
                 <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "oklch(0.40 0.12 155)" }}>
-                  Závěr z analýzy konkurence
+                  {t("prod.marketConclusion")}
                 </p>
                 <p className="text-sm leading-relaxed" style={{ color: "oklch(0.35 0.04 50)" }}>
                   {displayedOpt.marketConclusion}
@@ -570,23 +580,23 @@ export default function ProductPage() {
                 style={{ background: "oklch(0.94 0.012 75)", border: "1px dashed oklch(0.80 0.04 72)" }}
               >
                 <p className="text-xs uppercase tracking-wider mb-3 text-muted-foreground">
-                  Aktuální data konkurence na Etsy
+                  {t("prod.marketDataTitle")}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Konkurenčních nabídek</p>
+                    <p className="text-xs text-muted-foreground">{t("prod.competitors")}</p>
                     <p className="font-heading text-2xl font-light">
                       {displayedOpt.competition.competitorCount.toLocaleString("cs-CZ")}
                     </p>
                   </div>
                   {displayedOpt.competition.priceMedian ? (
                     <div>
-                      <p className="text-xs text-muted-foreground">Cena konkurence (medián)</p>
+                      <p className="text-xs text-muted-foreground">{t("prod.medianPrice")}</p>
                       <p className="font-heading text-2xl font-light">
                         {Math.round(displayedOpt.competition.priceMedian)} {displayedOpt.competition.priceCurrency}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        rozpětí {Math.round(displayedOpt.competition.priceMin)}–{Math.round(displayedOpt.competition.priceMax)} {displayedOpt.competition.priceCurrency}
+                        {t("prod.range")} {Math.round(displayedOpt.competition.priceMin)}–{Math.round(displayedOpt.competition.priceMax)} {displayedOpt.competition.priceCurrency}
                       </p>
                     </div>
                   ) : null}
@@ -594,7 +604,7 @@ export default function ProductPage() {
 
                 {displayedOpt.competition.topTags.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs text-muted-foreground mb-1.5">Nejčastější tagy konkurence:</p>
+                    <p className="text-xs text-muted-foreground mb-1.5">{t("prod.commonTags")}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {displayedOpt.competition.topTags.slice(0, 12).map((tag) => (
                         <span
@@ -611,10 +621,7 @@ export default function ProductPage() {
 
                 <p className="text-xs mt-3 flex items-start gap-1.5" style={{ color: "oklch(0.50 0.04 50)" }}>
                   <span>ℹ️</span>
-                  <span>
-                    Tato konkrétní data <strong>neukládáme</strong> — slouží jen pro vaši aktuální
-                    představu při této analýze. Po opuštění stránky zmizí; zůstane vám náš závěr výše.
-                  </span>
+                  <span>{t("prod.notStored")}</span>
                 </p>
               </div>
             )}
@@ -622,13 +629,13 @@ export default function ProductPage() {
             {/* Název */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Optimalizovaný název</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.optName")}</p>
                 <button
                   onClick={() => copyToClipboard(displayedOpt.titleOptimized, "Název")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
-                  Kopírovat
+                  {t("common.copy")}
                 </button>
               </div>
               <p className="font-medium leading-relaxed">{displayedOpt.titleOptimized}</p>
@@ -645,13 +652,13 @@ export default function ProductPage() {
             {/* Popis */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Optimalizovaný popis</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.optDesc")}</p>
                 <button
                   onClick={() => copyToClipboard(displayedOpt.descriptionOptimized, "Popis")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
-                  Kopírovat
+                  {t("common.copy")}
                 </button>
               </div>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayedOpt.descriptionOptimized}</p>
@@ -668,13 +675,13 @@ export default function ProductPage() {
             {/* Klíčová slova */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Klíčová slova</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.keywords")}</p>
                 <button
                   onClick={() => copyToClipboard(displayedOpt.keywords.join(", "), "Klíčová slova")}
                   className="text-xs hover:underline"
                   style={{ color: "oklch(0.78 0.11 196)" }}
                 >
-                  Kopírovat vše
+                  {t("common.copyAll")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -695,7 +702,7 @@ export default function ProductPage() {
 
             {/* Cenové doporučení */}
             <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Cenové doporučení</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("prod.pricingRec")}</p>
               <p className="text-sm leading-relaxed">{displayedOpt.pricingRecommendation}</p>
               {displayedOpt.pricingRecommendationCzech && (
                 <div className="mt-2 pl-3 border-l-2" style={{ borderColor: "oklch(0.78 0.11 196 / 0.35)" }}>
@@ -724,7 +731,7 @@ export default function ProductPage() {
           onClick={handleDelete}
           className="text-destructive hover:bg-destructive/10"
         >
-          Smazat produkt
+          {t("prod.deleteProduct")}
         </Button>
       </div>
     </div>

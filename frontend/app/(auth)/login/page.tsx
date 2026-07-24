@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const t = useT();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +30,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Přihlášení selhalo");
+      toast.error(err instanceof Error ? err.message : t("err.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -44,18 +46,18 @@ export default function LoginPage() {
           </span>
         </div>
         <CardTitle className="font-heading text-3xl font-light">
-          Vítejte zpět
+          {t("auth.welcomeBack")}
         </CardTitle>
         <div className="w-10 h-0.5 mt-2 rounded-full" style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
         <CardDescription className="mt-3 text-base">
-          Přihlaste se ke svému účtu
+          {t("auth.loginSubtitle")}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="px-8 pt-4">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">{t("auth.email")}</Label>
             <Input
               id="email"
               type="email"
@@ -68,13 +70,13 @@ export default function LoginPage() {
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Heslo</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <Link
                 href="/forgot-password"
                 className="text-xs hover:underline"
                 style={{ color: "oklch(0.78 0.11 196)" }}
               >
-                Zapomněli jste heslo?
+                {t("auth.forgotPassword")}
               </Link>
             </div>
             <Input
@@ -92,7 +94,7 @@ export default function LoginPage() {
             className="w-full mt-2"
             disabled={loading}
           >
-            {loading ? "Přihlašuji…" : "Přihlásit se"}
+            {loading ? t("auth.loggingIn") : t("auth.login")}
           </Button>
         </form>
 
@@ -101,7 +103,7 @@ export default function LoginPage() {
             <span className="w-full border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }} />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-2 text-muted-foreground" style={{ background: "oklch(0.97 0.008 80)" }}>nebo</span>
+            <span className="px-2 text-muted-foreground" style={{ background: "oklch(0.97 0.008 80)" }}>{t("auth.or")}</span>
           </div>
         </div>
 
@@ -116,19 +118,19 @@ export default function LoginPage() {
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             <path fill="none" d="M0 0h48v48H0z"/>
           </svg>
-          Přihlásit se přes Google
+          {t("auth.google")}
         </a>
       </CardContent>
 
       <CardFooter className="px-8 pb-8 justify-center">
         <p className="text-sm text-muted-foreground">
-          Ještě nemáte účet?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href="/register"
             className="font-medium hover:underline"
             style={{ color: "oklch(0.65 0.15 155)" }}
           >
-            Zaregistrujte se
+            {t("auth.registerLink")}
           </Link>
         </p>
       </CardFooter>

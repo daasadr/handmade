@@ -40,32 +40,12 @@ export default function GdprPage() {
           </p>
         </div>
 
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
-        >
-          {en ? (
-            <>
-              <strong>⚠️ Working translation — pending legal review.</strong> Fill the{" "}
-              <code>[FILL IN …]</code> controller details and confirm the US-transfer safeguard (Standard
-              Contractual Clauses) with your processor. Then remove this note.
-            </>
-          ) : (
-            <>
-              <strong>⚠️ Před spuštěním doplňte:</strong> na místa <code>[DOPLŇTE …]</code> vložte
-              údaje správce (jméno / firma, IČO, sídlo). U předání do USA (bod 4) nechte ověřit
-              právní mechanismus (standardní smluvní doložky). Tuto poznámku pak smažte.
-            </>
-          )}
-        </div>
-
         {en ? (
           // ===================== ENGLISH (GDPR + US) =====================
           <div className="space-y-5">
             <Section n={1} title="Data controller">
               <p>
-                The controller is <strong>[FILL IN: name / company, ID, registered address]</strong>,
-                operator of Handmade.net, established in the European Union. Contact:{" "}
+                The controller is the operator of Handmade.net, established in the European Union. Contact:{" "}
                 <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>info@handmade.net</a>.
               </p>
             </Section>
@@ -93,7 +73,7 @@ export default function GdprPage() {
             <Section n={4} title="Recipients and processors">
               <p>We do <strong>not</strong> sell your data. We share it only with processors needed to run the Service:</p>
               <ul className="space-y-1 list-disc pl-5">
-                <li><strong>Anthropic (Claude AI), USA</strong> — to generate optimization we send your product text and photos. This is a transfer outside the EU, made under appropriate safeguards (Standard Contractual Clauses). <strong>[FILL IN/CONFIRM the mechanism per your processor agreement]</strong></li>
+                <li><strong>Anthropic (Claude AI), USA</strong> — to generate optimization we send your product text and photos. This is a transfer outside the EU, made under appropriate safeguards (Standard Contractual Clauses).</li>
                 <li><strong>Hetzner (Germany, EU)</strong> — hosting and photo storage.</li>
                 <li><strong>Resend</strong> — sending email (verification, password reset).</li>
                 <li><strong>Stripe</strong> — payment processing for paid plans.</li>
@@ -154,8 +134,8 @@ export default function GdprPage() {
           <div className="space-y-5">
             <Section n={1} title="Správce údajů">
               <p>
-                Správcem osobních údajů je <strong>[DOPLŇTE: jméno / firma, IČO, sídlo]</strong>,
-                provozovatel služby Handmade.net. Kontakt:{" "}
+                Správcem osobních údajů je provozovatel služby Handmade.net se sídlem v Evropské unii.
+                Kontakt:{" "}
                 <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>info@handmade.net</a>.
               </p>
             </Section>
@@ -183,7 +163,7 @@ export default function GdprPage() {
             <Section n={4} title="Příjemci a zpracovatelé">
               <p>Údaje <strong>neprodáváme</strong>. Předáváme je pouze zpracovatelům nezbytným k provozu:</p>
               <ul className="space-y-1 list-disc pl-5">
-                <li><strong>Anthropic (Claude AI), USA</strong> — pro vygenerování optimalizace předáváme text a fotografie vašeho produktu. Jde o předání mimo EU na základě odpovídajících záruk (standardní smluvní doložky). <strong>[DOPLŇTE/OVĚŘTE mechanismus]</strong></li>
+                <li><strong>Anthropic (Claude AI), USA</strong> — pro vygenerování optimalizace předáváme text a fotografie vašeho produktu. Jde o předání mimo EU na základě odpovídajících záruk (standardní smluvní doložky).</li>
                 <li><strong>Hetzner (Německo, EU)</strong> — hosting a úložiště fotografií.</li>
                 <li><strong>Resend</strong> — odesílání e-mailů.</li>
                 <li><strong>Stripe</strong> — zpracování plateb.</li>

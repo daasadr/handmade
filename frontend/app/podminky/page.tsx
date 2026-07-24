@@ -40,34 +40,16 @@ export default function PodminkyPage() {
           </p>
         </div>
 
-        <div
-          className="rounded-xl px-4 py-3 text-sm"
-          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
-        >
-          {en ? (
-            <>
-              <strong>⚠️ Working translation — not yet legal advice.</strong> This English version is
-              provided for understanding and will be reviewed by a lawyer before launch. Fill the{" "}
-              <code>[FILL IN …]</code> operator details, then remove this note.
-            </>
-          ) : (
-            <>
-              <strong>⚠️ Před spuštěním doplňte:</strong> na místa <code>[DOPLŇTE …]</code> vložte
-              skutečné údaje provozovatele (jméno / firma, IČO, sídlo). Tuto poznámku pak smažte.
-              Doporučujeme nechat podmínky zkontrolovat právníkem.
-            </>
-          )}
-        </div>
-
         {en ? (
           // ===================== ENGLISH (EU-based, US-aware) =====================
           <div className="space-y-5">
             <Section n={1} title="Introduction and operator">
               <p>
                 These Terms govern your use of the Handmade.net service (the &quot;Service&quot;) at
-                handmade.net. The operator is <strong>[FILL IN: name / company, ID, registered address]</strong>{" "}
-                (&quot;we&quot;), established in the European Union. By registering or using the Service you agree
-                to these Terms. The Service is available to users worldwide, including the United States.
+                handmade.net. The Service is operated by the provider of Handmade.net (&quot;we&quot;),
+                established in the European Union; contact details are in the Contact section below. By
+                registering or using the Service you agree to these Terms. The Service is available to users
+                worldwide, including the United States.
               </p>
             </Section>
 
@@ -191,9 +173,9 @@ export default function PodminkyPage() {
             <Section n={1} title="Úvod a provozovatel">
               <p>
                 Tyto obchodní podmínky upravují používání služby Handmade.net (dále jen „služba")
-                dostupné na doméně handmade.net. Provozovatelem je{" "}
-                <strong>[DOPLŇTE: jméno / firma, IČO, sídlo]</strong> (dále jen „provozovatel"
-                nebo „my"). Registrací nebo používáním služby s těmito podmínkami souhlasíte.
+                dostupné na doméně handmade.net. Provozovatelem je poskytovatel služby Handmade.net
+                (dále jen „provozovatel" nebo „my") se sídlem v Evropské unii; kontaktní údaje jsou
+                uvedeny níže v části Kontakt. Registrací nebo používáním služby s těmito podmínkami souhlasíte.
               </p>
             </Section>
 

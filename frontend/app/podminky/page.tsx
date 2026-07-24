@@ -1,9 +1,7 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = {
-  title: "Obchodní podmínky — Handmade.net",
-  description: "Obchodní podmínky a zásady ochrany soukromí služby Handmade.net.",
-};
+import Link from "next/link";
+import { useLocale } from "@/lib/i18n";
 
 const MUTED = "oklch(0.45 0.04 50)";
 const ACCENT = "oklch(0.40 0.10 196)";
@@ -22,153 +20,294 @@ function Section({ n, title, children }: { n: number; title: string; children: R
 }
 
 export default function PodminkyPage() {
+  const { locale } = useLocale();
+  const en = locale === "en";
+
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: "oklch(0.973 0.008 80)", color: "oklch(0.22 0.04 48)" }}
-    >
+    <div className="min-h-screen" style={{ background: "oklch(0.973 0.008 80)", color: "oklch(0.22 0.04 48)" }}>
       <div className="max-w-3xl mx-auto px-5 py-12 space-y-6">
         <div>
           <Link href="/" className="text-sm hover:underline" style={{ color: ACCENT }}>
-            ← Zpět na úvod
+            {en ? "← Back to home" : "← Zpět na úvod"}
           </Link>
-          <h1 className="font-heading text-4xl font-light mt-3">Obchodní podmínky</h1>
+          <h1 className="font-heading text-4xl font-light mt-3">
+            {en ? "Terms of Service" : "Obchodní podmínky"}
+          </h1>
           <p className="text-sm mt-2" style={{ color: MUTED }}>
-            a zásady ochrany soukromí služby Handmade.net · účinné od 23. 7. 2026
+            {en
+              ? "and privacy overview for the Handmade.net service · effective 23 July 2026"
+              : "a zásady ochrany soukromí služby Handmade.net · účinné od 23. 7. 2026"}
           </p>
         </div>
 
-        <div className="space-y-5">
-          <Section n={1} title="Úvod a provozovatel">
-            <p>
-              Tyto obchodní podmínky upravují používání služby Handmade.net (dále jen „služba")
-              dostupné na doméně handmade.net. Provozovatelem je{" "}
-              <strong>[DOPLŇTE: jméno / firma, IČO, sídlo]</strong> (dále jen „provozovatel"
-              nebo „my"). Registrací nebo používáním služby s těmito podmínkami souhlasíte.
-            </p>
-          </Section>
-
-          <Section n={2} title="Co služba je (a co není)">
-            <p>
-              Handmade.net je <strong>optimalizační nástroj</strong>. Pomocí umělé inteligence
-              pomáhá tvůrcům ručních výrobků vytvořit lepší názvy, popisy a klíčová slova pro
-              jejich nabídky na tržištích jako Etsy, Amazon Handmade nebo Fler.
-            </p>
-            <p>
-              Služba <strong>neprodává</strong> vaše produkty, nezprostředkovává prodej ani
-              platby mezi vámi a zákazníky a nic za vás na žádné tržiště automaticky nenahrává.
-              Výstupy si sami zkopírujete a použijete na svém účtu u příslušného tržiště. Prodej
-              i vztah se zákazníkem zůstávají výhradně na vás.
-            </p>
-          </Section>
-
-          <Section n={3} title="Uživatelský účet">
-            <p>
-              Pro používání služby je potřeba účet. Odpovídáte za správnost údajů a za
-              zabezpečení svého hesla. Za činnost provedenou pod vaším účtem odpovídáte vy.
-              Účet je určen pro vaši vlastní tvůrčí činnost.
-            </p>
-          </Section>
-
-          <Section n={4} title="Tarify, platby a kvóty">
-            <p>
-              Služba nabízí bezplatný i placené tarify s různým měsíčním počtem AI analýz (viz{" "}
-              <Link href="/tarify" className="hover:underline" style={{ color: ACCENT }}>Tarify</Link>).
-              Platíte za možnost využívat naši AI optimalizaci — tedy za naši vlastní službu,
-              nikoliv za data z tržišť třetích stran. Kvóta se každý měsíc obnovuje. Pokud
-              analýza selže kvůli technické chybě na naší straně, do kvóty se nezapočítá.
-            </p>
-          </Section>
-
-          <Section n={5} title="Výstupy AI — bez záruky výsledku">
-            <p>
-              Výstupy generuje jazykový model a jde o <strong>návrhy</strong>. Nezaručujeme,
-              že jejich použití povede k vyšší prodejnosti, lepšímu umístění ve vyhledávání
-              nebo jakémukoliv konkrétnímu obchodnímu výsledku. Skóre konkurenceschopnosti je
-              orientační ukazatel. Před zveřejněním si výstupy vždy zkontrolujte — odpovědnost
-              za obsah svých nabídek nesete vy.
-            </p>
-          </Section>
-
-          <Section n={6} title="Váš obsah a práva">
-            <p>
-              Obsah, který do služby vložíte (názvy, popisy, fotografie produktů), zůstává
-              váš. Udělujete nám pouze omezené oprávnění tento obsah zpracovat za účelem
-              poskytnutí služby (zejména jej předat AI modelu a uložit). Optimalizované texty,
-              které vám AI vygeneruje, můžete volně používat.
-            </p>
-          </Section>
-
-          <Section n={7} title="Data a ochrana soukromí">
-            <p>Zpracováváme a ukládáme:</p>
-            <ul className="space-y-1 list-disc pl-5">
-              <li>e-mail a přihlašovací údaje (heslo pouze jako bezpečný otisk),</li>
-              <li>údaje profilu (název značky, bio, profilová fotka, odkazy),</li>
-              <li>vaše produkty a jejich fotografie (fotky v objektovém úložišti),</li>
-              <li>výsledky AI analýz a počet využitých analýz.</li>
-            </ul>
-            <p>
-              Data používáme výhradně k provozu služby. <strong>Neprodáváme</strong> je ani
-              nesdílíme s třetími stranami s výjimkou zpracovatelů nezbytných k provozu (AI
-              model pro analýzu, úložiště, e-mailová a platební služba). Pro vygenerování
-              výstupu předáváme text a fotky vašeho produktu poskytovateli AI. Podrobnosti
-              o zpracování včetně vašich práv najdete v{" "}
-              <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>zásadách GDPR</Link>.
-            </p>
-            <p>
-              O smazání účtu a souvisejících dat můžete kdykoliv požádat na kontaktním e-mailu
-              níže.
-            </p>
-          </Section>
-
-          <Section n={8} title="Tržiště třetích stran (Etsy, Amazon, Fler)">
-            <p>
-              Služba může zobrazovat informace z veřejně dostupných API těchto tržišť
-              (např. přehled konkurence z Etsy). Tato data jsou vlastnictvím příslušného
-              tržiště a jeho prodejců; zobrazujeme je agregovaně a{" "}
-              <strong>neukládáme je natrvalo</strong> — slouží jen k okamžité představě při
-              analýze. Používání každého tržiště se řídí i jeho vlastními pravidly.
-            </p>
-            <p className="text-xs pt-1" style={{ color: "oklch(0.55 0.03 55)" }}>
-              The term „Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API
-              but is not endorsed or certified by Etsy, Inc.
-            </p>
-          </Section>
-
-          <Section n={9} title="Zakázané používání">
-            <p>
-              Službu nesmíte zneužívat — zejména se pokoušet obejít bezpečnostní opatření,
-              nadměrně ji zatěžovat, používat ji k nezákonným účelům nebo k porušování práv
-              třetích stran. Při porušení podmínek můžeme účet omezit nebo zrušit.
-            </p>
-          </Section>
-
-          <Section n={10} title="Omezení odpovědnosti">
-            <p>
-              Služba je poskytována „tak jak je". V rozsahu povoleném zákonem neodpovídáme za
-              nepřímé škody, ušlý zisk ani za obchodní výsledky plynoucí z použití výstupů.
-              Neodpovídáme za dostupnost ani pravidla tržišť třetích stran.
-            </p>
-          </Section>
-
-          <Section n={11} title="Změny podmínek">
-            <p>
-              Podmínky můžeme aktualizovat. O podstatných změnách vás budeme informovat.
-              Pokračováním v používání služby po účinnosti změn vyjadřujete souhlas s
-              aktualizovaným zněním.
-            </p>
-          </Section>
-
-          <Section n={12} title="Kontakt">
-            <p>
-              S dotazy i žádostmi o smazání dat se obraťte na{" "}
-              <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
-                info@handmade.net
-              </a>. Zásady zpracování osobních údajů najdete v{" "}
-              <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>dokumentu GDPR</Link>.
-            </p>
-          </Section>
+        <div
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{ background: "oklch(0.88 0.10 85 / 0.15)", border: "1px solid oklch(0.75 0.12 80 / 0.35)" }}
+        >
+          {en ? (
+            <>
+              <strong>⚠️ Working translation — not yet legal advice.</strong> This English version is
+              provided for understanding and will be reviewed by a lawyer before launch. Fill the{" "}
+              <code>[FILL IN …]</code> operator details, then remove this note.
+            </>
+          ) : (
+            <>
+              <strong>⚠️ Před spuštěním doplňte:</strong> na místa <code>[DOPLŇTE …]</code> vložte
+              skutečné údaje provozovatele (jméno / firma, IČO, sídlo). Tuto poznámku pak smažte.
+              Doporučujeme nechat podmínky zkontrolovat právníkem.
+            </>
+          )}
         </div>
+
+        {en ? (
+          // ===================== ENGLISH (EU-based, US-aware) =====================
+          <div className="space-y-5">
+            <Section n={1} title="Introduction and operator">
+              <p>
+                These Terms govern your use of the Handmade.net service (the &quot;Service&quot;) at
+                handmade.net. The operator is <strong>[FILL IN: name / company, ID, registered address]</strong>{" "}
+                (&quot;we&quot;), established in the European Union. By registering or using the Service you agree
+                to these Terms. The Service is available to users worldwide, including the United States.
+              </p>
+            </Section>
+
+            <Section n={2} title="What the Service is (and isn't)">
+              <p>
+                Handmade.net is an <strong>optimization tool</strong>. Using AI, it helps makers of handmade
+                goods write better titles, descriptions and keywords for marketplaces such as Etsy, Amazon
+                Handmade or Fler.
+              </p>
+              <p>
+                The Service does <strong>not</strong> sell your products, does not process payments between you
+                and buyers, and does not upload anything to any marketplace on your behalf. You copy the output
+                and use it on your own marketplace account. The sale and the customer relationship remain
+                entirely yours.
+              </p>
+            </Section>
+
+            <Section n={3} title="Account">
+              <p>
+                An account is required. You are responsible for the accuracy of your details and for keeping
+                your password secure. You are responsible for activity under your account.
+              </p>
+            </Section>
+
+            <Section n={4} title="Plans, payments and quota">
+              <p>
+                The Service offers a free plan and paid plans with a monthly number of AI analyses (see{" "}
+                <Link href="/tarify" className="hover:underline" style={{ color: ACCENT }}>Plans</Link>). You pay
+                for our own AI optimization service — not for data from third-party marketplaces. The quota
+                resets monthly. If an analysis fails due to a technical error on our side, it is not counted.
+              </p>
+            </Section>
+
+            <Section n={5} title="AI output — no guarantee of results">
+              <p>
+                Output is generated by a language model and constitutes <strong>suggestions</strong>. We do not
+                guarantee that using it will increase sales, improve search ranking, or produce any specific
+                business result. The competitiveness score is an indicator only. Always review output before
+                publishing — you are responsible for the content of your listings.
+              </p>
+            </Section>
+
+            <Section n={6} title="Your content and rights">
+              <p>
+                Content you submit (titles, descriptions, product photos) remains yours. You grant us only a
+                limited permission to process it in order to provide the Service (in particular to send it to
+                the AI model and to store it). You may freely use the optimized text the AI generates for you.
+              </p>
+            </Section>
+
+            <Section n={7} title="Data and privacy">
+              <p>
+                We process your email, login credentials (password only as a secure hash), profile, products and
+                their photos, and usage data. We do <strong>not</strong> sell your data. We share it only with
+                processors necessary to run the Service (AI model, storage, email and payment providers). To
+                generate output we send your product text and photos to our AI provider,{" "}
+                <strong>Anthropic, in the United States</strong>. Full details, your rights, and — for US
+                residents — state privacy rights (e.g. California/CCPA) are in our{" "}
+                <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>Privacy Policy</Link>.
+                You may request deletion of your account and data at any time via the contact below.
+              </p>
+            </Section>
+
+            <Section n={8} title="Third-party marketplaces (Etsy, Amazon, Fler)">
+              <p>
+                The Service may display information from these marketplaces&apos; public APIs (e.g. an Etsy
+                competition overview). Such data belongs to the marketplace and its sellers; we show it in
+                aggregate and do <strong>not</strong> store it permanently — it serves only as an immediate
+                snapshot during analysis. Each marketplace also has its own rules.
+              </p>
+              <p className="text-xs pt-1" style={{ color: "oklch(0.55 0.03 55)" }}>
+                The term &quot;Etsy&quot; is a trademark of Etsy, Inc. This application uses the Etsy API but is
+                not endorsed or certified by Etsy, Inc.
+              </p>
+            </Section>
+
+            <Section n={9} title="Prohibited use">
+              <p>
+                You must not misuse the Service — in particular, do not attempt to bypass security measures,
+                overload it, use it for unlawful purposes, or infringe third-party rights. We may limit or
+                terminate an account that breaches these Terms.
+              </p>
+            </Section>
+
+            <Section n={10} title="Limitation of liability">
+              <p>
+                The Service is provided &quot;as is&quot;. To the extent permitted by law we are not liable for
+                indirect damages, lost profit, or business results arising from use of the output. We are not
+                responsible for the availability or rules of third-party marketplaces.
+              </p>
+            </Section>
+
+            <Section n={11} title="Governing law">
+              <p>
+                These Terms are governed by the laws of the operator&apos;s country of establishment (Czech
+                Republic / EU), without prejudice to mandatory consumer-protection rights you may have in your
+                country of residence. Nothing here limits rights that cannot be waived under your local law.
+              </p>
+            </Section>
+
+            <Section n={12} title="Changes to the Terms">
+              <p>
+                We may update these Terms. We will notify you of material changes. Continued use of the Service
+                after changes take effect constitutes acceptance of the updated version.
+              </p>
+            </Section>
+
+            <Section n={13} title="Contact">
+              <p>
+                For questions and data-deletion requests, contact{" "}
+                <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
+                  info@handmade.net
+                </a>. See also our{" "}
+                <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>Privacy Policy</Link>.
+              </p>
+            </Section>
+          </div>
+        ) : (
+          // ===================== ČESKY =====================
+          <div className="space-y-5">
+            <Section n={1} title="Úvod a provozovatel">
+              <p>
+                Tyto obchodní podmínky upravují používání služby Handmade.net (dále jen „služba")
+                dostupné na doméně handmade.net. Provozovatelem je{" "}
+                <strong>[DOPLŇTE: jméno / firma, IČO, sídlo]</strong> (dále jen „provozovatel"
+                nebo „my"). Registrací nebo používáním služby s těmito podmínkami souhlasíte.
+              </p>
+            </Section>
+
+            <Section n={2} title="Co služba je (a co není)">
+              <p>
+                Handmade.net je <strong>optimalizační nástroj</strong>. Pomocí umělé inteligence
+                pomáhá tvůrcům ručních výrobků vytvořit lepší názvy, popisy a klíčová slova pro
+                jejich nabídky na tržištích jako Etsy, Amazon Handmade nebo Fler.
+              </p>
+              <p>
+                Služba <strong>neprodává</strong> vaše produkty, nezprostředkovává prodej ani
+                platby mezi vámi a zákazníky a nic za vás na žádné tržiště automaticky nenahrává.
+                Výstupy si sami zkopírujete a použijete na svém účtu u příslušného tržiště. Prodej
+                i vztah se zákazníkem zůstávají výhradně na vás.
+              </p>
+            </Section>
+
+            <Section n={3} title="Uživatelský účet">
+              <p>
+                Pro používání služby je potřeba účet. Odpovídáte za správnost údajů a za
+                zabezpečení svého hesla. Za činnost provedenou pod vaším účtem odpovídáte vy.
+              </p>
+            </Section>
+
+            <Section n={4} title="Tarify, platby a kvóty">
+              <p>
+                Služba nabízí bezplatný i placené tarify s různým měsíčním počtem AI analýz (viz{" "}
+                <Link href="/tarify" className="hover:underline" style={{ color: ACCENT }}>Tarify</Link>).
+                Platíte za možnost využívat naši AI optimalizaci — tedy za naši vlastní službu,
+                nikoliv za data z tržišť třetích stran. Kvóta se každý měsíc obnovuje. Pokud
+                analýza selže kvůli technické chybě na naší straně, do kvóty se nezapočítá.
+              </p>
+            </Section>
+
+            <Section n={5} title="Výstupy AI — bez záruky výsledku">
+              <p>
+                Výstupy generuje jazykový model a jde o <strong>návrhy</strong>. Nezaručujeme,
+                že jejich použití povede k vyšší prodejnosti, lepšímu umístění ve vyhledávání
+                nebo jakémukoliv konkrétnímu obchodnímu výsledku. Skóre konkurenceschopnosti je
+                orientační ukazatel. Před zveřejněním si výstupy vždy zkontrolujte — odpovědnost
+                za obsah svých nabídek nesete vy.
+              </p>
+            </Section>
+
+            <Section n={6} title="Váš obsah a práva">
+              <p>
+                Obsah, který do služby vložíte (názvy, popisy, fotografie produktů), zůstává
+                váš. Udělujete nám pouze omezené oprávnění tento obsah zpracovat za účelem
+                poskytnutí služby (zejména jej předat AI modelu a uložit). Optimalizované texty,
+                které vám AI vygeneruje, můžete volně používat.
+              </p>
+            </Section>
+
+            <Section n={7} title="Data a ochrana soukromí">
+              <p>
+                Zpracováváme e-mail, přihlašovací údaje (heslo jen jako bezpečný otisk), profil,
+                produkty a jejich fotografie a údaje o užívání. Data <strong>neprodáváme</strong>.
+                Sdílíme je jen se zpracovateli nezbytnými k provozu (AI model, úložiště, e-mailová
+                a platební služba). Pro vygenerování výstupu předáváme text a fotky vašeho produktu
+                poskytovateli AI. Podrobnosti a vaše práva najdete v{" "}
+                <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>zásadách GDPR</Link>.
+                O smazání účtu můžete kdykoliv požádat na kontaktu níže.
+              </p>
+            </Section>
+
+            <Section n={8} title="Tržiště třetích stran (Etsy, Amazon, Fler)">
+              <p>
+                Služba může zobrazovat informace z veřejně dostupných API těchto tržišť
+                (např. přehled konkurence z Etsy). Tato data jsou vlastnictvím příslušného
+                tržiště a jeho prodejců; zobrazujeme je agregovaně a{" "}
+                <strong>neukládáme je natrvalo</strong> — slouží jen k okamžité představě při
+                analýze. Používání každého tržiště se řídí i jeho vlastními pravidly.
+              </p>
+              <p className="text-xs pt-1" style={{ color: "oklch(0.55 0.03 55)" }}>
+                The term „Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API
+                but is not endorsed or certified by Etsy, Inc.
+              </p>
+            </Section>
+
+            <Section n={9} title="Zakázané používání">
+              <p>
+                Službu nesmíte zneužívat — zejména se pokoušet obejít bezpečnostní opatření,
+                nadměrně ji zatěžovat, používat ji k nezákonným účelům nebo k porušování práv
+                třetích stran. Při porušení podmínek můžeme účet omezit nebo zrušit.
+              </p>
+            </Section>
+
+            <Section n={10} title="Omezení odpovědnosti">
+              <p>
+                Služba je poskytována „tak jak je". V rozsahu povoleném zákonem neodpovídáme za
+                nepřímé škody, ušlý zisk ani za obchodní výsledky plynoucí z použití výstupů.
+                Neodpovídáme za dostupnost ani pravidla tržišť třetích stran.
+              </p>
+            </Section>
+
+            <Section n={11} title="Změny podmínek">
+              <p>
+                Podmínky můžeme aktualizovat. O podstatných změnách vás budeme informovat.
+                Pokračováním v používání služby po účinnosti změn vyjadřujete souhlas s
+                aktualizovaným zněním.
+              </p>
+            </Section>
+
+            <Section n={12} title="Kontakt">
+              <p>
+                S dotazy i žádostmi o smazání dat se obraťte na{" "}
+                <a href="mailto:info@handmade.net" className="hover:underline" style={{ color: ACCENT }}>
+                  info@handmade.net
+                </a>. Zásady zpracování osobních údajů najdete v{" "}
+                <Link href="/gdpr" className="hover:underline" style={{ color: ACCENT }}>dokumentu GDPR</Link>.
+              </p>
+            </Section>
+          </div>
+        )}
       </div>
     </div>
   );

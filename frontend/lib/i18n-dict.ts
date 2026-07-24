@@ -34,6 +34,12 @@ const cs = {
   "dash.addProduct": "+ Přidat produkt",
   "dash.noProducts": "Zatím nemáte žádné produkty.",
   "dash.foundingMember": "✦ Founding Member",
+  "dash.emptyTitle": "Zatím žádné produkty",
+  "dash.emptyText": "Přidejte svůj první produkt a nechte AI ho optimalizovat.",
+  "dash.addFirst": "Přidat první produkt",
+  "status.draft": "Koncept",
+  "status.analyzed": "Analyzováno",
+  "status.completed": "Hotovo",
 
   // Products / new
   "new.back": "← Zpět na přehled",
@@ -120,6 +126,7 @@ const cs = {
   "profile.upgrade": "Upgradovat",
   "profile.avatarUpdated": "Fotka profilu aktualizována!",
   "profile.studioVideo": "▶ Video o studiu",
+  "profile.vipUntil": "do",
 
   // Auth
   "auth.welcomeBack": "Vítejte zpět",
@@ -190,6 +197,12 @@ const en: Partial<Record<keyof Dict, string>> = {
   "dash.addProduct": "+ Add product",
   "dash.noProducts": "You have no products yet.",
   "dash.foundingMember": "✦ Founding Member",
+  "dash.emptyTitle": "No products yet",
+  "dash.emptyText": "Add your first product and let the AI optimize it.",
+  "dash.addFirst": "Add first product",
+  "status.draft": "Draft",
+  "status.analyzed": "Analyzed",
+  "status.completed": "Done",
 
   // Products / new
   "new.back": "← Back to overview",
@@ -276,6 +289,7 @@ const en: Partial<Record<keyof Dict, string>> = {
   "profile.upgrade": "Upgrade",
   "profile.avatarUpdated": "Profile photo updated!",
   "profile.studioVideo": "▶ Studio video",
+  "profile.vipUntil": "until",
 
   // Auth
   "auth.welcomeBack": "Welcome back",

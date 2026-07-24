@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { prepareImages, formatBytes, IMAGE_LIMITS } from "@/lib/image-upload";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export default function NewProductPage() {
   const [compressing, setCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const t = useT();
 
   useEffect(() => {
     api.makers.getProfile()
@@ -104,7 +106,7 @@ export default function NewProductPage() {
       });
       productId = product.id;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Vytvoření selhalo");
+      toast.error(err instanceof Error ? err.message : t("err.saveFailed"));
       setLoading(false);
       return;
     }
@@ -114,7 +116,7 @@ export default function NewProductPage() {
     if (images.length) {
       try {
         await api.products.uploadImages(productId, images.map((img) => img.file));
-        toast.success("Produkt byl vytvořen i s fotkami!");
+        toast.success(t("new.createdWithPhotos"));
       } catch (err: unknown) {
         toast.error(
           `Produkt byl uložen, ale fotky se nepodařilo nahrát: ${
@@ -123,7 +125,7 @@ export default function NewProductPage() {
         );
       }
     } else {
-      toast.success("Produkt byl vytvořen!");
+      toast.success(t("new.createdOk"));
     }
 
     router.push(`/products/${productId}`);
@@ -142,22 +144,22 @@ export default function NewProductPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Zpět na přehled
+            {t("new.back")}
           </Link>
           <h1 className="font-heading text-4xl font-light mt-3 heading-accent">
-            Nový produkt
+            {t("new.title")}
           </h1>
         </div>
 
         <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
           <CardContent className="py-10 text-center space-y-4">
             <p className="text-3xl">✦</p>
-            <p className="font-heading text-xl font-light">Nejdřív vyplňte profil</p>
+            <p className="font-heading text-xl font-light">{t("new.needProfileTitle")}</p>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-              Před přidáním produktů je potřeba vyplnit základní informace o vašem studiu — název značky a bio.
+              {t("new.needProfileText")}
             </p>
             <Link href="/profile/edit" className={cn(buttonVariants(), "mt-2")}>
-              Vytvořit profil
+              {t("new.createProfile")}
             </Link>
           </CardContent>
         </Card>
@@ -169,41 +171,41 @@ export default function NewProductPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Zpět na přehled
+          {t("new.back")}
         </Link>
         <h1 className="font-heading text-4xl font-light mt-3 heading-accent">
-          Nový produkt
+          {t("new.title")}
         </h1>
         <p className="text-muted-foreground mt-3">
-          Vyplňte informace o produktu. AI pak vygeneruje optimalizovaný listing pro Etsy nebo Amazon.
+          {t("new.subtitle")}
         </p>
       </div>
 
       <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
         <CardHeader>
-          <CardTitle className="font-heading text-xl font-normal">Základní informace</CardTitle>
+          <CardTitle className="font-heading text-xl font-normal">{t("new.basicInfo")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="title">Název produktu *</Label>
+              <Label htmlFor="title">{t("new.nameLabel")}</Label>
               <Input
                 id="title"
-                placeholder="např. Ručně vyrobený keramický hrnek s glazurou"
+                placeholder={t("new.namePlaceholder")}
                 value={form.titleOriginal}
                 onChange={(e) => setForm({ ...form, titleOriginal: e.target.value })}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Původní název — AI ho optimalizuje pro vyhledávání
+                {t("new.nameHint")}
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description">Popis produktu *</Label>
+              <Label htmlFor="description">{t("new.descLabel")}</Label>
               <Textarea
                 id="description"
-                placeholder="Popište produkt — materiály, rozměry, způsob výroby, co ho dělá výjimečným..."
+                placeholder={t("new.descPlaceholder")}
                 value={form.descriptionOriginal}
                 onChange={(e) => setForm({ ...form, descriptionOriginal: e.target.value })}
                 required
@@ -211,13 +213,13 @@ export default function NewProductPage() {
                 className="resize-none"
               />
               <p className="text-xs text-muted-foreground">
-                Čím více detailů, tím lepší AI výsledek
+                {t("new.descHint")}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="price">Cena (EUR)</Label>
+                <Label htmlFor="price">{t("new.priceLabel")}</Label>
                 <Input
                   id="price"
                   type="number"
@@ -230,7 +232,7 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="category">Kategorie</Label>
+                <Label htmlFor="category">{t("new.categoryLabel")}</Label>
                 <select
                   id="category"
                   value={form.category}
@@ -238,7 +240,7 @@ export default function NewProductPage() {
                   className="flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                   style={{ background: "oklch(0.97 0.008 80)", borderColor: "oklch(0.85 0.02 72)" }}
                 >
-                  <option value="">Vyberte kategorii</option>
+                  <option value="">{t("new.categoryPlaceholder")}</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -247,7 +249,7 @@ export default function NewProductPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Fotografie produktu</Label>
+              <Label>{t("new.photos")}</Label>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -291,24 +293,23 @@ export default function NewProductPage() {
                 <span className="text-xl">📷</span>
                 <span className="text-sm">
                   {compressing
-                    ? "Připravuji fotky…"
+                    ? t("new.photosPreparing")
                     : images.length
-                      ? "Přidat další fotky"
-                      : "Klikněte pro přidání fotek"}
+                      ? t("new.photosAddMore")
+                      : t("new.photosClick")}
                 </span>
               </button>
               <p className="text-xs text-muted-foreground">
-                Nepovinné — AI bude fotky vidět při analýze a výsledky budou přesnější.
-                JPG, PNG nebo WebP · až {IMAGE_LIMITS.maxFiles} fotek · velké fotky zmenšíme automaticky.
+                {t("new.photosHint")}
               </p>
             </div>
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={loading || compressing} className="flex-1">
-                {loading ? "Ukládám…" : "Uložit produkt"}
+                {loading ? t("new.submitting") : t("new.submit")}
               </Button>
               <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }))}>
-                Zrušit
+                {t("common.cancel")}
               </Link>
             </div>
           </form>

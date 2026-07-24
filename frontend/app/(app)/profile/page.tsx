@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ function getYouTubeEmbedUrl(url: string): string | null {
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const t = useT();
   const [profile, setProfile] = useState<MakerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [noProfile, setNoProfile] = useState(false);
@@ -54,10 +56,10 @@ export default function ProfilePage() {
         <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
           <CardContent className="py-10 text-center space-y-4">
             <p className="text-3xl">✦</p>
-            <p className="font-heading text-xl font-light">Profil ještě není vytvořen</p>
-            <p className="text-muted-foreground text-sm">Vyplňte základní informace o svém studiu.</p>
+            <p className="font-heading text-xl font-light">{t("profile.notCreated")}</p>
+            <p className="text-muted-foreground text-sm">{t("profile.notCreatedText")}</p>
             <Link href="/profile/edit" className={cn(buttonVariants(), "mt-2")}>
-              Vytvořit profil
+              {t("profile.create")}
             </Link>
           </CardContent>
         </Card>
@@ -74,7 +76,7 @@ export default function ProfilePage() {
           href="/profile/edit"
           className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
         >
-          Upravit profil
+          {t("profile.edit")}
         </Link>
       </div>
 
@@ -141,7 +143,7 @@ export default function ProfilePage() {
               className="text-sm hover:underline"
               style={{ color: "oklch(0.40 0.10 196)" }}
             >
-              ▶ Video o studiu
+              {t("profile.studioVideo")}
             </a>
           )}
         </CardContent>
@@ -150,22 +152,22 @@ export default function ProfilePage() {
       {/* Účet a tarif — vidí jen vlastník */}
       <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
         <CardContent className="py-5 space-y-3">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Váš účet</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("profile.account")}</p>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">{user?.email}</p>
               <p className="text-xs text-muted-foreground">
-                Tarif{" "}
+                {t("profile.plan")}{" "}
                 <span className="font-medium" style={{ color: "oklch(0.40 0.10 196)" }}>
                   {PLAN_LABELS[user?.plan || "free"]}
                 </span>
                 {" · "}
-                {user?.aiUsageThisMonth || 0} / {vip || limit === 99999 ? "∞" : limit} optimalizací tento měsíc
+                {user?.aiUsageThisMonth || 0} / {vip || limit === 99999 ? "∞" : limit} {t("profile.thisMonth")}
                 {vip && (
                   <>
                     {" · "}
                     <span className="font-medium" style={{ color: "oklch(0.40 0.12 155)" }}>
-                      VIP{user?.vipUntil ? ` do ${new Date(user.vipUntil).toLocaleDateString("cs-CZ")}` : ""}
+                      VIP{user?.vipUntil ? ` ${t("profile.vipUntil")} ${new Date(user.vipUntil).toLocaleDateString()}` : ""}
                     </span>
                   </>
                 )}
@@ -177,7 +179,7 @@ export default function ProfilePage() {
                 className={cn(buttonVariants({ size: "sm" }))}
                 style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))", color: "white", border: "none" }}
               >
-                Upgradovat
+                {t("profile.upgrade")}
               </Link>
             )}
           </div>

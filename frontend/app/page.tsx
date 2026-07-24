@@ -1,8 +1,45 @@
+"use client";
+
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n";
+import { LangToggle } from "@/components/lang-toggle";
 
 export default function LandingPage() {
+  const { locale } = useLocale();
+  const en = locale === "en";
+
+  const steps = en
+    ? [
+        { step: "01", title: "Add your product", desc: "Enter the name, description and price as you know them. A few sentences is enough — leave the perfect wording to the AI.", color: "oklch(0.78 0.11 196)" },
+        { step: "02", title: "The AI optimizes it", desc: "Claude AI analyzes your product and generates an SEO title, a keyword-rich description and a pricing tip — separately for Etsy and Amazon.", color: "oklch(0.72 0.13 175)" },
+        { step: "03", title: "Copy and use", desc: "Copy the result with one click straight into your Etsy or Amazon Handmade account. Done.", color: "oklch(0.65 0.15 155)" },
+      ]
+    : [
+        { step: "01", title: "Přidejte produkt", desc: "Vyplňte název, popis a cenu tak, jak ho znáte. Stačí pár vět — perfektní formulace necháme na AI.", color: "oklch(0.78 0.11 196)" },
+        { step: "02", title: "AI ho optimalizuje", desc: "Claude AI analyzuje váš produkt a vygeneruje SEO název, popis s klíčovými slovy a cenové doporučení — zvlášť pro Etsy i Amazon.", color: "oklch(0.72 0.13 175)" },
+        { step: "03", title: "Zkopírujte a použijte", desc: "Výsledek zkopírujete jedním klikem přímo do svého Etsy nebo Amazon Handmade účtu. Hotovo.", color: "oklch(0.65 0.15 155)" },
+      ];
+
+  const features = en
+    ? [
+        { icon: "✦", title: "SEO title", desc: "An optimized title up to 140 characters with keywords for search on Etsy and Amazon." },
+        { icon: "◈", title: "Description with a story", desc: "An authentic description that engages customers and contains the words they search for." },
+        { icon: "◇", title: "13 keywords", desc: "A keyword set tailored for Etsy tags or Amazon search terms. Each word is copyable." },
+        { icon: "⬡", title: "Pricing strategy", desc: "A brief recommendation on how to price your product relative to the competition and market." },
+        { icon: "◎", title: "Competitiveness score", desc: "A 0–100 number telling you how strong your listing is compared to others." },
+        { icon: "◉", title: "Etsy and Amazon", desc: "Each platform has its own rules. We generate separately for Etsy and for Amazon Handmade." },
+      ]
+    : [
+        { icon: "✦", title: "SEO název", desc: "Optimalizovaný název až 140 znaků s klíčovými slovy pro vyhledávání na Etsy i Amazon." },
+        { icon: "◈", title: "Popis s příběhem", desc: "Autentický popis, který zaujme zákazníky a zároveň obsahuje slova, která vyhledávají." },
+        { icon: "◇", title: "13 klíčových slov", desc: "Sada klíčových slov přesně pro Etsy tagy nebo Amazon search terms. Každé slovo se dá zkopírovat." },
+        { icon: "⬡", title: "Cenová strategie", desc: "Stručné doporučení, jak produkt nacenit vzhledem ke konkurenci a trhu." },
+        { icon: "◎", title: "Skóre konkurenceschopnosti", desc: "Číslo 0–100, které vám řekne, jak silný je váš listing oproti ostatním." },
+        { icon: "◉", title: "Etsy i Amazon", desc: "Každá platforma má jiná pravidla. Generujeme zvlášť pro Etsy a zvlášť pro Amazon Handmade." },
+      ];
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.973 0.008 80)" }}>
       {/* ===== NAV ===== */}
@@ -20,9 +57,9 @@ export default function LandingPage() {
 
           <nav className="hidden md:flex items-center gap-6">
             {[
-              { href: "#jak-to-funguje", label: "Jak to funguje" },
-              { href: "#funkce", label: "Funkce" },
-              { href: "/tarify", label: "Tarify" },
+              { href: "#jak-to-funguje", label: en ? "How it works" : "Jak to funguje" },
+              { href: "#funkce", label: en ? "Features" : "Funkce" },
+              { href: "/tarify", label: en ? "Plans" : "Tarify" },
             ].map((l) => (
               <a
                 key={l.href}
@@ -36,19 +73,20 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <LangToggle className="mr-1" />
             <Link
               href="/login"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-sm")}
               style={{ color: "oklch(0.52 0.04 50)" }}
             >
-              Přihlásit se
+              {en ? "Sign in" : "Přihlásit se"}
             </Link>
             <Link
               href="/register"
               className={cn(buttonVariants({ size: "sm" }), "text-sm")}
               style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)" }}
             >
-              Začít zdarma
+              {en ? "Start free" : "Začít zdarma"}
             </Link>
           </div>
         </div>
@@ -57,7 +95,6 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* ===== HERO ===== */}
         <section className="relative overflow-hidden pt-24 pb-32 px-6">
-          {/* Dekorativní kulečky */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.12]"
               style={{ background: "radial-gradient(circle, oklch(0.78 0.11 196) 0%, transparent 65%)" }} />
@@ -68,30 +105,30 @@ export default function LandingPage() {
           </div>
 
           <div className="relative max-w-3xl mx-auto text-center">
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-8"
               style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}>
               <span>✦</span>
-              <span>AI optimalizace pro handmade výrobce</span>
+              <span>{en ? "AI optimization for handmade makers" : "AI optimalizace pro handmade výrobce"}</span>
             </div>
 
             <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl font-light leading-tight"
               style={{ color: "oklch(0.22 0.04 48)" }}>
-              Váš produkt si{" "}
+              {en ? "Your product " : "Váš produkt si "}
               <span className="italic" style={{
                 background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
               }}>
-                zaslouží být nalezen
+                {en ? "deserves to be found" : "zaslouží být nalezen"}
               </span>
             </h1>
 
             <p className="mt-8 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto"
               style={{ color: "oklch(0.52 0.04 50)" }}>
-              Nahrajte produkt, AI vygeneruje optimalizovaný název, popis a klíčová slova pro Etsy i Amazon Handmade.
-              Více zákazníků. Méně času s psaním.
+              {en
+                ? "Add a product and the AI generates an optimized title, description and keywords for Etsy and Amazon Handmade. More customers. Less time writing."
+                : "Nahrajte produkt, AI vygeneruje optimalizovaný název, popis a klíčová slova pro Etsy i Amazon Handmade. Více zákazníků. Méně času s psaním."}
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -100,19 +137,19 @@ export default function LandingPage() {
                 className={cn(buttonVariants(), "h-12 px-8 text-base")}
                 style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))", color: "white", border: "none" }}
               >
-                Začít zdarma — 5 optimalizací/měsíc
+                {en ? "Start free — 5 optimizations/month" : "Začít zdarma — 5 optimalizací/měsíc"}
               </Link>
               <a
                 href="#jak-to-funguje"
                 className={cn(buttonVariants({ variant: "outline" }), "h-12 px-8 text-base")}
                 style={{ borderColor: "oklch(0.85 0.02 72)", color: "oklch(0.52 0.04 50)" }}
               >
-                Jak to funguje ↓
+                {en ? "How it works ↓" : "Jak to funguje ↓"}
               </a>
             </div>
 
             <p className="mt-4 text-sm" style={{ color: "oklch(0.65 0.02 60)" }}>
-              Bez kreditní karty · Free tier navždy
+              {en ? "No credit card · Free tier forever" : "Bez kreditní karty · Free tier navždy"}
             </p>
           </div>
         </section>
@@ -122,7 +159,7 @@ export default function LandingPage() {
           <div className="max-w-3xl mx-auto px-6 text-center">
             <p className="text-sm font-medium uppercase tracking-widest mb-6"
               style={{ color: "oklch(0.65 0.02 60)" }}>
-              Optimalizujeme listingy pro
+              {en ? "We optimize listings for" : "Optimalizujeme listingy pro"}
             </p>
             <div className="flex items-center justify-center gap-12">
               <div className="flex items-center gap-2">
@@ -146,33 +183,14 @@ export default function LandingPage() {
             <div className="text-center mb-16">
               <h2 className="font-heading text-4xl sm:text-5xl font-light"
                 style={{ color: "oklch(0.22 0.04 48)" }}>
-                Tři kroky ke lepším prodejům
+                {en ? "Three steps to better sales" : "Tři kroky ke lepším prodejům"}
               </h2>
               <div className="w-12 h-0.5 mx-auto mt-4 rounded-full"
                 style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  step: "01",
-                  title: "Přidejte produkt",
-                  desc: "Vyplňte název, popis a cenu tak, jak ho znáte. Stačí pár vět — perfektní formulace necháme na AI.",
-                  color: "oklch(0.78 0.11 196)",
-                },
-                {
-                  step: "02",
-                  title: "AI ho optimalizuje",
-                  desc: "Claude AI analyzuje váš produkt a vygeneruje SEO název, popis s klíčovými slovy a cenové doporučení — zvlášť pro Etsy i Amazon.",
-                  color: "oklch(0.72 0.13 175)",
-                },
-                {
-                  step: "03",
-                  title: "Zkopírujte a použijte",
-                  desc: "Výsledek zkopírujete jedním klikem přímo do svého Etsy nebo Amazon Handmade účtu. Hotovo.",
-                  color: "oklch(0.65 0.15 155)",
-                },
-              ].map((item) => (
+              {steps.map((item) => (
                 <div key={item.step} className="relative p-8 rounded-2xl card-mystical"
                   style={{ background: "oklch(0.94 0.012 75)" }}>
                   <div className="font-heading text-5xl font-light mb-4 opacity-20"
@@ -201,45 +219,14 @@ export default function LandingPage() {
             <div className="text-center mb-16">
               <h2 className="font-heading text-4xl sm:text-5xl font-light"
                 style={{ color: "oklch(0.22 0.04 48)" }}>
-                Co dostanete
+                {en ? "What you get" : "Co dostanete"}
               </h2>
               <div className="w-12 h-0.5 mx-auto mt-4 rounded-full"
                 style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  icon: "✦",
-                  title: "SEO název",
-                  desc: "Optimalizovaný název až 140 znaků s klíčovými slovy pro vyhledávání na Etsy i Amazon.",
-                },
-                {
-                  icon: "◈",
-                  title: "Popis s příběhem",
-                  desc: "Autentický popis, který zaujme zákazníky a zároveň obsahuje slova, která vyhledávají.",
-                },
-                {
-                  icon: "◇",
-                  title: "13 klíčových slov",
-                  desc: "Sada klíčových slov přesně pro Etsy tagy nebo Amazon search terms. Každé slovo se dá zkopírovat.",
-                },
-                {
-                  icon: "⬡",
-                  title: "Cenová strategie",
-                  desc: "Stručné doporučení, jak produkt nacenit vzhledem ke konkurenci a trhu.",
-                },
-                {
-                  icon: "◎",
-                  title: "Skóre konkurenceschopnosti",
-                  desc: "Číslo 0–100, které vám řekne, jak silný je váš listing oproti ostatním.",
-                },
-                {
-                  icon: "◉",
-                  title: "Etsy i Amazon",
-                  desc: "Každá platforma má jiná pravidla. Generujeme zvlášť pro Etsy a zvlášť pro Amazon Handmade.",
-                },
-              ].map((f) => (
+              {features.map((f) => (
                 <div key={f.title} className="p-6 rounded-2xl"
                   style={{ background: "oklch(0.973 0.008 80)" }}>
                   <div className="text-2xl mb-3" style={{ color: "oklch(0.78 0.11 196)" }}>
@@ -267,17 +254,17 @@ export default function LandingPage() {
           <div className="relative max-w-2xl mx-auto text-center">
             <h2 className="font-heading text-4xl sm:text-5xl font-light mb-6"
               style={{ color: "oklch(0.22 0.04 48)" }}>
-              Začněte ještě dnes
+              {en ? "Get started today" : "Začněte ještě dnes"}
             </h2>
             <p className="text-lg mb-10" style={{ color: "oklch(0.52 0.04 50)" }}>
-              5 optimalizací zdarma každý měsíc. Bez kreditní karty.
+              {en ? "5 free optimizations every month. No credit card." : "5 optimalizací zdarma každý měsíc. Bez kreditní karty."}
             </p>
             <Link
               href="/register"
               className={cn(buttonVariants(), "h-12 px-10 text-base")}
               style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))", color: "white", border: "none" }}
             >
-              Vytvořit bezplatný účet
+              {en ? "Create a free account" : "Vytvořit bezplatný účet"}
             </Link>
           </div>
         </section>
@@ -295,12 +282,12 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6 flex-wrap justify-center">
             {[
-              { href: "/tarify", label: "Tarify" },
-              { href: "/podminky", label: "Obchodní podmínky" },
-              { href: "/gdpr", label: "GDPR" },
-              { href: "mailto:info@handmade.net", label: "Kontakt" },
-              { href: "/login", label: "Přihlásit se" },
-              { href: "/register", label: "Registrace" },
+              { href: "/tarify", label: en ? "Plans" : "Tarify" },
+              { href: "/podminky", label: en ? "Terms" : "Obchodní podmínky" },
+              { href: "/gdpr", label: en ? "Privacy" : "GDPR" },
+              { href: "mailto:info@handmade.net", label: en ? "Contact" : "Kontakt" },
+              { href: "/login", label: en ? "Sign in" : "Přihlásit se" },
+              { href: "/register", label: en ? "Sign up" : "Registrace" },
             ].map((l) => (
               <Link key={l.href} href={l.href}
                 className="text-sm hover:opacity-70 transition-opacity"

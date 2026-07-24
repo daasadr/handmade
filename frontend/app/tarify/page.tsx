@@ -7,92 +7,74 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-
-const PLANS = [
-  {
-    id: "free" as const,
-    name: "Free",
-    price: "0 Kč",
-    period: "navždy",
-    desc: "Pro vyzkoušení platformy",
-    limit: "5 optimalizací / měsíc",
-    features: [
-      "5 AI optimalizací měsíčně",
-      "Etsy & Amazon Handmade",
-      "Klíčová slova, popis, název",
-      "Skóre konkurenceschopnosti",
-      "Cenové doporučení",
-    ],
-    cta: "Začít zdarma",
-    highlight: false,
-    accentColor: "oklch(0.78 0.11 196)",
-  },
-  {
-    id: "mini" as const,
-    name: "Mini",
-    price: "199 Kč",
-    period: "měsíčně",
-    desc: "Pro aktivní výrobce",
-    limit: "30 optimalizací / měsíc",
-    features: [
-      "30 AI optimalizací měsíčně",
-      "Etsy & Amazon Handmade",
-      "Klíčová slova, popis, název",
-      "Skóre konkurenceschopnosti",
-      "Cenové doporučení",
-      "Prioritní zpracování",
-    ],
-    cta: "Vybrat Mini",
-    highlight: true,
-    accentColor: "oklch(0.72 0.13 175)",
-  },
-  {
-    id: "midi" as const,
-    name: "Midi",
-    price: "599 Kč",
-    period: "měsíčně",
-    desc: "Pro větší shopy",
-    limit: "150 optimalizací / měsíc",
-    features: [
-      "150 AI optimalizací měsíčně",
-      "Etsy & Amazon Handmade",
-      "Klíčová slova, popis, název",
-      "Skóre konkurenceschopnosti",
-      "Cenové doporučení",
-      "Prioritní zpracování",
-      "CSV export",
-    ],
-    cta: "Vybrat Midi",
-    highlight: false,
-    accentColor: "oklch(0.65 0.15 155)",
-  },
-  {
-    id: "max" as const,
-    name: "Max",
-    price: "1 499 Kč",
-    period: "měsíčně",
-    desc: "Pro profíky a agentury",
-    limit: "Neomezené optimalizace",
-    features: [
-      "Neomezené AI optimalizace",
-      "Etsy & Amazon Handmade",
-      "Klíčová slova, popis, název",
-      "Skóre konkurenceschopnosti",
-      "Cenové doporučení",
-      "Prioritní zpracování",
-      "CSV export",
-      "Bulk import produktů",
-      "Přednostní podpora",
-    ],
-    cta: "Vybrat Max",
-    highlight: false,
-    accentColor: "oklch(0.55 0.14 145)",
-  },
-];
+import { useLocale } from "@/lib/i18n";
+import { LangToggle } from "@/components/lang-toggle";
 
 export default function TarifyPage() {
   const { user } = useAuth();
+  const { locale } = useLocale();
+  const en = locale === "en";
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Ceny zůstávají v Kč — měna pro zahraničí je obchodní rozhodnutí na později.
+  const PLANS = [
+    {
+      id: "free" as const,
+      name: "Free",
+      price: "0 Kč",
+      period: en ? "forever" : "navždy",
+      desc: en ? "To try the platform" : "Pro vyzkoušení platformy",
+      limit: en ? "5 optimizations / month" : "5 optimalizací / měsíc",
+      features: en
+        ? ["5 AI optimizations per month", "Etsy & Amazon Handmade", "Keywords, description, title", "Competitiveness score", "Pricing recommendation"]
+        : ["5 AI optimalizací měsíčně", "Etsy & Amazon Handmade", "Klíčová slova, popis, název", "Skóre konkurenceschopnosti", "Cenové doporučení"],
+      cta: en ? "Start free" : "Začít zdarma",
+      highlight: false,
+      accentColor: "oklch(0.78 0.11 196)",
+    },
+    {
+      id: "mini" as const,
+      name: "Mini",
+      price: "199 Kč",
+      period: en ? "per month" : "měsíčně",
+      desc: en ? "For active makers" : "Pro aktivní výrobce",
+      limit: en ? "30 optimizations / month" : "30 optimalizací / měsíc",
+      features: en
+        ? ["30 AI optimizations per month", "Etsy & Amazon Handmade", "Keywords, description, title", "Competitiveness score", "Pricing recommendation", "Priority processing"]
+        : ["30 AI optimalizací měsíčně", "Etsy & Amazon Handmade", "Klíčová slova, popis, název", "Skóre konkurenceschopnosti", "Cenové doporučení", "Prioritní zpracování"],
+      cta: en ? "Choose Mini" : "Vybrat Mini",
+      highlight: true,
+      accentColor: "oklch(0.72 0.13 175)",
+    },
+    {
+      id: "midi" as const,
+      name: "Midi",
+      price: "599 Kč",
+      period: en ? "per month" : "měsíčně",
+      desc: en ? "For bigger shops" : "Pro větší shopy",
+      limit: en ? "150 optimizations / month" : "150 optimalizací / měsíc",
+      features: en
+        ? ["150 AI optimizations per month", "Etsy & Amazon Handmade", "Keywords, description, title", "Competitiveness score", "Pricing recommendation", "Priority processing", "CSV export"]
+        : ["150 AI optimalizací měsíčně", "Etsy & Amazon Handmade", "Klíčová slova, popis, název", "Skóre konkurenceschopnosti", "Cenové doporučení", "Prioritní zpracování", "CSV export"],
+      cta: en ? "Choose Midi" : "Vybrat Midi",
+      highlight: false,
+      accentColor: "oklch(0.65 0.15 155)",
+    },
+    {
+      id: "max" as const,
+      name: "Max",
+      price: "1 499 Kč",
+      period: en ? "per month" : "měsíčně",
+      desc: en ? "For pros and agencies" : "Pro profíky a agentury",
+      limit: en ? "Unlimited optimizations" : "Neomezené optimalizace",
+      features: en
+        ? ["Unlimited AI optimizations", "Etsy & Amazon Handmade", "Keywords, description, title", "Competitiveness score", "Pricing recommendation", "Priority processing", "CSV export", "Bulk product import", "Priority support"]
+        : ["Neomezené AI optimalizace", "Etsy & Amazon Handmade", "Klíčová slova, popis, název", "Skóre konkurenceschopnosti", "Cenové doporučení", "Prioritní zpracování", "CSV export", "Bulk import produktů", "Přednostní podpora"],
+      cta: en ? "Choose Max" : "Vybrat Max",
+      highlight: false,
+      accentColor: "oklch(0.55 0.14 145)",
+    },
+  ];
 
   const handleUpgrade = async (planId: "mini" | "midi" | "max") => {
     if (!user) {
@@ -104,14 +86,13 @@ export default function TarifyPage() {
       const { url } = await api.billing.createCheckout(planId);
       window.location.href = url;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Chyba při vytváření platby");
+      toast.error(err instanceof Error ? err.message : (en ? "Payment error" : "Chyba při vytváření platby"));
       setLoading(null);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.973 0.008 80)" }}>
-      {/* Nav */}
       <header className="sticky top-0 z-40 border-b"
         style={{ background: "oklch(0.973 0.008 80 / 0.92)", borderColor: "oklch(0.85 0.02 72)", backdropFilter: "blur(8px)" }}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -122,19 +103,20 @@ export default function TarifyPage() {
             </span>
           </Link>
           <div className="flex items-center gap-2">
+            <LangToggle className="mr-1" />
             {user ? (
               <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-                Přehled
+                {en ? "Overview" : "Přehled"}
               </Link>
             ) : (
               <>
                 <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
                   style={{ color: "oklch(0.52 0.04 50)" }}>
-                  Přihlásit se
+                  {en ? "Sign in" : "Přihlásit se"}
                 </Link>
                 <Link href="/register" className={cn(buttonVariants({ size: "sm" }))}
                   style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)" }}>
-                  Začít zdarma
+                  {en ? "Start free" : "Začít zdarma"}
                 </Link>
               </>
             )}
@@ -147,19 +129,20 @@ export default function TarifyPage() {
           <div className="text-center mb-16">
             <Link href={user ? "/dashboard" : "/"} className="text-sm hover:opacity-70 transition-opacity mb-6 inline-block"
               style={{ color: "oklch(0.65 0.02 60)" }}>
-              ← Zpět
+              {en ? "← Back" : "← Zpět"}
             </Link>
             <h1 className="font-heading text-5xl sm:text-6xl font-light" style={{ color: "oklch(0.22 0.04 48)" }}>
-              Tarify
+              {en ? "Plans" : "Tarify"}
             </h1>
             <div className="w-12 h-0.5 mx-auto mt-4 mb-6 rounded-full"
               style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
             <p className="text-lg max-w-xl mx-auto" style={{ color: "oklch(0.52 0.04 50)" }}>
-              Začněte zdarma. Upgradujte, když budete připraveni.
+              {en ? "Start free. Upgrade when you're ready." : "Začněte zdarma. Upgradujte, když budete připraveni."}
             </p>
             {user && (
               <p className="text-sm mt-2" style={{ color: "oklch(0.65 0.04 155)" }}>
-                Aktuální plán: <strong>{user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}</strong>
+                {en ? "Current plan: " : "Aktuální plán: "}
+                <strong>{user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}</strong>
               </p>
             )}
           </div>
@@ -167,7 +150,6 @@ export default function TarifyPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PLANS.map((plan) => {
               const isCurrent = user?.plan === plan.id;
-              const isPaid = plan.id !== "free";
 
               return (
                 <div
@@ -182,13 +164,13 @@ export default function TarifyPage() {
                   {plan.highlight && !isCurrent && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium"
                       style={{ background: "linear-gradient(135deg, oklch(0.78 0.11 196), oklch(0.65 0.15 155))", color: "white" }}>
-                      Nejoblíbenější
+                      {en ? "Most popular" : "Nejoblíbenější"}
                     </div>
                   )}
                   {isCurrent && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium"
                       style={{ background: plan.accentColor, color: "white" }}>
-                      Váš plán
+                      {en ? "Your plan" : "Váš plán"}
                     </div>
                   )}
 
@@ -235,13 +217,13 @@ export default function TarifyPage() {
                   {isCurrent ? (
                     <div className={cn(buttonVariants(), "w-full justify-center text-sm opacity-60 cursor-default")}
                       style={{ background: plan.accentColor, color: "white", border: "none" }}>
-                      Aktivní plán
+                      {en ? "Active plan" : "Aktivní plán"}
                     </div>
                   ) : plan.id === "free" ? (
                     <Link href={user ? "/dashboard" : "/register"}
                       className={cn(buttonVariants(), "w-full justify-center text-sm")}
                       style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)", border: "none" }}>
-                      {user ? "Přejít na přehled" : "Začít zdarma"}
+                      {user ? (en ? "Go to overview" : "Přejít na přehled") : (en ? "Start free" : "Začít zdarma")}
                     </Link>
                   ) : (
                     <button
@@ -253,7 +235,7 @@ export default function TarifyPage() {
                         : { background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)", border: "none" }
                       }
                     >
-                      {loading === plan.id ? "Přesměrovávám…" : plan.cta}
+                      {loading === plan.id ? (en ? "Redirecting…" : "Přesměrovávám…") : plan.cta}
                     </button>
                   )}
                 </div>
@@ -262,7 +244,7 @@ export default function TarifyPage() {
           </div>
 
           <p className="text-center text-sm mt-10" style={{ color: "oklch(0.65 0.02 60)" }}>
-            Bezpečné platby přes Stripe · Zrušit lze kdykoliv
+            {en ? "Secure payments via Stripe · Cancel anytime" : "Bezpečné platby přes Stripe · Zrušit lze kdykoliv"}
           </p>
         </div>
       </main>
@@ -270,7 +252,7 @@ export default function TarifyPage() {
       <footer className="border-t py-8 px-6 text-center"
         style={{ borderColor: "oklch(0.85 0.02 72)", background: "oklch(0.94 0.012 75)" }}>
         <p className="text-xs" style={{ color: "oklch(0.70 0.02 60)" }}>
-          © 2026 Handmade.net · Všechna práva vyhrazena
+          © 2026 Handmade.net · {en ? "All rights reserved" : "Všechna práva vyhrazena"}
         </p>
       </footer>
     </div>

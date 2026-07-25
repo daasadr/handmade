@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { useLocale } from "@/lib/i18n";
 import { api, AdminUser, AdminStats, UpdateAdminUserData, isVipActive } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +36,8 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const { locale } = useLocale();
+  const en = locale === "en";
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +58,7 @@ export default function AdminPage() {
         setStats(s);
       })
       .catch((err: unknown) =>
-        toast.error(err instanceof Error ? err.message : "Načtení dat selhalo"),
+        toast.error(err instanceof Error ? err.message : en ? "Failed to load data" : "Načtení dat selhalo"),
       )
       .finally(() => setLoading(false));
   }, [isAdmin]);
@@ -65,8 +68,8 @@ export default function AdminPage() {
     if (id === user?.id && data.role === "maker") {
       const otherAdmins = users.filter((u) => u.role === "admin" && u.id !== id).length;
       const warning = otherAdmins
-        ? "Odeberete si vlastní admin roli a ztratíte přístup do administrace. Pokračovat?"
-        : "Jste jediný administrátor. Odebráním role ztratí přístup do administrace úplně všichni a půjde to vrátit jen zásahem do databáze. Opravdu pokračovat?";
+        ? (en ? "You will remove your own admin role and lose access to the admin area. Continue?" : "Odeberete si vlastní admin roli a ztratíte přístup do administrace. Pokračovat?")
+        : (en ? "You are the only administrator. Removing the role locks everyone out of the admin area and can only be undone in the database. Really continue?" : "Jste jediný administrátor. Odebráním role ztratí přístup do administrace úplně všichni a půjde to vrátit jen zásahem do databáze. Opravdu pokračovat?");
       if (!confirm(warning)) {
         // Vrátí <select> zpět na původní hodnotu.
         setUsers((prev) => [...prev]);
@@ -83,14 +86,14 @@ export default function AdminPage() {
       const updated = await api.admin.updateUser(id, data);
       setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
       if (data.isVip !== undefined) {
-        toast.success(data.isVip ? "VIP uděleno" : "VIP odebráno");
+        toast.success(data.isVip ? (en ? "VIP granted" : "VIP uděleno") : (en ? "VIP removed" : "VIP odebráno"));
       } else {
-        toast.success("Uloženo");
+        toast.success(en ? "Saved" : "Uloženo");
       }
       api.admin.getStats().then(setStats).catch(() => {});
     } catch (err: unknown) {
       setUsers(previous);
-      toast.error(err instanceof Error ? err.message : "Uložení selhalo");
+      toast.error(err instanceof Error ? err.message : (en ? "Save failed" : "Uložení selhalo"));
     } finally {
       setSaving((prev) => {
         const next = new Set(prev);
@@ -111,16 +114,16 @@ export default function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
-        <h1 className="font-heading text-4xl font-light heading-accent">Administrace</h1>
+        <h1 className="font-heading text-4xl font-light heading-accent">{en ? "Admin" : "Administrace"}</h1>
         <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
           <CardContent className="py-10 text-center space-y-3">
             <p className="text-3xl">✦</p>
-            <p className="font-heading text-xl font-light">Sem nemáte přístup</p>
+            <p className="font-heading text-xl font-light">{en ? "You don't have access" : "Sem nemáte přístup"}</p>
             <p className="text-muted-foreground text-sm">
-              Administrace je dostupná pouze účtům s rolí administrátora.
+              {en ? "The admin area is available only to accounts with the administrator role." : "Administrace je dostupná pouze účtům s rolí administrátora."}
             </p>
             <Link href="/dashboard" className="text-sm hover:underline" style={{ color: "oklch(0.40 0.10 196)" }}>
-              ← Zpět na přehled
+              {en ? "← Back to overview" : "← Zpět na přehled"}
             </Link>
           </CardContent>
         </Card>
@@ -137,19 +140,19 @@ export default function AdminPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-4xl font-light heading-accent">Administrace</h1>
+        <h1 className="font-heading text-4xl font-light heading-accent">{en ? "Admin" : "Administrace"}</h1>
         <p className="text-muted-foreground mt-3">
-          Správa uživatelů, tarifů a VIP účtů.
+          {en ? "Manage users, plans and VIP accounts." : "Správa uživatelů, tarifů a VIP účtů."}
         </p>
       </div>
 
       {/* Statistiky */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Uživatelé" value={stats?.totalUsers ?? "—"} />
-        <StatCard label="Produkty" value={stats?.totalProducts ?? "—"} />
-        <StatCard label="VIP účty" value={stats?.vipCount ?? "—"} />
+        <StatCard label={en ? "Users" : "Uživatelé"} value={stats?.totalUsers ?? "—"} />
+        <StatCard label={en ? "Products" : "Produkty"} value={stats?.totalProducts ?? "—"} />
+        <StatCard label={en ? "VIP accounts" : "VIP účty"} value={stats?.vipCount ?? "—"} />
         <StatCard
-          label="Platící"
+          label={en ? "Paying" : "Platící"}
           value={
             stats
               ? PLANS.filter((p) => p !== "free").reduce((sum, p) => sum + Number(planCount(p)), 0)
@@ -177,14 +180,14 @@ export default function AdminPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-heading text-2xl font-light">
-            Uživatelé{" "}
+            {en ? "Users" : "Uživatelé"}{" "}
             <span className="text-base text-muted-foreground">
               ({filtered.length}
-              {query && filtered.length !== users.length ? ` z ${users.length}` : ""})
+              {query && filtered.length !== users.length ? (en ? ` of ${users.length}` : ` z ${users.length}`) : ""})
             </span>
           </h2>
           <Input
-            placeholder="Hledat podle e-mailu…"
+            placeholder={en ? "Search by email…" : "Hledat podle e-mailu…"}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
@@ -194,7 +197,9 @@ export default function AdminPage() {
         {filtered.length === 0 ? (
           <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
             <CardContent className="py-10 text-center text-muted-foreground text-sm">
-              {query ? `Žádný uživatel neodpovídá „${query}".` : "Zatím tu nejsou žádní uživatelé."}
+              {query
+                ? (en ? `No user matches “${query}”.` : `Žádný uživatel neodpovídá „${query}".`)
+                : (en ? "No users yet." : "Zatím tu nejsou žádní uživatelé.")}
             </CardContent>
           </Card>
         ) : (
@@ -213,8 +218,8 @@ export default function AdminPage() {
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{u.email}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {u.aiUsageThisMonth} optimalizací tento měsíc ·{" "}
-                        registrace {new Date(u.createdAt).toLocaleDateString("cs-CZ")}
+                        {u.aiUsageThisMonth} {en ? "optimizations this month" : "optimalizací tento měsíc"} ·{" "}
+                        {en ? "registered" : "registrace"} {new Date(u.createdAt).toLocaleDateString(en ? "en-US" : "cs-CZ")}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -237,7 +242,7 @@ export default function AdminPage() {
                             color: "oklch(0.50 0.14 75)",
                           }}
                         >
-                          ✦ Founding
+                          {en ? "✦ Founding" : "✦ Founding"}
                         </span>
                       )}
                       {u.role === "admin" && (
@@ -255,9 +260,9 @@ export default function AdminPage() {
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
                           style={{ background: "oklch(0.85 0.02 72)", color: "oklch(0.45 0.04 50)" }}
-                          title="E-mail zatím neověřen"
+                          title={en ? "Email not verified yet" : "E-mail zatím neověřen"}
                         >
-                          Neověřen
+                          {en ? "Unverified" : "Neověřen"}
                         </span>
                       )}
                     </div>
@@ -266,7 +271,7 @@ export default function AdminPage() {
                   {/* Ovládání */}
                   <div className="flex items-end gap-3 flex-wrap pt-1">
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground block">Tarif</label>
+                      <label className="text-xs text-muted-foreground block">{en ? "Plan" : "Tarif"}</label>
                       <select
                         value={u.plan}
                         disabled={busy}
@@ -281,7 +286,7 @@ export default function AdminPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground block">Role</label>
+                      <label className="text-xs text-muted-foreground block">{en ? "Role" : "Role"}</label>
                       <select
                         value={u.role}
                         disabled={busy}
@@ -295,7 +300,7 @@ export default function AdminPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground block">VIP do (prázdné = napořád)</label>
+                      <label className="text-xs text-muted-foreground block">{en ? "VIP until (empty = forever)" : "VIP do (prázdné = napořád)"}</label>
                       <input
                         type="date"
                         value={toDateInput(u.vipUntil)}
@@ -323,7 +328,7 @@ export default function AdminPage() {
                           : { background: "oklch(0.88 0.02 72)", color: "oklch(0.40 0.04 50)" }
                       }
                     >
-                      {u.isVip ? "★ Odebrat VIP" : "☆ Udělit VIP"}
+                      {u.isVip ? (en ? "★ Remove VIP" : "★ Odebrat VIP") : (en ? "☆ Grant VIP" : "☆ Udělit VIP")}
                     </button>
 
                     <button
@@ -337,7 +342,7 @@ export default function AdminPage() {
                           : { background: "oklch(0.88 0.02 72)", color: "oklch(0.40 0.04 50)" }
                       }
                     >
-                      {u.isFoundingMember ? "✦ Odebrat Founding" : "✧ Founding Member"}
+                      {u.isFoundingMember ? (en ? "✦ Remove Founding" : "✦ Odebrat Founding") : (en ? "✧ Founding Member" : "✧ Founding Member")}
                     </button>
                   </div>
 

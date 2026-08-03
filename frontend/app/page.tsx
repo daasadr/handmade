@@ -183,7 +183,7 @@ export default function LandingPage() {
             <div className="text-center mb-16">
               <h2 className="font-heading text-4xl sm:text-5xl font-light"
                 style={{ color: "oklch(0.22 0.04 48)" }}>
-                {en ? "Three steps to better sales" : "Tři kroky ke lepším prodejům"}
+                {en ? "Three steps to better sales" : "Tři kroky k lepším prodejům"}
               </h2>
               <div className="w-12 h-0.5 mx-auto mt-4 rounded-full"
                 style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />

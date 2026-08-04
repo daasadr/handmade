@@ -51,7 +51,8 @@ services:
       PORT: 3001
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
-      - "3001:3001"
+      # Jen loopback — na port chodí pouze nginx z hostu, ne internet.
+      - "127.0.0.1:3001:3001"
 
   frontend:
     build:
@@ -67,7 +68,8 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      # Jen loopback — na port chodí pouze nginx z hostu, ne internet.
+      - "127.0.0.1:3000:3000"
 
 volumes:
   postgres_data:

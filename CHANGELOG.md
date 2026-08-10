@@ -58,6 +58,34 @@ Bez DB změn (jen frontend).
 
 ---
 
+## [2026-08-07] Optimalizace na míru marketplacům (reálná pole platforem)
+
+**Typ:** feat
+**Soubory:** `backend/src/migrations/1754000000000-AddPlatformFields.ts` (nový), `backend/src/ai/ai-optimization.entity.ts`, `backend/src/ai/ai.service.ts`, `frontend/lib/api.ts`, `frontend/lib/i18n-dict.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/app/(app)/napoveda/page.tsx`, `CLAUDE.md`
+
+### Co bylo změněno
+AI teď generuje **pole, která daná platforma reálně vyplňuje**, ne pořád stejnou strukturu:
+- **Etsy** — název ≤140 znaků, **13 tagů (každý ≤20 znaků**, tvrdý limit Etsy — ořezáváme), **materiály**.
+- **Amazon Handmade** — **5 bullet pointů** + **search terms** (skryté, ≤240 znaků), žádné tagy.
+- **Fler** — české tagy + materiály, celý výstup česky.
+
+Detail produktu zobrazuje pole popsaná názvy dané platformy, každé s kopírováním (bullet points se kopírují jako odrážkový seznam). Nápověda aktualizována.
+
+### Proč
+Uživatelé kopírují výstup do konkrétního marketplacu. Když dostanou přesně jeho pole (a v jeho limitech — např. Etsy tag ≤20 znaků), je to rovnou použitelné. Otevírá to i budoucí export.
+
+### Způsob provedení
+Prompt v `ai.service` se větví podle `platform` (struktura polí) × `lang` (české překlady u Etsy/Amazon v CS verzi). Extra pole (`materials`, `bulletPoints`, `searchTerms`) se ukládají do nového JSONB sloupce `platformFields` (migrace). `keywords` drží tagy. Konkurence/skóre používá tagy jako dřív (jen přejmenovaná proměnná).
+
+### Instrukce pro deploy
+```bash
+cd /opt/handmade && git pull origin master
+docker compose -f docker-compose.prod.yml up -d --build
+```
+Migrace `platformFields` proběhne sama.
+
+---
+
 ## [2026-07-23] Etsy compliance: obchodní podmínky, doložka, neukládání dat konkurence
 
 **Typ:** feat

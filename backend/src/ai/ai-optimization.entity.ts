@@ -26,8 +26,22 @@ export class AiOptimization {
   @Column({ nullable: true, type: 'text' })
   descriptionOptimized: string;
 
+  /** Tagy (Etsy/Fler). Pro Amazon prázdné — tam se místo tagů plní bullet points + search terms. */
   @Column({ type: 'jsonb', default: '[]' })
   keywords: string[];
+
+  /**
+   * Pole specifická pro platformu:
+   *   materials    — Etsy/Fler (seznam materiálů)
+   *   bulletPoints — Amazon (5 hlavních bodů)
+   *   searchTerms  — Amazon (skryté vyhledávací výrazy)
+   */
+  @Column({ type: 'jsonb', default: '{}' })
+  platformFields: {
+    materials?: string[];
+    bulletPoints?: string[];
+    searchTerms?: string;
+  };
 
   @Column({ nullable: true, type: 'text' })
   pricingRecommendation: string;

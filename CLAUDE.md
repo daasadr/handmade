@@ -182,16 +182,16 @@ GET    /products/:id/optimizations   JWT required
 6. Uloží do `ai_optimizations`, aktualizuje `products.status = analyzed`
 7. Aktualizuje `aiUsageThisMonth` v DB
 
-**Výstup AI:**
-```json
-{
-  "optimized_title": "...",
-  "optimized_description": "...",
-  "keywords": ["...", ...],
-  "pricing_recommendation": "...",
-  "competitiveness_score": 0-100
-}
-```
+**Výstup AI — pole na míru platformě.** Sdílená pole (název, popis, cena, skóre)
+má každá platforma; navíc pole specifická pro daný marketplace:
+- **Etsy:** `tags` (13, každý ≤20 znaků — tvrdý limit Etsy, ořezáváme v kódu), `materials`.
+- **Amazon Handmade:** `bullet_points` (5), `search_terms` (skryté, ≤240 znaků). Žádné tagy.
+- **Fler:** české `tags` + `materials`, celý výstup česky.
+
+Extra pole (`materials`, `bulletPoints`, `searchTerms`) se ukládají do jednoho
+JSONB sloupce `platformFields`. `keywords` drží tagy (Etsy/Fler); u Amazonu prázdné.
+Prompt se větví podle `platform` (struktura polí) × `lang` (české překlady u Etsy/Amazon
+v CS verzi). Viz `ai/ai.service.ts`.
 
 **Skóre konkurenceschopnosti — dva zdroje (`scoreSource`):**
 - `market` — spočítáno z REÁLNÉ konkurence na Etsy (`ai/market-score.ts`) z dat

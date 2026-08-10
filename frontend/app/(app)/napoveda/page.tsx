@@ -139,14 +139,14 @@ export default function NapovedaPage() {
             ? [
                 ["Optimized title", "An SEO title in English — with materials, colors and technique."],
                 ["Optimized description", "An engaging, keyword-rich description, 150–300 words."],
-                ["13 keywords", "Search tags you paste into your listing."],
+                ["Platform-specific fields", "Etsy: 13 tags (each ≤20 chars) + materials. Amazon: 5 key-feature bullets + backend search terms. Fler: Czech tags. Exactly what each marketplace asks for."],
                 ["Pricing recommendation", "A short pricing-strategy tip."],
                 ["Competitiveness score", "An estimate of listing strength, 0–100 (see below)."],
               ]
             : [
                 ["Optimalizovaný název", "SEO název v angličtině (jazyk tržišť) — s materiály, barvami a technikou."],
                 ["Optimalizovaný popis", "Poutavý popis s klíčovými slovy, 150–300 slov."],
-                ["13 klíčových slov", "Tagy pro vyhledávání, které vložíte do listingu."],
+                ["Pole na míru platformě", "Etsy: 13 tagů (každý ≤20 znaků) + materiály. Amazon: 5 hlavních bodů + skryté vyhledávací výrazy. Fler: české tagy. Přesně to, co dané tržiště vyplňuje."],
                 ["Cenové doporučení", "Krátká rada k cenové strategii."],
                 ["Skóre konkurenceschopnosti", "Odhad síly listingu 0–100 (viz níže)."],
               ]

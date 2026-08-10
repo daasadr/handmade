@@ -96,6 +96,37 @@ export class AiService {
 Use ONLY what you can actually see — do not invent details not visible in the photos.`
       : '';
 
+    // České překlady chceme jen v české verzi u Etsy/Amazon (Fler je rovnou
+    // česky, anglická verze bez překladu).
+    const wantCzech = lang === 'cs' && !isFler;
+
+    const langNote = isFler
+      ? 'Fler.cz je český trh a čeští zákazníci hledají česky. Napiš celý výstup POUZE ČESKY.'
+      : lang === 'en'
+        ? 'Output English only. Leave every *_czech field as an empty string.'
+        : 'Write the main fields in English. Fill each *_czech field with a Czech translation of the title, description and pricing so the seller understands them.';
+
+    const titleInstr = isFler
+      ? 'SEO optimalizovaný název ČESKY, max 140 znaků — s materiály, barvami a technikou z fotky'
+      : 'SEO-optimized title in English, max 140 chars — include specific materials, colors and technique from the photo';
+    const descInstr = isFler
+      ? 'Poutavý, konkrétní popis ČESKY se SEO klíčovými slovy, 150–300 slov. Popiš, čím je kus výjimečný.'
+      : 'Vivid, specific description with SEO keywords in English, 150-300 words. Describe what makes this piece unique.';
+    const pricingInstr = isFler
+      ? 'Stručná cenová strategie ČESKY, 2–3 věty'
+      : 'Brief pricing strategy advice in English, 2-3 sentences';
+
+    // Pole na míru dané platformě — přesně to, co se u ní reálně vyplňuje.
+    const platformSchema =
+      platform === 'amazon'
+        ? `  "bullet_points": ["exactly 5 concise benefit-focused key-feature bullets in English, each max ~200 characters"],
+  "search_terms": "single line of space-separated backend search keywords in English, no commas, max 240 characters, not shown to buyers",`
+        : isFler
+          ? `  "tags": ["až 13 českých štítků, každý MAXIMÁLNĚ 20 znaků, malými písmeny, bez interpunkce"],
+  "materials": ["až 13 materiálů česky, 1–2 slova každý, např. bavlna, stříbro, ořechové dřevo"],`
+          : `  "tags": ["exactly 13 Etsy tags in English, each MAX 20 characters (hard Etsy limit), lowercase, no punctuation"],
+  "materials": ["up to 13 materials in English, 1-2 words each, e.g. cotton, sterling silver, walnut wood"],`;
+
     const promptText = `You are an expert in optimizing product listings for handmade marketplaces.
 ${imageAnalysisInstruction}
 Optimize this handmade product listing for ${platformInstructions}:
@@ -106,43 +137,16 @@ Optimize this handmade product listing for ${platformInstructions}:
 
 ${hasImages ? 'Ground the optimized title and description in the specific visual details you observed in the photos. Mention specific colors, materials, and techniques you can actually see.' : ''}
 
-${
-  isFler
-    ? `Fler.cz je český trh a čeští zákazníci hledají česky. Napiš celý výstup POUZE ČESKY.
-Respond ONLY with a valid JSON object (no markdown, no explanation):
+Respond ONLY with a valid JSON object (no markdown, no explanation). ${langNote}
 {
-  "optimized_title": "SEO optimalizovaný název ČESKY, max 140 znaků — s konkrétními materiály/barvami/technikou z fotky",
-  "title_czech": "",
-  "optimized_description": "Poutavý, konkrétní popis ČESKY se SEO klíčovými slovy, 150–300 slov. Popiš, čím je kus výjimečný.",
-  "description_czech": "",
-  "keywords": ["české klíčové slovo 1", "české klíčové slovo 2", "...celkem 13 českých klíčových slov, jak je Češi opravdu hledají"],
-  "pricing_recommendation": "Stručná cenová strategie ČESKY, 2–3 věty",
-  "pricing_recommendation_czech": "",
+  "optimized_title": "${titleInstr}",
+  "title_czech": "${wantCzech ? 'Český překlad optimalizovaného názvu' : ''}",
+  "optimized_description": "${descInstr}",
+  "description_czech": "${wantCzech ? 'Český překlad optimalizovaného popisu, stejná délka' : ''}",
+${platformSchema}
+  "pricing_recommendation": "${pricingInstr}",
+  "pricing_recommendation_czech": "${wantCzech ? 'Český překlad cenového doporučení' : ''}",
   "competitiveness_score": 75
-}`
-    : lang === 'en'
-      ? `Respond ONLY with a valid JSON object (no markdown, no explanation). Output English only — no Czech translations:
-{
-  "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
-  "title_czech": "",
-  "optimized_description": "Vivid, specific description with SEO keywords in English, 150-300 words. Describe what makes this piece unique based on what is visible.",
-  "description_czech": "",
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10", "keyword11", "keyword12", "keyword13"],
-  "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",
-  "pricing_recommendation_czech": "",
-  "competitiveness_score": 75
-}`
-      : `Respond ONLY with a valid JSON object (no markdown, no explanation):
-{
-  "optimized_title": "SEO-optimized title in English, max 140 chars — include specific materials/colors/technique from the photo",
-  "title_czech": "Český překlad optimalizovaného názvu",
-  "optimized_description": "Vivid, specific description with SEO keywords in English, 150-300 words. Describe what makes this piece unique based on what is visible.",
-  "description_czech": "Český překlad optimalizovaného popisu, stejná délka",
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10", "keyword11", "keyword12", "keyword13"],
-  "pricing_recommendation": "Brief pricing strategy advice in English, 2-3 sentences",
-  "pricing_recommendation_czech": "Český překlad cenového doporučení",
-  "competitiveness_score": 75
-}`
 }`;
 
     // Přidáme obrázky jako vision content pokud existují (max 4)
@@ -159,7 +163,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
     try {
       message = await this.anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: messageContent as any }],
       });
     } catch (err) {
@@ -179,7 +183,36 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       throw new BadRequestException('AI vrátila neplatný formát odpovědi');
     }
 
-    const keywords: string[] = parsed.keywords || [];
+    // Tagy: nové pole `tags`, fallback na staré `keywords`. Etsy má tvrdý limit
+    // 20 znaků na tag — ořízneme, ať jsou reálně použitelné. Fler limit nemá.
+    const tagLimited = platform === 'etsy';
+    const tags: string[] = (Array.isArray(parsed.tags) ? parsed.tags : parsed.keywords || [])
+      .map((t: unknown) => String(t).trim())
+      .filter(Boolean)
+      .map((t: string) => (tagLimited ? t.slice(0, 20) : t))
+      .slice(0, 13);
+
+    const materials: string[] = (Array.isArray(parsed.materials) ? parsed.materials : [])
+      .map((m: unknown) => String(m).trim())
+      .filter(Boolean)
+      .slice(0, 13);
+
+    const bulletPoints: string[] = (Array.isArray(parsed.bullet_points) ? parsed.bullet_points : [])
+      .map((b: unknown) => String(b).trim())
+      .filter(Boolean)
+      .slice(0, 5);
+
+    const searchTerms: string =
+      typeof parsed.search_terms === 'string' ? parsed.search_terms.trim().slice(0, 240) : '';
+
+    const platformFields: {
+      materials?: string[];
+      bulletPoints?: string[];
+      searchTerms?: string;
+    } = {};
+    if (materials.length) platformFields.materials = materials;
+    if (bulletPoints.length) platformFields.bulletPoints = bulletPoints;
+    if (searchTerms) platformFields.searchTerms = searchTerms;
 
     // Reálná konkurence z Etsy — jen když je API nakonfigurováno a jde o Etsy.
     // Amazon nemá veřejné vyhledávací API (viz nápověda), takže tam zůstává odhad AI.
@@ -190,21 +223,21 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
     let marketConclusion: string | undefined;
 
     if (platform === 'etsy' && this.etsyService.isEnabled()) {
-      // Dotaz na trh = pár hlavních klíčových slov (co by zákazník opravdu hledal),
-      // fallback na původní název, kdyby AI klíčová slova nevrátila.
-      const query = keywords.slice(0, 3).join(' ') || product.titleOriginal;
+      // Dotaz na trh = pár hlavních tagů (co by zákazník opravdu hledal),
+      // fallback na původní název, kdyby AI tagy nevrátila.
+      const query = tags.slice(0, 3).join(' ') || product.titleOriginal;
       competition = await this.etsyService.searchCompetition(query);
 
       if (competition) {
         competitivenessScore = computeMarketScore(
           product.priceOriginal,
-          keywords,
+          tags,
           competition,
         );
         // Ukládáme JEN tento textový závěr, ne surová data z Etsy (Terms).
         marketConclusion = buildMarketConclusion(
           product.priceOriginal,
-          keywords,
+          tags,
           competition,
         );
         scoreSource = 'market';
@@ -217,7 +250,8 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
       titleCzech: parsed.title_czech,
       descriptionOptimized: parsed.optimized_description,
       descriptionCzech: parsed.description_czech,
-      keywords,
+      keywords: tags,
+      platformFields,
       pricingRecommendation: parsed.pricing_recommendation,
       pricingRecommendationCzech: parsed.pricing_recommendation_czech,
       competitivenessScore,

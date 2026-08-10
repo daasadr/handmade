@@ -672,31 +672,112 @@ export default function ProductPage() {
 
             <Separator />
 
-            {/* Klíčová slova */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.keywords")}</p>
-                <button
-                  onClick={() => copyToClipboard(displayedOpt.keywords.join(", "), "Klíčová slova")}
-                  className="text-xs hover:underline"
-                  style={{ color: "oklch(0.78 0.11 196)" }}
-                >
-                  {t("common.copyAll")}
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {displayedOpt.keywords.map((kw) => (
-                  <span
-                    key={kw}
-                    className="px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80"
-                    style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}
-                    onClick={() => copyToClipboard(kw, `"${kw}"`)}
-                  >
-                    {kw}
-                  </span>
-                ))}
-              </div>
-            </div>
+            {/* Pole na míru platformě */}
+            {displayedOpt.platform === "amazon" ? (
+              <>
+                {/* Bullet points (Amazon) */}
+                {(displayedOpt.platformFields?.bulletPoints?.length ?? 0) > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.bulletPoints")}</p>
+                      <button
+                        onClick={() => copyToClipboard(displayedOpt.platformFields!.bulletPoints!.map((b) => `• ${b}`).join("\n"), t("prod.bulletPoints"))}
+                        className="text-xs hover:underline"
+                        style={{ color: "oklch(0.78 0.11 196)" }}
+                      >
+                        {t("common.copyAll")}
+                      </button>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {displayedOpt.platformFields!.bulletPoints!.map((b, i) => (
+                        <li key={i} className="text-sm leading-relaxed flex gap-2">
+                          <span className="shrink-0" style={{ color: "oklch(0.78 0.11 196)" }}>•</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Search terms (Amazon — skryté) */}
+                {displayedOpt.platformFields?.searchTerms && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.searchTerms")}</p>
+                      <button
+                        onClick={() => copyToClipboard(displayedOpt.platformFields!.searchTerms!, t("prod.searchTerms"))}
+                        className="text-xs hover:underline"
+                        style={{ color: "oklch(0.78 0.11 196)" }}
+                      >
+                        {t("common.copy")}
+                      </button>
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{displayedOpt.platformFields.searchTerms}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Tagy (Etsy/Fler) */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      {t("prod.tags")}
+                      {displayedOpt.platform === "etsy" && (
+                        <span className="normal-case tracking-normal"> · {t("prod.tagsHintEtsy")}</span>
+                      )}
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(displayedOpt.keywords.join(", "), t("prod.tags"))}
+                      className="text-xs hover:underline"
+                      style={{ color: "oklch(0.78 0.11 196)" }}
+                    >
+                      {t("common.copyAll")}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {displayedOpt.keywords.map((kw) => (
+                      <span
+                        key={kw}
+                        className="px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80"
+                        style={{ background: "oklch(0.78 0.11 196 / 0.12)", color: "oklch(0.35 0.10 196)" }}
+                        onClick={() => copyToClipboard(kw, kw)}
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Materiály (Etsy/Fler) */}
+                {(displayedOpt.platformFields?.materials?.length ?? 0) > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("prod.materials")}</p>
+                      <button
+                        onClick={() => copyToClipboard(displayedOpt.platformFields!.materials!.join(", "), t("prod.materials"))}
+                        className="text-xs hover:underline"
+                        style={{ color: "oklch(0.78 0.11 196)" }}
+                      >
+                        {t("common.copyAll")}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {displayedOpt.platformFields!.materials!.map((m) => (
+                        <span
+                          key={m}
+                          className="px-2 py-0.5 rounded-full text-xs cursor-pointer hover:opacity-80"
+                          style={{ background: "oklch(0.65 0.15 155 / 0.12)", color: "oklch(0.38 0.12 155)" }}
+                          onClick={() => copyToClipboard(m, m)}
+                        >
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             <Separator />
 

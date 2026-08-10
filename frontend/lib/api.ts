@@ -280,6 +280,12 @@ export interface AiOptimization {
   keywords: string[];
   pricingRecommendation: string;
   pricingRecommendationCzech?: string;
+  /** Pole na míru platformě: materials (Etsy/Fler), bulletPoints + searchTerms (Amazon). */
+  platformFields?: {
+    materials?: string[];
+    bulletPoints?: string[];
+    searchTerms?: string;
+  };
   competitivenessScore: number;
   /** 'market' = z reálné konkurence (Etsy), 'ai' = odhad AI. */
   scoreSource?: "ai" | "market";

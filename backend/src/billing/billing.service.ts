@@ -28,7 +28,10 @@ export class BillingService {
   ) {
     if (process.env.STRIPE_SECRET_KEY) {
       this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2026-05-27.dahlia',
+        // Musí sedět s verzí, pro kterou je nainstalované stripe SDK — jinak
+        // neprojde typecheck a při jiné verzi se můžou lišit tvary odpovědí.
+        // Při upgradu balíčku stripe tohle číslo srovnej s Stripe.LatestApiVersion.
+        apiVersion: '2026-06-24.dahlia',
       });
     }
   }

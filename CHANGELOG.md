@@ -28,6 +28,30 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-09-22] Zavedení osvědčených zásad z AlmostThere (bezpečné úložiště, health check, testy, pravidla)
+
+**Typ:** feat | refactor | docs
+**Soubory:** `frontend/lib/safe-storage.ts` (nový), `frontend/lib/api.ts`, `frontend/lib/auth-context.tsx`, `frontend/lib/i18n.tsx`, `frontend/components/cookie-consent.tsx`, `frontend/app/auth/callback/page.tsx`, `backend/src/app.controller.ts`, `backend/src/app.controller.spec.ts`, `backend/src/ai/market-score.spec.ts` (nový), `backend/src/billing/billing.service.ts`, `backend/package.json`, `docker-compose.prod.yml`, `CLAUDE.md`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Přenesli jsme do projektu užitečná pravidla z příručky projektu AlmostThere:
+- **Bezpečné úložiště (bod 05):** nový `frontend/lib/safe-storage.ts` (getStored/setStored/removeStored, vše v try/catch). Všech 5 konzumentů `localStorage` (api, auth-context, i18n, cookie-consent, auth callback) napojeno přes něj — Firefox v přísném režimu jinak hodí výjimku i při čtení a shodí stránku.
+- **Health check (bod 08):** `GET /api/health` v `app.controller.ts` se dotazuje i databáze (`SELECT 1`) a vrací 200/503. Pro externího hlídače.
+- **První reálné testy (bod 07):** `market-score.spec.ts` (10 testů čisté rozhodovací logiky skóre) + přepsaný `app.controller.spec.ts` (health, obě větve). Nový skript `npm run check` = typecheck + testy (bez DB/internetu). Testy pojmenované jako popis chyby.
+- **Pravidla (body 01–08):** nová sekce 15 v `CLAUDE.md` mapující zásady na náš stack, s odkazy na reálné soubory.
+- **stop_grace_period 60s** na backend v `docker-compose.prod.yml` (bod 08 — analýza volá Claude, výchozích 10 s by ji při deployi utnulo).
+- **ETSY_API_KEY** doplněn do `environment` backendu v compose — dosud chyběl, klíč z `.env` by se do kontejneru nepropsal.
+
+### Proč
+Ověřená pravidla, která v AlmostThere odhalila reálné chyby až u uživatelů. Bod 06 (JWT nese jen identitu) už jsme měli splněný. Doplnění ETSY_API_KEY do compose je zároveň nutná podmínka pro chystané zapnutí reálného skóre konkurence.
+
+### Způsob provedení
+Mechanické napojení úložiště přes helper; health endpoint injektuje `DataSource`; billing `apiVersion` srovnán na `2026-06-24.dahlia` (verze nainstalovaného SDK), aby byl typecheck zelený. Backend `npm run check`: typecheck 0 chyb, 12 testů zelených. Frontend `tsc --noEmit` čistý.
+
+### Instrukce pro deploy (pokud potřeba)
+Standardní `git pull && docker compose -f docker-compose.prod.yml up -d --build`. Health check po deployi ověříš: `curl -s http://127.0.0.1/api/health` → `{"status":"ok"}`.
+
 ## [2026-07-23] GDPR, cookie lišta a kontaktní e-mail
 
 **Typ:** feat

@@ -349,6 +349,7 @@ Stripe platby jsou **fáze 2** — zatím neimplementováno. Plán se mění ru�
 8. **DTO vždy** opatři class-validator dekorátory (`@IsString()`, `@IsOptional()`, atd.)
 9. **shadcn/ui** — nepoužívej `asChild`, použij `buttonVariants` + `Link` (viz sekce 7)
 10. **Testuj build** před pushnutím: `cd frontend && npx next build`
+11. **Před commitem backendu** spusť `cd backend && npm run check` (typecheck + testy, běží bez DB a internetu). Dodržuj zásady ze sekce 15.
 
 ---
 
@@ -366,6 +367,9 @@ JWT_EXPIRES_IN=7d
 # AI
 ANTHROPIC_API_KEY=sk-ant-...   # Claude API
 
+# Konkurence (volitelné — bez klíče jede AI skóre)
+ETSY_API_KEY=...               # Etsy Open API v3 keystring; jen na serveru, nikdy do gitu
+
 # S3 (Hetzner Object Storage)
 S3_ENDPOINT=https://fsn1.your-objectstorage.com
 S3_BUCKET=handmade-media
@@ -382,3 +386,55 @@ PORT=3001
 FRONTEND_URL=http://46.224.46.43
 NEXT_PUBLIC_API_URL=http://46.224.46.43/api
 ```
+
+---
+
+## 15. Zásady z praxe (osvědčené za rok stavění, převzato z AlmostThere)
+
+Pravidlo je to podstatné. Odkaz vedle je, kde to u nás žije. Když něco zjednodušuješ,
+napřed si přečti, proč to tam je.
+
+**15.1 Komentář říká PROČ, ne CO.** U každého neobvyklého rozhodnutí napiš, jaká chyba
+ho způsobila. Kód říká, co se děje; komentář musí říct, co se rozbije, když to někdo
+zjednoduší. Je to zároveň nejlepší zadání pro AI — s „proč" to model nepředělá.
+Vzor: `frontend/lib/image-upload.ts`, `frontend/lib/safe-storage.ts`, `ai/market-score.ts`.
+
+**15.2 Jmenovatel nesmí vznikat až akcí uživatele.** Když píšeš „X z Y" nebo kreslíš
+pruh postupu, ptej se: kdy vznikne Y? Musí existovat od začátku, ne až tím, že uživatel
+něco udělá — jinak chybějící data zmizí z čitatele i jmenovatele a podíl vyjde 100 %.
+U nás: měsíční kvótu ber z **plánu** (existuje od začátku), ne z počtu provedených analýz.
+
+**15.3 Za hranicí serveru nevěř ničemu.** Každý endpoint v pořadí: ověř přihlášení →
+ověř oprávnění → ověř tvar dat (DTO + `ValidationPipe`, už globálně v `main.ts`). Že
+uživatel neviděl tlačítko, není ochrana. Vlastnictví ověřuj **v dotazu**
+(`where: { id, maker: { userId } }`), ne až po něm, a vracej **404 místo 403** (neprozradí,
+že záznam existuje). Chybová hláška, se kterou uživatel nic nezmůže, je chyba v hlášce —
+pro čekatelný stav udělej vlastní výjimku + vlastní HTTP kód + větu „co dělat".
+Vzor: `ai/ai.service.ts translateAnthropicError()` (nikdy nevrací 401), `ImageUploadError`.
+
+**15.4 Dlouhá operace zamkne, čeho se dotkne.** `analyze` (volá Claude vteřiny) a platby
+čtou stav a pak ho přepisují — mezi tím je díra. Čti co nejpozději, zapisuj v jedné
+transakci. Rename sloupce = expand-contract: přidat → zapisovat do obou → dopsat data →
+přepnout čtení → teprve pak zahodit (migrace běží, zatímco stará verze obsluhuje uživatele).
+⚠️ Dosud NEZAMČENO: dvojklik na „Spustit analýzu" — kandidát na `replanningAt`-styl zámek.
+
+**15.5 Prohlížeč je cizí prostředí.** Na `localStorage` se sahá **jen přes
+`frontend/lib/safe-storage.ts`** (getStored/setStored/removeStored). Firefox v přísném
+režimu hodí výjimku i při čtení a shodí stránku dřív, než se vykreslí („nefungují tlačítka").
+
+**15.6 JWT nese jen to, co se mezi přihlášeními nemění.** Token = identita (`sub`, `email`).
+Plán, VIP, role se čtou z DB při každém requestu (`auth/jwt.strategy.ts`). ✅ Už tak je —
+nikdy do tokenu nedávej předplatné ani přístup, platilo by dlouho poté, co přestalo platit.
+
+**15.7 Testy: testuj rozhodnutí, ne dráty.** Nemá smysl testovat, že TypeORM uloží řádek.
+Smysl má úsudek — skóre, limity, kvóta. Vytáhni rozhodnutí do čisté funkce a otestuj ji
+(`ai/market-score.ts` → `market-score.spec.ts`). Test pojmenuj jako popis chyby
+(`it('nespadne na nulu, když chybí cena')`), ne `it('works')`. Před commitem `npm run check`.
+
+**15.8 Provoz a tajemství.**
+- Health check se ptá i DB: `GET /api/health` (`app.controller.ts`) — vrací 200/503. Napoj
+  na něj externího hlídače, ať se o výpadku dozvíš dřív než uživatel.
+- **Tajemství (klíče, hesla) NIKDY do chatu, gitu ani do AI.** Ve výpisech je přepiš na `XXX`.
+  Co jednou projde chatem, je potřeba rotovat. Klíče patří jen do serverového `.env`.
+- `stop_grace_period` v compose musí být delší než nejdelší request (analyze), ať Docker
+  neutne uživateli operaci uprostřed. Build patří mimo produkční stroj.

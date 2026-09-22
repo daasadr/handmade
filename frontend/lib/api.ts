@@ -1,12 +1,13 @@
+import { getStored, removeStored } from "./safe-storage";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token");
+  return getStored("access_token");
 }
 
 function handleUnauthorized() {
-  localStorage.removeItem("access_token");
+  removeStored("access_token");
   window.location.href = "/login";
 }
 

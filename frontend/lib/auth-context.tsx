@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { api, User } from "./api";
+import { getStored, setStored, removeStored } from "./safe-storage";
 
 interface AuthContextType {
   user: User | null;
@@ -18,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    const token = localStorage.getItem("access_token");
+    const token = getStored("access_token");
     if (!token) {
       setUser(null);
       setLoading(false);
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(me);
     } catch {
       setUser(null);
-      localStorage.removeItem("access_token");
+      removeStored("access_token");
     } finally {
       setLoading(false);
     }
@@ -41,12 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await api.auth.login(email, password);
-    localStorage.setItem("access_token", res.access_token);
+    setStored("access_token", res.access_token);
     setUser(res.user);
   };
 
   const logout = () => {
-    localStorage.removeItem("access_token");
+    removeStored("access_token");
     setUser(null);
     window.location.href = "/login";
   };

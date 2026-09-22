@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getStored, setStored } from "@/lib/safe-storage";
 
 const STORAGE_KEY = "cookie_ack";
 
@@ -17,21 +18,15 @@ export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
-    } catch {
-      // localStorage nedostupný (privátní režim) — lištu prostě neukážeme.
-    }
+    // Nedostupné úložiště → getStored vrátí null → lištu ukážeme (a potvrzení
+    // se nezapíše, ale to je lepší než pád).
+    if (!getStored(STORAGE_KEY)) setVisible(true);
   }, []);
 
   if (!visible) return null;
 
   const acknowledge = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      /* ignore */
-    }
+    setStored(STORAGE_KEY, "1");
     setVisible(false);
   };
 

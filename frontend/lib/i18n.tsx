@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { dict, type Dict } from "./i18n-dict";
+import { getStored, setStored } from "./safe-storage";
 
 export type Locale = "cs" | "en";
 
@@ -24,12 +25,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let resolved: Locale | null = null;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "cs" || saved === "en") resolved = saved;
-    } catch {
-      /* ignore */
-    }
+    const saved = getStored(STORAGE_KEY);
+    if (saved === "cs" || saved === "en") resolved = saved;
     if (!resolved) {
       // První návštěva → podle prohlížeče. Čeština jen pro cs*, jinak angličtina.
       const nav = typeof navigator !== "undefined" ? navigator.language : "";
@@ -40,11 +37,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    try {
-      localStorage.setItem(STORAGE_KEY, l);
-    } catch {
-      /* ignore */
-    }
+    setStored(STORAGE_KEY, l);
   }, []);
 
   return <Ctx.Provider value={{ locale, setLocale }}>{children}</Ctx.Provider>;

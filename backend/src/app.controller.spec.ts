@@ -1,22 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ServiceUnavailableException } from '@nestjs/common';
+import { getDataSourceToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 describe('AppController', () => {
-  let appController: AppController;
-
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+  // DataSource.query je jediné, co health() potřebuje — zbytek nemockujeme.
+  const makeController = async (query: () => Promise<unknown>) => {
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        AppService,
+        { provide: getDataSourceToken(), useValue: { query } as Partial<DataSource> },
+      ],
     }).compile();
+    return module.get<AppController>(AppController);
+  };
 
-    appController = app.get<AppController>(AppController);
-  });
+  describe('health', () => {
+    it('vrátí ok, když databáze odpoví', async () => {
+      const controller = await makeController(async () => [{ '?column?': 1 }]);
+      await expect(controller.health()).resolves.toEqual({ status: 'ok' });
+    });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    // Regrese: dřív Nest odpověděl 200 i s mrtvou DB, protože se DB neptal.
+    it('vyhodí 503, když dotaz na databázi selže', async () => {
+      const controller = await makeController(async () => {
+        throw new Error('connection refused');
+      });
+      await expect(controller.health()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
     });
   });
 });

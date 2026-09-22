@@ -16,6 +16,8 @@
     "migration:run": "npm run build && npx typeorm migration:run -d dist/data-source.js",
     "migration:revert": "npm run build && npx typeorm migration:revert -d dist/data-source.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check": "npm run typecheck && npm run test",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

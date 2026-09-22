@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { setStored } from "@/lib/safe-storage";
 
 function CallbackContent() {
   const searchParams = useSearchParams();
@@ -10,7 +11,7 @@ function CallbackContent() {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
-      localStorage.setItem("access_token", token);
+      setStored("access_token", token);
       // Full page load is intentional: AuthProvider in root layout already
       // ran refresh() with an empty localStorage. A SPA navigation to
       // /dashboard would hit ProtectedLayout with user=null and bounce

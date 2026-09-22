@@ -28,6 +28,40 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-09-22] Deploy skript s úklidem jen našeho projektu
+
+**Typ:** feat | config
+**Soubory:** `deploy/deploy.sh` (nový), `.gitattributes` (nový), `CLAUDE.md`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Nový `deploy/deploy.sh` — jednou příkazem nasadí novou verzi na serveru:
+`git pull --ff-only` → build → `up -d` → počká na `/api/health` (až 60 s) →
+uklidí staré images. Předloha z AlmostThere přizpůsobená našemu stacku.
+
+### Proč
+Aby se nasazovalo jedním krokem místo ručních `git pull` + docker příkazů, a
+aby se serverový prostor sám udržoval uklizený — **ale jen pro tento projekt**.
+
+### Způsob provedení
+- **Úklid jen našeho projektu:** místo globálního `docker image prune` /
+  `docker builder prune` (které by sáhly na almostthere/skrytokraj/familyfood)
+  si skript zapamatuje ID images našich služeb PŘED buildem (`docker compose
+  images -q`) a po nasazení smaže jen ty, které už nejsou aktuální. `docker
+  image rm ... || true` nikdy nesmaže běžící ani cizí image.
+- **Migrace:** nemáme samostatnou službu `migrate` (TypeORM `migrationsRun=true`
+  spustí migrace při startu backendu). Ověření schématu zastane health check:
+  když migrace spadne, backend nenaběhne a `/api/health` neodpoví → skript skončí
+  chybou, nová verze nikdy nepojede nad starým schématem.
+- **Úklid až po health checku** — kdyby nová verze byla rozbitá, staré images
+  zůstanou pro rychlý ruční rollback.
+- **`.gitattributes`** vynucuje LF u `*.sh`, aby CRLF z Windows nerozbil shebang
+  na Linuxu. Skript je commitnutý s executable bitem. Ověřeno `bash -n`.
+
+### Instrukce pro deploy (pokud potřeba)
+Na serveru jednorázově: `chmod +x /opt/handmade/deploy/deploy.sh` (nebo se
+přenese executable bit z gitu po `git pull`). Pak stačí `/opt/handmade/deploy/deploy.sh`.
+
 ## [2026-09-22] Zavedení osvědčených zásad z AlmostThere (bezpečné úložiště, health check, testy, pravidla)
 
 **Typ:** feat | refactor | docs

@@ -259,12 +259,16 @@ proběhne s AI skóre. Konkurence je bonus, ne blokující závislost.
 **Object Storage:** bucket `handmade-media`, Hetzner FSN1, endpoint: `https://fsn1.your-objectstorage.com`
 **Firewall:** porty 22, 80, 443, 2222 otevřeny
 
-**Produkční deploy na serveru:**
+**Produkční deploy na serveru:** jedním skriptem
 ```bash
-cd /opt/handmade
-git pull origin master
-docker compose -f docker-compose.prod.yml up -d --build
+/opt/handmade/deploy/deploy.sh
 ```
+Skript udělá: `git pull --ff-only` → build → `up -d` → počká na `/api/health`
+(200 = backend naběhl, migrace proběhly, DB žije) → smaže **jen staré images
+tohoto projektu** (žádný globální prune, aby nesáhl na almostthere/skrytokraj/
+familyfood). Když health check do 60 s neodpoví, skončí chybou a staré images
+nechá pro rollback. Ruční varianta zůstává: `git pull origin master && docker
+compose -f docker-compose.prod.yml up -d --build`.
 
 **GitHub repo:** https://github.com/daasadr/handmade.git, větev `master`
 

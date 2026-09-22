@@ -1,0 +1,3 @@
+# Shell skripty musí mít vždy LF konce řádků — jedou na Linuxovém serveru.
+# CRLF (výchozí na Windows) by rozbil shebang: `#!/usr/bin/env bash\r` → chyba.
+*.sh text eol=lf

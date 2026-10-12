@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "handmade",
+  "project_id": "34952a56-5291-432a-b367-a8c136bf0e0f"
+}

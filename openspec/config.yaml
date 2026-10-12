@@ -1,0 +1,41 @@
+schema: spec-driven
+
+context: |
+  Language: cs
+  All artifacts must be written in cs.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Kód, identifikátory a komentáře anglicky; komentář říká PROČ (viz CLAUDE.md sekce 15.1).
+
+  Projekt: Handmade.net — SaaS (Launchpad model) pro handmade výrobce. Vygeneruje
+  optimalizovaný název/popis/klíčová slova/cenu zvlášť pro Etsy, Amazon Handmade a Fler;
+  výrobce si výsledek zkopíruje na svůj marketplace. Platforma NEPRODÁVÁ produkty.
+  Stack: NestJS 11 (backend, port 3001), Next.js 16 App Router (frontend, port 3000),
+  PostgreSQL 16 + TypeORM 0.3, shadcn/ui (base-nova, NE Radix), Tailwind 4, Claude Haiku 4.5.
+  Docker Compose, nginx, Hetzner. Zdroj pravdy je CLAUDE.md.
+
+  Tvrdá omezení:
+  - Produkce běží NODE_ENV=production → TypeORM synchronize VYPNUTO. Každá změna sloupce
+    entity MUSÍ mít migraci v backend/src/migrations/ (jinak dotaz spadne na "column X
+    does not exist", u User i přihlášení). Viz CLAUDE.md sekce 4.
+  - Etsy API Terms: surová data konkurence se NEUKLÁDAJÍ (jen odvozené skóre a textový
+    závěr). Viz CLAUDE.md sekce 6.
+  - Dvojjazyčnost CS/EN; anglické optimalizace jen anglicky; Fler jen v CS verzi.
+  - Tajemství (klíče) jen v serverovém .env, nikdy do gitu ani chatu.
+
+rules:
+  proposal:
+    - Vždy uveď sekci "Non-goals".
+  design:
+    - U každé nové závislosti uveď dopad (velikost bundlu, výkon).
+    - Každá změna sloupce entity má v tasks navazující úkol "Migrace + test".
+  tasks:
+    - Úkol max. ~2 hodiny práce.
+    - Každý úkol uvádí způsob ověření (test, příkaz nebo pozorovatelné chování).
+    - Před zavřením úkolu backendu projde `cd backend && npm run check`.
+    - Úkoly dotýkající se autentizace, plateb, licencí, vstupů od uživatele nebo nové
+      závislosti mají navazující úkol "Review bezpečnosti".
+
+operations:
+  archive:
+    guidance:
+      - Po archivaci zapiš shrnutí změny i do CHANGELOG.md (formát v tom souboru).

@@ -443,8 +443,30 @@ Smysl má úsudek — skóre, limity, kvóta. Vytáhni rozhodnutí do čisté fu
 - `stop_grace_period` v compose musí být delší než nejdelší request (analyze), ať Docker
   neutne uživateli operaci uprostřed. Build patří mimo produkční stroj.
 
+---
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:1105d646 -->
+## 16. Pracovní postup (OpenSpec + Beads)
+
+Zavedeno 2026-10-12, aby práce přežila pauzy a bylo jasné, čím pokračovat.
+
+- **Práce = Beads (`bd`).** Úkoly žijí v lokální Dolt DB (`.beads/`), ne v markdownu
+  ani v hlavě. Po pauze `bd ready` ukáže, co je na řadě. **Místo TodoWrite používej `bd`.**
+  Podrobnosti v bloku „Beads Issue Tracker" níže (spravuje ho `bd`, needituj ho ručně).
+- **Co a proč = OpenSpec.** Každá větší změna → `openspec/changes/<název>/`
+  (`proposal.md`, `specs/`, `design.md`, `tasks.md`). Příkazy `/opsx:*`. Design a tasks
+  píšeme **just-in-time** až před začátkem změny, ne dopředu pro všechno. Hotový projekt
+  **nespecifikujeme zpětně** — specs jen pro to, na čem zrovna děláme; kód je zdroj pravdy.
+  Po dokončení změnu archivuj (`/opsx:archive`) a shrnutí zapiš do `CHANGELOG.md`.
+- **Smyčka úkolu:** `bd ready` → `bd update <id> --claim` → přečti změnu → implementuj
+  (testy a dokumentace patří k úkolu, ne na konec) → `npm run check` + build → zaškrtni
+  task → `bd close <id>`. Nová práce, na kterou narazíš = nový `bd` úkol, ne poznámka v textu.
+- **Review bezpečnosti** jako samostatný úkol na konci změny dotýkající se autentizace,
+  plateb, licencí, vstupů od uživatele nebo nové závislosti (nálezy do `design.md`).
+- **Koexistence:** `CHANGELOG.md` (historie) a sekce 15 (zásady) platí dál. OpenSpec/Beads
+  jsou navíc, pro řízení rozpracované práce. Poznatky mezi sezeními: `bd remember`.
+- **Git beze změny pravidel:** commit a push jen se souhlasem uživatelky (sekce 13).
+
+<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:46cd31e7 -->
 ## Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
@@ -488,6 +510,7 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
    # Team-maintainer opt-in only, unless current instructions forbid it:
    git pull --rebase
+   bd dolt push
    git push
    git status
    ```

@@ -28,6 +28,29 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-14] Oprava buildu: Stripe apiVersion se neuvádí
+
+**Typ:** fix
+**Soubory:** `backend/src/billing/billing.service.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Z konstruktoru Stripe odebrán `apiVersion`. (Opravuje předchozí záznam z 2026-09-22,
+kde byl srovnán na `2026-06-24.dahlia` — to byla chyba.)
+
+### Proč
+Docker build na serveru spadl: `TS2322: Type '2026-06-24.dahlia' is not assignable to
+type '2026-05-27.dahlia'`. Typ `apiVersion` je literálový union vázaný na přesnou verzi
+balíčku stripe. Lokální `node_modules` měla stripe 22.3.2 (chce 06-24), ale
+`package-lock.json` pinuje 22.2.0 (chce 05-27). Docker dělá `npm ci` z lockfile → jiná
+verze → jiný očekávaný řetězec. Lokální typecheck proto klamal.
+
+### Způsob provedení
+`apiVersion` je v typu volitelný (`apiVersion?`), takže ho stačí vynechat — SDK použije
+verzi, pro kterou je sestavené, a build projde na 22.2.0 i 22.3.2. `npm run check` zelený
+(typecheck + 12 testů). Poznatek uložen přes `bd remember`. Billing stále není naživo; až
+půjde do provozu, verzi připnout podle tehdy nainstalovaného SDK a sjednotit `npm ci`.
+
 ## [2026-09-22] Deploy skript s úklidem jen našeho projektu
 
 **Typ:** feat | config

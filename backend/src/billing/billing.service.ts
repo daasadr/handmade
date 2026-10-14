@@ -27,12 +27,15 @@ export class BillingService {
     private userRepo: Repository<User>,
   ) {
     if (process.env.STRIPE_SECRET_KEY) {
-      this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        // Musí sedět s verzí, pro kterou je nainstalované stripe SDK — jinak
-        // neprojde typecheck a při jiné verzi se můžou lišit tvary odpovědí.
-        // Při upgradu balíčku stripe tohle číslo srovnej s Stripe.LatestApiVersion.
-        apiVersion: '2026-06-24.dahlia',
-      });
+      // apiVersion schválně NEuvádíme. Jeho typ je literálový union vázaný na
+      // přesnou verzi balíčku stripe, takže hardcodovaný řetězec spadne při
+      // typecheku, jakmile se verze SDK liší. Přesně to se stalo: lokální
+      // node_modules (22.3.2) se rozešla s package-lock.json (22.2.0), hodnota
+      // prošla u mě, ale build v Dockeru (npm ci z lockfile) spadl. Bez
+      // apiVersion použije SDK verzi, pro kterou je sestavené — funguje všude.
+      // Billing není naživo; až půjde do provozu, verzi připni podle tehdy
+      // nainstalovaného SDK (a sjednoť node_modules s lockfile přes `npm ci`).
+      this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {});
     }
   }
 

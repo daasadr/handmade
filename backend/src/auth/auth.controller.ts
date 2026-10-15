@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,12 +19,19 @@ class ForgotPasswordDto {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  // Rate limit cílíme jen na tyhle citlivé endpointy (ne globálně). Klíčem je
+  // IP klienta (díky `trust proxy` z X-Forwarded-For). Při překročení → 429.
+
   @Post('register')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // max 10 registrací/hod z IP — zabíjí hromadné boty
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10/min — brzda proti hádání hesla
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -34,11 +42,15 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5/hod — ať se nedá spamovat resetními maily
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
   @Post('reset-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 3600000 } })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.password);
   }

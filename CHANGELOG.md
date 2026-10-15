@@ -28,6 +28,31 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-15] Rate limiting na auth endpointech (ochrana proti botům)
+
+**Typ:** feat
+**Soubory:** `backend/package.json`, `backend/package-lock.json`, `backend/src/main.ts`, `backend/src/app.module.ts`, `backend/src/auth/auth.controller.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Přidán `@nestjs/throttler` a limity na citlivé auth endpointy (klíč = IP klienta):
+- `register` 10/hod, `login` 10/min, `forgot-password` 5/hod, `reset-password` 10/hod.
+- `main.ts`: `app.set('trust proxy', 1)` — aby limiter viděl reálnou IP z X-Forwarded-For, ne IP nginx.
+- Guard NEní globální — jen na těchto endpointech, ať rate limit neomezí běžný provoz.
+
+### Proč
+V DB bylo 441 neověřených účtů — nejspíš spam registrace. Registrace neměla žádnou
+brzdu. Ověření e-mailu při loginu kryje zneužití AI, tohle kryje samotné hromadné
+zakládání účtů a hádání hesel. (Beads `handmade-956`.)
+
+### Způsob provedení
+`npm run check` zelený (typecheck + 12 testů). Při překročení limitu vrací endpoint 429.
+
+### ⚠️ Závislost na nginx
+Aby se limit počítal per-IP a ne per-proxy, musí nginx v `/api` bloku posílat
+`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` (a ideálně i
+`proxy_set_header X-Real-IP $remote_addr;`). Bez toho by se všichni počítali jako jedna IP.
+
 ## [2026-10-15] AppController zaregistrován v AppModule (/api a /api/health fungují)
 
 **Typ:** fix

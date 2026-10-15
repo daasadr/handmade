@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -26,6 +27,10 @@ import { CharityRecord } from './charity/charity-record.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Výchozí limit (60/min). Guard ale NEaplikujeme globálně — jen na citlivé
+    // auth endpointy (viz auth.controller.ts), ať rate limit neomezí běžný
+    // provoz appky. Úložiště je in-memory (jedna instance backendu → stačí).
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,

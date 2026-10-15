@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -85,6 +86,15 @@ export class AuthService {
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Neplatné přihlašovací údaje');
+
+    // Bez ověřeného e-mailu nepouštíme dál. 403 (ne 401) schválně: frontend na
+    // 401 odhlašuje a přesměrovává na /login, takže by se tato hláška ztratila.
+    // Google účty jsou ověřené automaticky (viz loginOrRegisterWithGoogle).
+    if (!user.emailVerified) {
+      throw new ForbiddenException(
+        'Nejdřív potvrďte svůj e-mail — poslali jsme vám ověřovací odkaz. Po jeho potvrzení se můžete přihlásit.',
+      );
+    }
 
     const token = this.jwtService.sign({ sub: user.id, email: user.email });
     return {

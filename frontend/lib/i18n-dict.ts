@@ -183,6 +183,10 @@ const cs = {
   "auth.agreeTerms": "obchodními podmínkami",
   "auth.agreeAnd": "a",
   "auth.agreeGdpr": "zpracováním osobních údajů",
+  "err.passwordWeak": "Heslo musí obsahovat alespoň jedno písmeno a jednu číslici.",
+  "auth.checkEmailTitle": "Zkontrolujte svůj e-mail",
+  "auth.checkEmailBody": "Poslali jsme ověřovací odkaz na vaši e-mailovou adresu. Otevřete ho, potvrďte účet a pak se můžete přihlásit.",
+  "auth.goToLogin": "Přejít na přihlášení",
 
   // Analysis errors / generic
   "err.analysisFailed": "Analýza selhala",
@@ -373,6 +377,10 @@ const en: Partial<Record<keyof Dict, string>> = {
   "auth.agreeTerms": "terms of service",
   "auth.agreeAnd": "and",
   "auth.agreeGdpr": "processing of personal data",
+  "err.passwordWeak": "Password must contain at least one letter and one number.",
+  "auth.checkEmailTitle": "Check your email",
+  "auth.checkEmailBody": "We sent a verification link to your email address. Open it, confirm your account, then you can sign in.",
+  "auth.goToLogin": "Go to sign in",
 
   // Errors
   "err.analysisFailed": "Analysis failed",

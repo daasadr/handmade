@@ -28,6 +28,38 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-15] Oprava registrace a přihlašování (UX + ověření e-mailu + síla hesla)
+
+**Typ:** fix
+**Soubory:** `frontend/lib/api.ts`, `frontend/app/(auth)/register/page.tsx`, `frontend/lib/i18n-dict.ts`, `backend/src/auth/auth.service.ts`, `backend/src/auth/dto/register.dto.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **Bounce bez hlášky opraven:** `api.ts` už nepřesměrovává na /login při 401 z `/auth/*` —
+  tam 401 znamená „špatné údaje" a patří k zobrazení hlášky, ne k odhlášení. Redirect
+  zůstává jen pro přihlášené requesty (vypršelá session).
+- **Jasná obrazovka po registraci:** místo bliknutí toastu + redirectu ukáže registrace
+  trvalý stav „Zkontrolujte svůj e-mail" s adresou a odkazem na přihlášení.
+- **Ověření e-mailu vynuceno při loginu:** backend `login()` vrací 403 se srozumitelnou
+  hláškou, dokud není e-mail potvrzený (Google účty jsou ověřené automaticky).
+- **Silnější heslo:** min 8 znaků + aspoň jedno písmeno a číslice (frontend hint i backend
+  DTO `@Matches`). „helloworld" nově neprojde.
+
+### Proč
+Nový uživatel přes e-mail uvízl: po registraci netušil, že má ověřit e-mail, a přihlášení
+se bez vysvětlení vracelo na /login. Hlášeno uživatelkou.
+
+### Způsob provedení
+Viz Beads epic `handmade-9gb`. `npm run check` zelený (typecheck + 12 testů), frontend
+`next build` zelený. i18n klíče doplněny CS i EN.
+
+### Instrukce pro deploy (pokud potřeba)
+Po deployi: existující NEOVĚŘENÉ e-mailové účty se nově nepřihlásí. Pokud nějaké jsou
+(testovací), označ je jako ověřené v DB:
+`UPDATE users SET "emailVerified" = true WHERE "emailVerified" = false AND "googleId" IS NULL;`
+(nebo jen pro konkrétní e-maily přidáním `AND email IN ('…')`). Follow-up `handmade-9gb.5`:
+endpoint „znovu poslat ověřovací e-mail".
+
 ## [2026-10-14] Oprava buildu: Stripe apiVersion se neuvádí
 
 **Typ:** fix

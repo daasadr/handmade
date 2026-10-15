@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -20,8 +19,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const t = useT();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +32,53 @@ export default function RegisterPage() {
       toast.error(t("err.passwordMin"));
       return;
     }
+    // Musí sedět s backendem (register.dto.ts): písmeno + číslice. Jinak projde
+    // slabé heslo typu „helloworld" a uživatel se diví, že ho web vzal.
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      toast.error(t("err.passwordWeak"));
+      return;
+    }
     setLoading(true);
     try {
       await api.auth.register(email, password);
-      toast.success(t("auth.accountCreated"));
-      router.push("/login");
+      // Nepřesměrováváme na /login (toast by jen bliknul a vypadalo by to, že se
+      // nic nestalo). Ukážeme trvalou obrazovku „ověř e-mail" — bez ní uživatel
+      // netuší, že se musí nejdřív potvrdit, než se přihlásí.
+      setRegistered(true);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t("err.registerFailed"));
     } finally {
       setLoading(false);
     }
   };
+
+  if (registered) {
+    return (
+      <Card className="w-full max-w-md card-mystical shadow-lg border-0" style={{ background: "oklch(0.97 0.008 80)" }}>
+        <CardHeader className="pb-2 pt-8 px-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">✦</span>
+            <span className="font-heading text-xl tracking-wide" style={{ color: "oklch(0.52 0.04 50)" }}>
+              handmade.net
+            </span>
+          </div>
+          <CardTitle className="font-heading text-3xl font-light">
+            {t("auth.checkEmailTitle")}
+          </CardTitle>
+          <div className="w-10 h-0.5 mt-2 rounded-full" style={{ background: "linear-gradient(to right, oklch(0.78 0.11 196), oklch(0.65 0.15 155))" }} />
+        </CardHeader>
+        <CardContent className="px-8 pt-4 space-y-4">
+          <p className="text-base">{t("auth.checkEmailBody")}</p>
+          <p className="text-sm font-medium break-all" style={{ color: "oklch(0.40 0.10 196)" }}>
+            {email}
+          </p>
+          <Link href="/login" className={cn(buttonVariants(), "w-full justify-center")}>
+            {t("auth.goToLogin")}
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md card-mystical shadow-lg border-0" style={{ background: "oklch(0.97 0.008 80)" }}>

@@ -24,7 +24,11 @@ async function request<T>(
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
-  if (res.status === 401) {
+  // 401 = vyprší přihlášení → odhlásit a na /login. ALE jen u přihlášených
+  // requestů. U /auth/* (login, register, …) znamená 401 „špatné údaje" a
+  // patří k zobrazení hlášky na stránce — redirect by ji schoval a vypadalo
+  // by to, že se formulář jen „sám odeslal zpět". (Odtud bounce bez hlášky.)
+  if (res.status === 401 && !path.startsWith("/auth/")) {
     handleUnauthorized();
     throw new Error("Unauthorized");
   }

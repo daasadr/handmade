@@ -6,7 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -76,9 +76,8 @@ function ResetPasswordContent() {
           />
           <div className="space-y-1.5">
             <Label htmlFor="password">Nové heslo</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               placeholder="alespoň 8 znaků"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -88,9 +87,8 @@ function ResetPasswordContent() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password2">Nové heslo znovu</Label>
-            <Input
+            <PasswordInput
               id="password2"
-              type="password"
               placeholder="••••••••"
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}

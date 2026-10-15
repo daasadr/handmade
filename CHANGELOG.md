@@ -28,6 +28,22 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-15] Zobrazení hesla (oko) na auth formulářích
+
+**Typ:** fix
+**Soubory:** `frontend/components/ui/password-input.tsx` (nový), `frontend/app/(auth)/login/page.tsx`, `frontend/app/(auth)/register/page.tsx`, `frontend/app/(auth)/reset-password/page.tsx`
+
+### Co bylo změněno
+Nová komponenta `PasswordInput` s přepínačem „zobrazit/skrýt" (oko) nasazena do login,
+registrace i reset hesla.
+
+### Proč
+Uživatelka si při resetu nastavila jiné heslo, než si myslela: prohlížeč jí do skrytých
+polí vecpal staré heslo (i s tečkou na konci), kvůli puntíkům to neviděla, a pak se tím
+„svým" heslem nemohla přihlásit. Reset cesta v kódu byla přitom správná — problém byl
+neviditelný vstup. S okem uživatel vidí přesně, co nastavuje a zadává. Doplňuje skryté
+`username` pole na reset formuláři (viz commit d9d7e05), které bránilo tomu dosazování.
+
 ## [2026-10-15] Rate limiting na auth endpointech (ochrana proti botům)
 
 **Typ:** feat

@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -114,10 +115,9 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">{t("auth.password")}</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
-              placeholder="alespoň 8 znaků"
+              placeholder="alespoň 8 znaků, písmeno + číslice"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -126,9 +126,8 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password2">{t("auth.passwordAgain")}</Label>
-            <Input
+            <PasswordInput
               id="password2"
-              type="password"
               placeholder="••••••••"
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}

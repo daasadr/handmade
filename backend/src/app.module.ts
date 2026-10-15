@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { MakersModule } from './makers/makers.module';
 import { ProductsModule } from './products/products.module';
@@ -45,5 +47,10 @@ import { CharityRecord } from './charity/charity-record.entity';
     AffiliateModule,
     BillingModule,
   ],
+  // AppController nese / (getHello) a /api/health. Bez téhle registrace se
+  // nenamountuje a obojí vrací 404 — což se dlouho přehlíželo, protože health
+  // check nikdo nevolal, dokud ho nezačal ověřovat deploy skript.
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

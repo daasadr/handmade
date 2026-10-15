@@ -28,6 +28,25 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-15] AppController zaregistrován v AppModule (/api a /api/health fungují)
+
+**Typ:** fix
+**Soubory:** `backend/src/app.module.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Do `AppModule` doplněno `controllers: [AppController]` + `providers: [AppService]`.
+
+### Proč
+Na produkci vracelo `/api/health` i `/api` NestJS 404 a deploy skript falešně hlásil
+„backend neodpověděl". Logy ukázaly, že se `AppController` vůbec nemapuje — v `AppModule`
+nebyl zaregistrovaný. Health endpoint tak byl mrtvý kód; přehlíželo se to, dokud ho
+nezačal ověřovat deploy skript. (Nebyl to problém portu — port 3001 byl správně.)
+
+### Způsob provedení
+`npm run check` zelený. Po deployi `curl http://127.0.0.1:3001/api/health` → `{"status":"ok"}`
+a deploy skript doběhne čistě.
+
 ## [2026-10-15] Oprava registrace a přihlašování (UX + ověření e-mailu + síla hesla)
 
 **Typ:** fix

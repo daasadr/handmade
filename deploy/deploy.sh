@@ -26,12 +26,12 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
-# Port backendu (na něm žije /api/health). Musí sedět s mapováním v
-# docker-compose.prod.yml (127.0.0.1:3001), jinak by kontrola níž ťukala na
-# cizí projekt. Když PORT v .env není, padáme na výchozí 3001.
-# `|| true` brání set -e ukončit skript, když PORT v .env chybí.
-BACKEND_PORT="$(grep -E '^PORT=' .env | cut -d= -f2 | tr -d '[:space:]')" || true
-BACKEND_PORT="${BACKEND_PORT:-3001}"
+# Port backendu na hostu. Je NAPEVNO v docker-compose.prod.yml (127.0.0.1:3001).
+# Schválně ho NEčteme z .env: PORT v .env je port UVNITŘ kontejneru a nemusí
+# odpovídat mapování na host. Health check musí klepat na skutečně namapovaný
+# port — jinak trefí frontend (3000) a dostane 404, i když backend běží v pořádku.
+# (Přesně to se stalo při prvním ostrém deploji.)
+BACKEND_PORT=3001
 
 # Zámek, podle kterého (budoucí) hlídač dostupnosti pozná, že nedostupnost
 # během nasazení je naše práce, a nemá kvůli ní budit. Uklízí se i při chybě

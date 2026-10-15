@@ -61,6 +61,19 @@ function ResetPasswordContent() {
     <>
       <CardContent className="px-8 pt-4">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Skryté pole e-mailu: bez něj správce hesel Chrome neví, ke kterému
+              účtu nové heslo patří, a nabízí/dosazuje heslo jiného účtu (to byl
+              ten „vecpává původní účet"). Zároveň mizí varování v DevTools. */}
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            aria-hidden="true"
+            tabIndex={-1}
+            readOnly
+            value=""
+            style={{ display: "none" }}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="password">Nové heslo</Label>
             <Input

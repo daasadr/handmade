@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   ServiceUnavailableException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Logger,
@@ -15,6 +16,7 @@ import { Product, ProductStatus } from '../products/product.entity';
 import { User, UserPlan, isVipActive } from '../users/user.entity';
 import { EtsyService } from '../common/etsy/etsy.service';
 import { computeMarketScore, buildMarketConclusion } from './market-score';
+import { InFlightLock } from './in-flight-lock';
 
 export type Platform = 'etsy' | 'amazon' | 'fler';
 
@@ -30,6 +32,7 @@ const PLAN_LIMITS: Record<UserPlan, number> = {
 export class AiService {
   private anthropic: Anthropic;
   private readonly logger = new Logger(AiService.name);
+  private readonly analyzeLock = new InFlightLock();
 
   constructor(
     @InjectRepository(AiOptimization)
@@ -44,6 +47,30 @@ export class AiService {
   }
 
   async analyze(
+    productId: string,
+    user: User,
+    platform: Platform = 'etsy',
+    lang: 'cs' | 'en' = 'cs',
+  ) {
+    // Zámek proti dvojkliku / dvojímu odeslání: dvě souběžné analýzy téhož
+    // produktu+platformy by jinak dvakrát volaly Claude (náš náklad) a založily
+    // duplicitní optimalizaci. Klíč je per uživatel+produkt+platforma, takže
+    // Etsy a Amazon můžou běžet souběžně. In-memory stačí pro jednu instanci
+    // backendu; při více instancích by bylo potřeba zamykat v DB (viz 15.4).
+    const lockKey = `${user.id}:${productId}:${platform}`;
+    if (!this.analyzeLock.acquire(lockKey)) {
+      throw new ConflictException(
+        'Analýza tohoto produktu právě probíhá. Počkejte prosím na výsledek.',
+      );
+    }
+    try {
+      return await this.performAnalysis(productId, user, platform, lang);
+    } finally {
+      this.analyzeLock.release(lockKey);
+    }
+  }
+
+  private async performAnalysis(
     productId: string,
     user: User,
     platform: Platform = 'etsy',

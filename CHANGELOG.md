@@ -28,6 +28,27 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-23] Zámek proti dvojkliku na „Spustit analýzu"
+
+**Typ:** feat
+**Soubory:** `backend/src/ai/in-flight-lock.ts` (nový), `backend/src/ai/in-flight-lock.spec.ts` (nový), `backend/src/ai/ai.service.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Nová třída `InFlightLock` a zámek v `AiService.analyze` (klíč = uživatel+produkt+platforma).
+Druhá souběžná analýza téhož produktu/platformy vrátí 409 „Analýza právě probíhá".
+
+### Proč
+Dvojklik / dvojí odeslání by spustilo dvě volání Claude (náš náklad) a založilo
+duplicitní optimalizaci. Frontend sice tlačítko během běhu zakazuje, ale backend to
+nekryl (retry, víc záložek, přímé API). (Beads `handmade-w6k`, zásada 15.4.)
+
+### Způsob provedení
+Rozhodnutí „pustit/nepustit" vytaženo do čisté třídy `InFlightLock` (4 testy). In-memory
+(jedna instance backendu); při více instancích by bylo potřeba zamykat v DB/Redisu.
+Etsy a Amazon téhož produktu můžou běžet souběžně (platforma je v klíči). `npm run check`
+zelený (16 testů).
+
 ## [2026-10-23] KRITICKÉ: duplicitní AuthProvider rozbíjel přihlášení
 
 **Typ:** fix

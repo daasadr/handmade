@@ -28,6 +28,31 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-10-23] KRITICKÉ: duplicitní AuthProvider rozbíjel přihlášení
+
+**Typ:** fix
+**Soubory:** `frontend/app/(auth)/layout.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Z `(auth)/layout.tsx` odebrán vlastní `<AuthProvider>` — root (`app/providers.tsx`)
+ho už dodává celé aplikaci.
+
+### Proč
+Přihlášení „probliklo" zpět na login bez chybové hlášky; konzole hlásila 401 na
+`/auth/me`. Příčina: `AuthProvider` byl instancovaný DVAKRÁT — jednou v rootu (obsluhuje
+chráněné stránky `(app)`) a podruhé v `(auth)/layout` (obsluhuje login). Přihlášení
+nastavilo uživatele do vnitřní (login) instance, ale `router.push('/dashboard')` ji
+zahodil a chráněné stránky četly root instanci, která o přihlášení nevěděla → `user=null`
+→ okamžitý redirect zpět na /login. 401 na `/auth/me` byl z marného dotazu root instance
+starým/žádným tokenem. Login přitom proběhl úspěšně, proto žádná chybová hláška.
+
+### Způsob provedení
+Jeden provider = jeden sdílený stav. `next build` zelený. Audit zbytku auth části:
+login/registrace/reset/ověření/zapomenuté heslo mají korektní chybové i úspěšné stavy;
+backend vrací srozumitelné hlášky. Drobnost k dořešení: backendové hlášky a stránky
+verify-email/forgot-password jsou jen česky (EN uživatel vidí češtinu).
+
 ## [2026-10-15] Zobrazení hesla (oko) na auth formulářích
 
 **Typ:** fix

@@ -1,0 +1,28 @@
+# Handmade.net
+
+> AI nástroj, který handmade prodejcům optimalizuje listingy pro Etsy, Amazon Handmade a Fler. Vygeneruje lepší název, popis, 13 klíčových slov, cenovou strategii a skóre konkurenceschopnosti. Handmade.net NEprodává produkty — je to optimalizační nástroj, prodejce prodává dál sám na svém marketplace účtu.
+
+## Co to je (CS)
+- Handmade.net je český SaaS (launchpad model) pro výrobce ručních výrobků.
+- Flow: přidáš produkt (název, popis, cena, foto) → spustíš analýzu → AI (Claude) vrátí optimalizovaný název, popis, klíčová slova, cenové doporučení a skóre konkurenceschopnosti → zkopíruješ si to na svůj marketplace.
+- Podporované marketplace: Etsy (13 tagů), Amazon Handmade (odrážky + search terms), Fler (česky).
+- U Etsy se skóre konkurenceschopnosti počítá z reálných dat trhu přes Etsy API.
+- Zdarma 5 optimalizací měsíčně; placené plány Mini/Midi/Max nabízejí víc.
+- Rozhraní i optimalizace česky i anglicky; Fler jen v české verzi.
+
+## What it is (EN)
+- Handmade.net is an AI tool that optimizes product listings for handmade sellers on Etsy, Amazon Handmade and Fler.
+- It does NOT sell products — sellers copy the optimized output to their own marketplace account.
+- Free tier: 5 optimizations per month.
+
+## Odkazy / Links
+- Web: https://handmade.net
+- Tarify / Pricing: https://handmade.net/tarify
+- Nápověda / Help: https://handmade.net/napoveda
+- Obchodní podmínky / Terms: https://handmade.net/podminky
+- Zpracování osobních údajů / Privacy (GDPR): https://handmade.net/gdpr
+
+## FAQ
+- Prodává Handmade.net moje výrobky? Ne, je to optimalizační nástroj, ne tržiště.
+- Pro které marketplace to funguje? Etsy, Amazon Handmade, Fler.
+- Je to zdarma? Ano, 5 optimalizací měsíčně zdarma.

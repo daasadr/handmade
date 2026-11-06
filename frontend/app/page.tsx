@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n";
 import { LangToggle } from "@/components/lang-toggle";
+import { FAQ, FAQ_EN } from "@/lib/seo";
 
 export default function LandingPage() {
   const { locale } = useLocale();
@@ -238,6 +239,28 @@ export default function LandingPage() {
                   </h3>
                   <p className="text-sm leading-relaxed" style={{ color: "oklch(0.52 0.04 50)" }}>
                     {f.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== FAQ (viditelná, shoduje se s FAQPage JSON-LD → AEO) ===== */}
+        <section className="py-24 px-6" style={{ background: "oklch(0.94 0.012 75 / 0.4)" }}>
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-heading text-4xl sm:text-5xl font-light mb-10 text-center"
+              style={{ color: "oklch(0.22 0.04 48)" }}>
+              {en ? "Frequently asked questions" : "Časté dotazy"}
+            </h2>
+            <div className="space-y-6">
+              {(en ? FAQ_EN : FAQ).map((item) => (
+                <div key={item.q}>
+                  <h3 className="font-heading text-xl mb-1.5" style={{ color: "oklch(0.30 0.04 48)" }}>
+                    {item.q}
+                  </h3>
+                  <p className="text-base leading-relaxed" style={{ color: "oklch(0.52 0.04 50)" }}>
+                    {item.a}
                   </p>
                 </div>
               ))}

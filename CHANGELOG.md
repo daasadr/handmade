@@ -28,6 +28,42 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] SEO / GEO / AEO — kompletní základ
+
+**Typ:** feat
+**Soubory:** `frontend/lib/seo.ts` (nový), `frontend/app/layout.tsx`, `frontend/app/robots.ts` (nový), `frontend/app/sitemap.ts` (nový), `frontend/app/opengraph-image.tsx` (nový), `frontend/public/llms.txt` (nový), `frontend/app/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **Metadata** (root layout): `metadataBase`, titulek + šablona, popis, klíčová slova,
+  Open Graph, Twitter card, robots index/follow.
+- **robots.txt** (`app/robots.ts`) — povoluje veřejné stránky, zakazuje přihlášenou část a /api.
+- **sitemap.xml** (`app/sitemap.ts`) — veřejné stránky s prioritami.
+- **Strukturovaná data JSON-LD** (schema.org @graph): Organization, WebSite, SoftwareApplication,
+  **FAQPage** — pomáhá vyhledávačům i AI odpovědním enginům (GEO/AEO).
+- **Viditelná FAQ sekce** na landingu (CS/EN), obsahově shodná s FAQPage JSON-LD.
+- **llms.txt** (`public/llms.txt`) — strojově čitelný popis webu pro LLM/AI enginy.
+- **Dynamický OG obrázek** (`app/opengraph-image.tsx`, next/og) — branded náhled pro sdílení.
+
+### Proč
+Priorita #2. Aby web dobře fungoval v klasickém vyhledávání i v AI odpovědích (ChatGPT,
+Perplexity). (Beads epic `handmade-3y5`.)
+
+### Způsob provedení
+Sdílený `lib/seo.ts` drží doménu, popis, FAQ (CS/EN) i generátor JSON-LD — jeden zdroj pravdy
+pro metadata, strukturovaná data i viditelnou FAQ. Doména default `https://handmade.net`,
+přebitelná přes `NEXT_PUBLIC_SITE_URL`. `next build` zelený (/robots.txt, /sitemap.xml,
+/opengraph-image se generují).
+
+### Známé omezení
+i18n je klientské (první render CS), takže anglický obsah nemá vlastní indexovatelnou URL —
+crawlery/enginy vidí CS. Plné vícejazyčné SEO (locale routy + hreflang) je větší věc, založeno
+jako follow-up.
+
+### Instrukce pro deploy
+`./deploy/deploy.sh`. Po nasazení ověř `https://handmade.net/robots.txt`, `/sitemap.xml`,
+`/llms.txt`. Pokud produkční URL není handmade.net, nastav `NEXT_PUBLIC_SITE_URL`.
+
 ## [2026-11-07] Bezpečnostní audit — opravy (mass assignment, JWT, helmet, heslo)
 
 **Typ:** fix (security)

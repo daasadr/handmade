@@ -35,7 +35,7 @@ export class AiController {
   }
 
   @Get(':id/optimizations')
-  getOptimizations(@Param('id') productId: string) {
-    return this.aiService.getOptimizations(productId);
+  getOptimizations(@Param('id') productId: string, @CurrentUser() user: User) {
+    return this.aiService.getOptimizations(productId, user);
   }
 }

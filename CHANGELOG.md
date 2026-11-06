@@ -28,6 +28,30 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] Bezpečnost: oprava IDOR na AI endpointech + 404 u cizích produktů
+
+**Typ:** fix (security)
+**Soubory:** `backend/src/ai/ai.service.ts`, `backend/src/ai/ai.controller.ts`, `backend/src/products/products.service.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **IDOR `POST /products/:id/analyze`:** `performAnalysis` načítal produkt podle ID bez
+  kontroly vlastníka → přihlášený uživatel mohl spustit analýzu na cizím produktu (čtení
+  cizích dat, založení optimalizace). Nově se ověřuje vlastnictví V DOTAZU
+  (`where: { id, maker: { userId } }`), cizí/neexistující → 404.
+- **IDOR `GET /products/:id/optimizations`:** vracel optimalizace kohokoli podle productId
+  (endpoint neměl ani `user`). Nově ověřuje vlastnictví produktu, jinak 404.
+- **Info-leak:** `products.service.findOne` vracel u cizího produktu 403 (prozradilo
+  existenci) → sjednoceno na 404. Zásada 15.3.
+
+### Proč
+Priorita #1 bezpečnost. Toto byly reálné IDOR díry (přístup k cizím zdrojům podle ID).
+První nálezy; probíhá širší bezpečnostní audit (Beads epic `handmade-eis`).
+
+### Způsob provedení
+Vlastnictví se ověřuje v dotazu přes relaci `maker.userId`, ne až po načtení. `npm run
+check` zelený (16 testů).
+
 ## [2026-11-06] Profil-příběh: custom bohatý editor (druhý režim)
 
 **Typ:** feat

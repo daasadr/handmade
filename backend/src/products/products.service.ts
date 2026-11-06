@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -56,8 +56,10 @@ export class ProductsService {
       where: { id },
       relations: ['images', 'optimizations'],
     });
-    if (!product) throw new NotFoundException('Produkt nenalezen');
-    if (product.makerId !== profile.id) throw new ForbiddenException();
+    // 404 i u cizího produktu (ne 403) — neprozradíme, že existuje. Zásada 15.3.
+    if (!product || product.makerId !== profile.id) {
+      throw new NotFoundException('Produkt nenalezen');
+    }
     return product;
   }
 

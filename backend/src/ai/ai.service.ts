@@ -94,8 +94,10 @@ export class AiService {
       );
     }
 
+    // Vlastnictví ověřeno V DOTAZU (IDOR): analyzovat jde jen vlastní produkt.
+    // Cizí i neexistující → 404 (neprozradí, že produkt existuje). Zásada 15.3.
     const product = await this.productRepo.findOne({
-      where: { id: productId },
+      where: { id: productId, maker: { userId: user.id } },
       relations: ['images'],
     });
     if (!product) throw new NotFoundException('Produkt nenalezen');
@@ -374,7 +376,13 @@ ${platformSchema}
     );
   }
 
-  async getOptimizations(productId: string) {
+  async getOptimizations(productId: string, user: User) {
+    // Ověření vlastnictví v dotazu (IDOR): optimalizace vrátíme jen k produktu
+    // přihlášeného uživatele. Cizí i neexistující → 404. Zásada 15.3.
+    const product = await this.productRepo.findOne({
+      where: { id: productId, maker: { userId: user.id } },
+    });
+    if (!product) throw new NotFoundException('Produkt nenalezen');
     return this.optimizationRepo.find({
       where: { productId },
       order: { createdAt: 'DESC' },

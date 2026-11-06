@@ -6,6 +6,7 @@ import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
 import { buildStoryBlocks } from "@/lib/story-template";
+import DOMPurify from "dompurify";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -124,8 +125,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Příběh tvůrce — odstavce proložené obrázky; jinak krátké bio */}
-          {storyBlocks.length > 0 ? (
+          {/* Příběh tvůrce — custom HTML (sanitizované), jinak šablona, jinak bio */}
+          {profile.storyMode === "custom" && profile.storyHtml ? (
+            <div
+              className="prose-story text-sm text-foreground/80 mb-4"
+              // HTML je očištěné už na serveru (sanitizeStoryHtml); DOMPurify je
+              // druhá obrana při zobrazení. Běží jen na klientovi (profil se
+              // načítá v useEffect), takže window je k dispozici.
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(profile.storyHtml) }}
+            />
+          ) : storyBlocks.length > 0 ? (
             <div className="space-y-4 mb-4">
               {storyBlocks.map((block) => (
                 <div key={block.key} className="space-y-2">

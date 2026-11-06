@@ -9,6 +9,11 @@ import { compressImage, ImageUploadError } from "@/lib/image-upload";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
 import { STORY_QUESTION_KEYS, CURATED_QUOTES } from "@/lib/story-template";
+import dynamic from "next/dynamic";
+
+// TipTap jen na klientovi — ssr:false brání hydration mismatchi a nenačítá
+// těžkou knihovnu na server.
+const StoryEditor = dynamic(() => import("@/components/story-editor"), { ssr: false });
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +38,8 @@ export default function ProfileEditPage() {
     motto: "",
     story: {} as Record<string, string>,
     storyImages: {} as Record<string, string>,
+    storyMode: "template" as "template" | "custom",
+    storyHtml: "",
   });
   const [showQuotes, setShowQuotes] = useState(false);
   const [uploadingStoryKey, setUploadingStoryKey] = useState<string | null>(null);
@@ -59,6 +66,8 @@ export default function ProfileEditPage() {
           motto: p.motto || "",
           story: p.storyAnswers || {},
           storyImages: p.storyImages || {},
+          storyMode: p.storyMode === "custom" ? "custom" : "template",
+          storyHtml: p.storyHtml || "",
         });
       })
       .catch(() => setIsNew(true))
@@ -139,6 +148,8 @@ export default function ProfileEditPage() {
         motto: form.motto || undefined,
         storyAnswers: form.story,
         storyImages: form.storyImages,
+        storyMode: form.storyMode,
+        storyHtml: form.storyMode === "custom" ? form.storyHtml : undefined,
       };
       let p = isNew
         ? await api.makers.createProfile(data)
@@ -343,7 +354,33 @@ export default function ProfileEditPage() {
                 )}
               </div>
 
-              {/* Řízené otázky */}
+              {/* Přepínač režimu: šablona vs volný editor */}
+              <div className="flex gap-2 mt-5 mb-1">
+                {(["template", "custom"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setForm({ ...form, storyMode: m })}
+                    className="text-xs px-3 py-1.5 rounded-full border transition-colors"
+                    style={
+                      form.storyMode === m
+                        ? { background: "oklch(0.78 0.11 196 / 0.2)", borderColor: "oklch(0.78 0.11 196)", color: "oklch(0.35 0.08 200)" }
+                        : { borderColor: "oklch(0.85 0.02 72)", color: "oklch(0.52 0.04 50)" }
+                    }
+                  >
+                    {m === "template" ? t("pe.modeTemplate") : t("pe.modeCustom")}
+                  </button>
+                ))}
+              </div>
+
+              {form.storyMode === "custom" ? (
+                <div className="mt-3">
+                  <StoryEditor
+                    value={form.storyHtml}
+                    onChange={(html) => setForm((f) => ({ ...f, storyHtml: html }))}
+                  />
+                </div>
+              ) : (
               <div className="space-y-4 mt-4">
                 {STORY_QUESTION_KEYS.map((k) => (
                   <div key={k} className="space-y-1.5">
@@ -397,6 +434,7 @@ export default function ProfileEditPage() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             <div className="flex gap-3 pt-1">

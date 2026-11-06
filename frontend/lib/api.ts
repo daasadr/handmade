@@ -244,6 +244,8 @@ export interface MakerProfile {
   motto?: string;
   storyAnswers?: Record<string, string>;
   storyImages?: Record<string, string>;
+  storyMode?: "template" | "custom";
+  storyHtml?: string;
   profileImageUrl?: string;
   videoUrl?: string;
   marketplaceLinks?: Record<string, string>;
@@ -256,6 +258,8 @@ export type MakerProfileInput = Partial<{
   motto: string;
   storyAnswers: Record<string, string>;
   storyImages: Record<string, string>;
+  storyMode: "template" | "custom";
+  storyHtml: string;
   videoUrl: string;
 }>;
 

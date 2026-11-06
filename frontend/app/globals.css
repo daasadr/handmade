@@ -125,3 +125,39 @@
   background: radial-gradient(circle, oklch(0.78 0.11 196 / 0.08) 0%, transparent 70%);
   pointer-events: none;
 }
+
+/* Obsah volného editoru příběhu (TipTap) i jeho zobrazení na profilu. */
+.prose-story { line-height: 1.7; }
+.prose-story p { margin: 0 0 0.75rem; }
+.prose-story h2 {
+  font-family: var(--font-heading), serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 1rem 0 0.5rem;
+}
+.prose-story h3 {
+  font-family: var(--font-heading), serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0.75rem 0 0.4rem;
+}
+.prose-story ul,
+.prose-story ol { margin: 0 0 0.75rem; padding-left: 1.4rem; }
+.prose-story ul { list-style: disc; }
+.prose-story ol { list-style: decimal; }
+.prose-story li { margin: 0.2rem 0; }
+.prose-story a { color: oklch(0.40 0.10 196); text-decoration: underline; }
+.prose-story img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 0.5rem 0;
+}
+.prose-story blockquote {
+  border-left: 3px solid oklch(0.78 0.11 196);
+  padding-left: 0.75rem;
+  margin: 0 0 0.75rem;
+  font-style: italic;
+}
+/* Placeholder prázdného editoru by byl fajn, ale držíme to jednoduché. */
+.prose-story:focus { outline: none; }

@@ -44,6 +44,14 @@ export class MakerProfile {
   @Column({ type: 'jsonb', default: '{}' })
   storyImages: Record<string, string>;
 
+  /** Režim příběhu: 'template' (šablona) | 'custom' (volný editor). NULL = šablona/bio. */
+  @Column({ nullable: true })
+  storyMode: string;
+
+  /** HTML z volného editoru — UŽ sanitizované na serveru (sanitizeStoryHtml). */
+  @Column({ nullable: true, type: 'text' })
+  storyHtml: string;
+
   @Column({ nullable: true })
   profileImageUrl: string;
 

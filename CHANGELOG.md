@@ -28,6 +28,43 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-06] Profil-příběh: custom bohatý editor (druhý režim)
+
+**Typ:** feat
+**Soubory:** `backend/src/migrations/1757000000000-AddProfileCustomStory.ts` (nový), `backend/src/makers/maker-profile.entity.ts`, `backend/src/makers/makers.service.ts`, `backend/package.json` (+sanitize-html), `frontend/components/story-editor.tsx` (nový), `frontend/app/(app)/profile/edit/page.tsx`, `frontend/app/(app)/profile/page.tsx`, `frontend/app/globals.css`, `frontend/lib/api.ts`, `frontend/lib/i18n-dict.ts`, `frontend/package.json` (+@tiptap/*, dompurify)
+**Commit:** nepushováno
+
+### Co bylo změněno
+Druhý režim profilu vedle šablony — **volný bohatý editor** (TipTap): tučné/kurzíva/podtržení/
+přeškrtnuté, nadpisy, odrážky/číslování, **zarovnání** (vlevo/střed/vpravo), **barva textu**,
+**font**, **vkládání obrázků**. Přepínač „Šablona / Volný editor" v editaci. Nové sloupce
+`storyMode` + `storyHtml` (migrace `1757000000000`). Veřejný profil renderuje podle režimu.
+
+### Proč
+Pokrývá původní vizi „velmi variabilně editovatelné" pro ty, kdo chtějí psát volně, ne přes
+otázky. (Beads `handmade-adq.4`.)
+
+### Bezpečnost (review — `handmade-adq.4` podúkol)
+Ukládáme HTML od uživatele → riziko XSS. Obrana:
+- **Server (primární):** `sanitizeStoryHtml()` v `makers.service` čistí HTML allowlistem
+  (povolené tagy, styly color/text-align/font-family, obrázky jen http(s), `<a>` dostane
+  rel/target). Běží PŘED uložením v create i update, nejde obejít (zásada 15.3). Zahazuje
+  `<script>`, `on*` handlery, `javascript:` odkazy.
+- **Klient (druhá obrana):** DOMPurify při zobrazení.
+- Editor jen na klientovi (`next/dynamic` ssr:false) — bez hydration mismatche.
+
+### Nové závislosti (bod 09)
+Frontend: `@tiptap/*` (react, starter-kit, text-style, color, font-family, text-align, image)
++ `dompurify` (~54 balíčků, WYSIWYG je největší kus profilu). Backend: `sanitize-html`.
+
+### Poznámka
+Unit test sanitizéru odložen: Jest si u `sanitize-html` vybírá ESM variantu `htmlparser2`
+a padá na „import outside a module"; runtime v Node/Dockeru je v pořádku (CJS). Doladit
+Jest/ESM config později. `npm run check` zelený (16 testů), `next build` zelený.
+
+### Instrukce pro deploy
+`./deploy/deploy.sh` — migrace `1757000000000` přidá `storyMode`+`storyHtml` při startu backendu.
+
 ## [2026-11-06] Profil-příběh: obrázky proložené mezi odstavci
 
 **Typ:** feat

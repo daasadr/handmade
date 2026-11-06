@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { exportAllCsv, hasExportable } from "@/lib/export";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "oklch(0.52 0.04 50)",
@@ -192,9 +193,21 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-heading text-2xl font-light">{t("dash.yourProducts")}</h2>
-          <Link href="/products/new" className={cn(buttonVariants({ size: "sm" }))}>
-            {t("dash.addProduct")}
-          </Link>
+          <div className="flex items-center gap-2">
+            {hasExportable(products) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportAllCsv(products)}
+                title={t("exp.allCsvHint")}
+              >
+                {t("exp.allCsv")}
+              </Button>
+            )}
+            <Link href="/products/new" className={cn(buttonVariants({ size: "sm" }))}>
+              {t("dash.addProduct")}
+            </Link>
+          </div>
         </div>
 
         {products.length === 0 ? (

@@ -28,6 +28,30 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] Export do marketplaců (CSV + copy-ready text)
+
+**Typ:** feat
+**Soubory:** `frontend/lib/export.ts` (nový), `frontend/app/(app)/dashboard/page.tsx`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/lib/i18n-dict.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Výrobce si teď optimalizovaný obsah stáhne, místo ručního přepisování:
+- **Dashboard → „Export do CSV"** — tabulka všech produktů × platforem (název, popis, klíčová
+  slova, materiály, Amazon odrážky/search terms, cena, skóre). UTF-8 + BOM, ať Excel čte diakritiku.
+- **Detail produktu → „Stáhnout CSV"** (tenhle produkt) + **„Stáhnout text"** — copy-ready blok
+  na míru platformě (NÁZEV / POPIS / TAGY / MATERIÁLY / ODRÁŽKY / SEARCH TERMS / CENA).
+
+### Proč
+Priorita #3. „Export do marketplaců — ať výrobce nemusí nic přepisovat ručně." (Beads `handmade-1hy`.)
+
+### Způsob provedení
+Vše client-side (`lib/export.ts`) — data už frontend má načtená, žádný backend ani migrace.
+Tlačítko exportu se na dashboardu ukáže jen když je co exportovat. `next build` zelený.
+
+### Fáze 2 (follow-up)
+Nativní formáty marketplaců (Amazon flat-file .xlsm/.txt po kategoriích, přímý push na Etsy
+přes OAuth) jsou větší a specifické — založeno zvlášť.
+
 ## [2026-11-07] SEO / GEO / AEO — kompletní základ
 
 **Typ:** feat

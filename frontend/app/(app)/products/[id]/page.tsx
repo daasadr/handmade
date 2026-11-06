@@ -8,6 +8,7 @@ import { api, Product, AiOptimization, Platform, PLATFORM_LABELS } from "@/lib/a
 import { prepareImages, formatBytes } from "@/lib/image-upload";
 import { useT, useLocale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { exportPlatformTxt, exportProductCsv } from "@/lib/export";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -558,6 +559,24 @@ export default function ProductPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
+            {/* Export — copy-ready .txt na míru platformě + CSV celého produktu */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportPlatformTxt(product.titleOriginal, displayedOpt)}
+              >
+                {t("exp.txt")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportProductCsv({ ...product, optimizations })}
+              >
+                {t("exp.csv")}
+              </Button>
+            </div>
+
             {/* Závěr z konkurence — UKLÁDÁ SE, zobrazuje se vždy */}
             {displayedOpt.scoreSource === "market" && displayedOpt.marketConclusion && (
               <div

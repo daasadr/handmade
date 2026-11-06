@@ -25,6 +25,10 @@ export class CreateMakerProfileDto {
   storyAnswers?: Record<string, string>;
 
   @IsOptional()
+  @IsObject()
+  storyImages?: Record<string, string>;
+
+  @IsOptional()
   @IsUrl({ require_protocol: false })
   videoUrl?: string;
 }

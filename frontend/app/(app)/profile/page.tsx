@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
-import { buildStory } from "@/lib/story-template";
+import { buildStoryBlocks } from "@/lib/story-template";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,8 +49,8 @@ export default function ProfilePage() {
   const vip = isVipActive(user);
   const limit = PLAN_LIMITS[user?.plan || "free"];
   const embedUrl = profile?.videoUrl ? getYouTubeEmbedUrl(profile.videoUrl) : null;
-  // Z odpovědí šablony složíme souvislý příběh; když je prázdný, padáme na bio.
-  const story = buildStory(profile?.storyAnswers);
+  // Z odpovědí + obrázků šablony složíme ilustrovaný příběh; prázdný → bio.
+  const storyBlocks = buildStoryBlocks(profile?.storyAnswers, profile?.storyImages);
 
   if (noProfile || !profile) {
     return (
@@ -124,13 +124,26 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Příběh tvůrce — složený ze šablony; jinak krátké bio */}
-          {story.length > 0 ? (
-            <div className="space-y-3 mb-4">
-              {story.map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
-                  {para}
-                </p>
+          {/* Příběh tvůrce — odstavce proložené obrázky; jinak krátké bio */}
+          {storyBlocks.length > 0 ? (
+            <div className="space-y-4 mb-4">
+              {storyBlocks.map((block) => (
+                <div key={block.key} className="space-y-2">
+                  {block.text && (
+                    <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                      {block.text}
+                    </p>
+                  )}
+                  {block.image && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={block.image}
+                      alt=""
+                      className="w-full rounded-xl object-cover"
+                      style={{ maxHeight: "420px" }}
+                    />
+                  )}
+                </div>
               ))}
             </div>
           ) : (

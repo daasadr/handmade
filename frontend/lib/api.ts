@@ -122,6 +122,13 @@ export const api = {
       form.append("image", file);
       return requestFile<MakerProfile>("/makers/profile/image", form);
     },
+    // Nahraje obrázek příběhu a vrátí jen URL (profil nemění) — URL se uloží
+    // do storyImages a odešle s profilem.
+    uploadStoryImage: (file: File) => {
+      const form = new FormData();
+      form.append("image", file);
+      return requestFile<{ url: string }>("/makers/profile/story-image", form);
+    },
   },
 
   products: {
@@ -236,6 +243,7 @@ export interface MakerProfile {
   bio?: string;
   motto?: string;
   storyAnswers?: Record<string, string>;
+  storyImages?: Record<string, string>;
   profileImageUrl?: string;
   videoUrl?: string;
   marketplaceLinks?: Record<string, string>;
@@ -247,6 +255,7 @@ export type MakerProfileInput = Partial<{
   bio: string;
   motto: string;
   storyAnswers: Record<string, string>;
+  storyImages: Record<string, string>;
   videoUrl: string;
 }>;
 

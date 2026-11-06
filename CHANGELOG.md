@@ -28,6 +28,28 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-06] Profil-příběh: obrázky proložené mezi odstavci
+
+**Typ:** feat
+**Soubory:** `backend/src/migrations/1756000000000-AddProfileStoryImages.ts` (nový), `backend/src/makers/maker-profile.entity.ts`, `backend/src/makers/makers.service.ts`, `backend/src/makers/makers.controller.ts`, `frontend/lib/api.ts`, `frontend/lib/story-template.ts`, `frontend/lib/i18n-dict.ts`, `frontend/app/(app)/profile/edit/page.tsx`, `frontend/app/(app)/profile/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Ke každé otázce příběhu lze přidat obrázek; na profilu se zobrazí pod daným odstavcem, takže
+příběh je ilustrovaný. Model: `storyImages` = mapa { klíčOtázky: URL } (migrace `1756000000000`).
+Nový endpoint `POST /makers/profile/story-image` nahraje obrázek do S3 a vrátí jen URL (profil
+nemění → jde přidat i při zakládání). V editaci náhled + odebrání u každé otázky.
+
+### Proč
+Aby profil vypadal jako opravdová stránka s příběhem, ne jen bloky textu. (Beads `handmade-adq.6`.)
+
+### Způsob provedení
+`buildStoryBlocks()` složí odstavce + obrázky v pořadí otázek. Obrázky jedou přes existující
+klientskou kompresi. `npm run check` zelený (16 testů), `next build` zelený.
+
+### Instrukce pro deploy
+`./deploy/deploy.sh` — migrace `1756000000000` přidá sloupec `storyImages` při startu backendu.
+
 ## [2026-11-06] Profil jako příběh — šablona, motto, nabídka citátů
 
 **Typ:** feat

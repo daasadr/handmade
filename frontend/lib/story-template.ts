@@ -23,6 +23,27 @@ export function buildStory(answers?: Record<string, string>): string[] {
   return STORY_QUESTION_KEYS.map((k) => (answers[k] ?? "").trim()).filter(Boolean);
 }
 
+export interface StoryBlock {
+  key: StoryQuestionKey;
+  text: string;
+  image?: string;
+}
+
+/**
+ * Složí příběh na bloky v pořadí otázek. Každý blok má text odstavce a/nebo
+ * obrázek (ten se zobrazí pod odstavcem). Bloky bez textu i obrázku vynechá.
+ */
+export function buildStoryBlocks(
+  answers?: Record<string, string>,
+  images?: Record<string, string>,
+): StoryBlock[] {
+  return STORY_QUESTION_KEYS.map((k) => ({
+    key: k,
+    text: (answers?.[k] ?? "").trim(),
+    image: (images?.[k] ?? "").trim() || undefined,
+  })).filter((b) => b.text || b.image);
+}
+
 /**
  * Nabídka citátů pro motto — pro ty, kdo nevědí, co napsat. Web má usnadňovat
  * kreativní procesy, tak pomáháme i tady. Uživatel si klidně napíše vlastní.

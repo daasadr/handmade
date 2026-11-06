@@ -43,4 +43,20 @@ export class MakersController {
     const url = await this.s3Service.uploadFile(file, `profiles/${user.id}`);
     return this.makersService.updateProfileImage(user, url);
   }
+
+  /**
+   * Nahraje obrázek do příběhu a vrátí jen jeho URL — profil NEmění. URL si
+   * frontend uloží do `storyImages` a odešle s profilem. Nevyžaduje existující
+   * profil, takže jde přidat obrázek i při zakládání profilu.
+   */
+  @Post('profile/story-image')
+  @UseInterceptors(FileInterceptor('image', imageUploadOptions))
+  async uploadStoryImage(
+    @CurrentUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ url: string }> {
+    if (!file) throw new BadRequestException('Žádný soubor nebyl nahrán');
+    const url = await this.s3Service.uploadFile(file, `profiles/${user.id}/story`);
+    return { url };
+  }
 }

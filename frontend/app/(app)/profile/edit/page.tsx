@@ -32,8 +32,10 @@ export default function ProfileEditPage() {
     videoUrl: "",
     motto: "",
     story: {} as Record<string, string>,
+    storyImages: {} as Record<string, string>,
   });
   const [showQuotes, setShowQuotes] = useState(false);
+  const [uploadingStoryKey, setUploadingStoryKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -56,6 +58,7 @@ export default function ProfileEditPage() {
           videoUrl: p.videoUrl || "",
           motto: p.motto || "",
           story: p.storyAnswers || {},
+          storyImages: p.storyImages || {},
         });
       })
       .catch(() => setIsNew(true))
@@ -88,6 +91,31 @@ export default function ProfileEditPage() {
     }
   };
 
+  const handleStoryImage = async (key: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingStoryKey(key);
+    try {
+      const compressed = await compressImage(file);
+      const { url } = await api.makers.uploadStoryImage(compressed);
+      setForm((f) => ({ ...f, storyImages: { ...f.storyImages, [key]: url } }));
+    } catch (err: unknown) {
+      if (err instanceof ImageUploadError) toast.error(err.fullMessage);
+      else toast.error(err instanceof Error ? err.message : t("err.uploadFailed"));
+    } finally {
+      setUploadingStoryKey(null);
+    }
+  };
+
+  const removeStoryImage = (key: string) => {
+    setForm((f) => {
+      const next = { ...f.storyImages };
+      delete next[key];
+      return { ...f, storyImages: next };
+    });
+  };
+
   const handlePortal = async () => {
     setPortalLoading(true);
     try {
@@ -110,6 +138,7 @@ export default function ProfileEditPage() {
         videoUrl: form.videoUrl || undefined,
         motto: form.motto || undefined,
         storyAnswers: form.story,
+        storyImages: form.storyImages,
       };
       let p = isNew
         ? await api.makers.createProfile(data)
@@ -331,6 +360,40 @@ export default function ProfileEditPage() {
                         setForm({ ...form, story: { ...form.story, [k]: e.target.value } })
                       }
                     />
+                    {form.storyImages[k] ? (
+                      <div className="relative inline-block mt-1">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={form.storyImages[k]}
+                          alt=""
+                          className="h-24 rounded-lg object-cover border"
+                          style={{ borderColor: "oklch(0.85 0.02 72)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeStoryImage(k)}
+                          aria-label={t("pe.removeImage")}
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full text-white text-sm flex items-center justify-center transition-opacity hover:opacity-90"
+                          style={{ background: "oklch(0.22 0.04 48 / 0.85)" }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        className="inline-flex items-center gap-1 text-xs cursor-pointer hover:underline mt-1"
+                        style={{ color: "oklch(0.40 0.10 196)" }}
+                      >
+                        {uploadingStoryKey === k ? t("prod.uploading") : t("pe.addStoryImage")}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingStoryKey === k}
+                          onChange={(e) => handleStoryImage(k, e)}
+                        />
+                      </label>
+                    )}
                   </div>
                 ))}
               </div>

@@ -40,6 +40,10 @@ export class MakerProfile {
   @Column({ type: 'jsonb', default: '{}' })
   storyAnswers: Record<string, string>;
 
+  /** Obrázky příběhu: mapa { klíčOtázky: URL }. Zobrazí se pod daným odstavcem. */
+  @Column({ type: 'jsonb', default: '{}' })
+  storyImages: Record<string, string>;
+
   @Column({ nullable: true })
   profileImageUrl: string;
 

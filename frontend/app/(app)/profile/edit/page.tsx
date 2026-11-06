@@ -31,6 +31,11 @@ export default function ProfileEditPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  // U nového profilu ještě neexistuje záznam, ke kterému by se fotka připnula
+  // (upload volá getProfile). Vybranou fotku proto podržíme a nahrajeme hned po
+  // vytvoření profilu — ať ji uživatel přidá rovnou při zakládání.
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,10 +50,19 @@ export default function ProfileEditPage() {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
     if (!file) return;
-    setUploadingAvatar(true);
     try {
       const compressed = await compressImage(file);
+      if (isNew) {
+        // Profil ještě není uložený → fotku jen podržíme a ukážeme náhled.
+        // Nahraje se v handleSave hned po createProfile.
+        if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview);
+        setPendingAvatar(compressed);
+        setPendingAvatarPreview(URL.createObjectURL(compressed));
+        return;
+      }
+      setUploadingAvatar(true);
       const updated = await api.makers.uploadProfileImage(compressed);
       setProfile(updated);
       toast.success(t("profile.avatarUpdated"));
@@ -57,7 +71,6 @@ export default function ProfileEditPage() {
       else toast.error(err instanceof Error ? err.message : t("err.uploadFailed"));
     } finally {
       setUploadingAvatar(false);
-      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -82,9 +95,22 @@ export default function ProfileEditPage() {
         bio: form.bio || undefined,
         videoUrl: form.videoUrl || undefined,
       };
-      const p = isNew
+      let p = isNew
         ? await api.makers.createProfile(data)
         : await api.makers.updateProfile(data);
+      // Fotka vybraná při zakládání: teď už profil existuje, tak ji nahrajeme.
+      if (isNew && pendingAvatar) {
+        try {
+          p = await api.makers.uploadProfileImage(pendingAvatar);
+        } catch {
+          toast.error(t("pe.photoAfterSaveFailed"));
+        }
+        setPendingAvatar(null);
+        if (pendingAvatarPreview) {
+          URL.revokeObjectURL(pendingAvatarPreview);
+          setPendingAvatarPreview(null);
+        }
+      }
       setProfile(p);
       setIsNew(false);
       toast.success(t("pe.profileSaved"));
@@ -126,8 +152,8 @@ export default function ProfileEditPage() {
           <div className="flex items-center gap-4">
             <div className="relative group">
               <Avatar className="h-16 w-16">
-                {profile?.profileImageUrl && (
-                  <AvatarImage src={profile.profileImageUrl} alt={t("nav.profile")} />
+                {(pendingAvatarPreview || profile?.profileImageUrl) && (
+                  <AvatarImage src={pendingAvatarPreview ?? profile?.profileImageUrl} alt={t("nav.profile")} />
                 )}
                 <AvatarFallback
                   className="text-xl font-medium"
@@ -139,10 +165,10 @@ export default function ProfileEditPage() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                disabled={uploadingAvatar || isNew}
+                disabled={uploadingAvatar}
                 className="absolute inset-0 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
                 style={{ background: "oklch(0.22 0.04 48 / 0.6)" }}
-                title={isNew ? t("pe.saveFirst") : t("pe.changePhotoShort")}
+                title={t("pe.changePhotoShort")}
               >
                 <span className="text-white text-xs">{uploadingAvatar ? "…" : "✎"}</span>
               </button>
@@ -164,19 +190,17 @@ export default function ProfileEditPage() {
                 {" · "}
                 {limit === 99999 ? t("pe.unlimited") : `${limit} ${t("pe.perMonth")}`}
               </p>
-              {!isNew && (
-                <button
-                  type="button"
-                  onClick={() => avatarInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="text-xs text-muted-foreground hover:underline mt-0.5 cursor-pointer"
-                >
-                  {uploadingAvatar ? t("prod.uploading") : t("pe.changePhoto")}
-                </button>
-              )}
-              {isNew && (
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="text-xs text-muted-foreground hover:underline mt-0.5 cursor-pointer"
+              >
+                {uploadingAvatar ? t("prod.uploading") : t("pe.changePhoto")}
+              </button>
+              {isNew && pendingAvatar && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("pe.addPhotoAfter")}
+                  {t("pe.photoWithProfile")}
                 </p>
               )}
             </div>

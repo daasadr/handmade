@@ -154,6 +154,8 @@ const cs = {
   "pe.accountCard": "Účet",
   "pe.studioCard": "Studio profil",
   "pe.addPhotoAfter": "Fotku lze přidat po vytvoření profilu",
+  "pe.photoWithProfile": "Vybranou fotku uložíme spolu s profilem.",
+  "pe.photoAfterSaveFailed": "Profil jsme uložili, ale fotku se nepodařilo nahrát — zkuste ji přidat na profilu.",
 
   // Auth
   "auth.welcomeBack": "Vítejte zpět",
@@ -348,6 +350,8 @@ const en: Partial<Record<keyof Dict, string>> = {
   "pe.accountCard": "Account",
   "pe.studioCard": "Studio profile",
   "pe.addPhotoAfter": "You can add a photo after creating the profile",
+  "pe.photoWithProfile": "Your selected photo will be saved with the profile.",
+  "pe.photoAfterSaveFailed": "We saved your profile, but the photo upload failed — add it from your profile.",
 
   // Auth
   "auth.welcomeBack": "Welcome back",

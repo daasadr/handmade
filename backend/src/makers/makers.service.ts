@@ -77,6 +77,48 @@ export class CreateMakerProfileDto {
   videoUrl?: string;
 }
 
+/**
+ * Pro PATCH. Vlastní validovaná třída (ne Partial<CreateMakerProfileDto>) —
+ * Partial se za běhu smaže na Object a ValidationPipe přeskočí, takže by prošly
+ * cizí klíče i neověřené hodnoty (obří storyHtml, neplatný storyMode). Zde platí
+ * stejná pravidla, jen brandName je volitelný.
+ */
+export class UpdateMakerProfileDto {
+  @IsOptional()
+  @IsString()
+  brandName?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  motto?: string;
+
+  @IsOptional()
+  @IsObject()
+  storyAnswers?: Record<string, string>;
+
+  @IsOptional()
+  @IsObject()
+  storyImages?: Record<string, string>;
+
+  @IsOptional()
+  @IsIn(['template', 'custom'])
+  storyMode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40000)
+  storyHtml?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: false })
+  videoUrl?: string;
+}
+
 @Injectable()
 export class MakersService {
   constructor(
@@ -96,7 +138,7 @@ export class MakersService {
     return this.profileRepo.save(profile);
   }
 
-  async updateProfile(user: User, dto: Partial<CreateMakerProfileDto>) {
+  async updateProfile(user: User, dto: UpdateMakerProfileDto) {
     const profile = await this.profileRepo.findOne({ where: { userId: user.id } });
     if (!profile) throw new NotFoundException('Profil nenalezen');
     this.sanitizeDto(dto);
@@ -105,7 +147,7 @@ export class MakersService {
   }
 
   /** HTML příběhu se ukládá JEN očištěné. Děláme to tady, ať to nejde obejít. */
-  private sanitizeDto(dto: Partial<CreateMakerProfileDto>) {
+  private sanitizeDto(dto: { storyHtml?: string }) {
     if (typeof dto.storyHtml === 'string') {
       dto.storyHtml = sanitizeStoryHtml(dto.storyHtml);
     }

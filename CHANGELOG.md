@@ -28,6 +28,40 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] Bezpečnostní audit — opravy (mass assignment, JWT, helmet, heslo)
+
+**Typ:** fix (security)
+**Soubory:** `backend/src/products/products.service.ts`, `backend/src/products/products.controller.ts`, `backend/src/makers/makers.service.ts`, `backend/src/makers/makers.controller.ts`, `backend/src/main.ts`, `backend/src/auth/jwt.strategy.ts`, `backend/src/auth/auth.module.ts`, `backend/src/auth/dto/reset-password.dto.ts`, `backend/package.json` (+helmet)
+**Commit:** nepushováno
+
+### Co bylo změněno (nálezy z auditu, epic handmade-eis)
+- **#3 Mass assignment (HIGH):** PATCH `/products/:id` a `/makers/profile` braly `@Body()
+  Partial<Dto>`, což se za běhu smaže na `Object` → ValidationPipe přeskočil a neodfiltroval
+  cizí klíče (`makerId`, `status`, obří `storyHtml`…). Zavedeny validované `UpdateProductDto`
+  a `UpdateMakerProfileDto` (allowlist polí).
+- **#4 JWT secret (HIGH):** odstraněn veřejně známý fallback `'dev-secret-change-in-production'`;
+  `main.ts` nově spadne při startu, pokud `JWT_SECRET` chybí nebo má < 32 znaků.
+- **#5 Helmet (MEDIUM):** přidány bezpečnostní hlavičky (`helmet`, CSP vypnutá — JSON API).
+- **#6 Síla hesla (LOW):** reset hesla nově vyžaduje písmeno + číslici (jako registrace).
+
+### Proč
+Priorita #1 bezpečnost. Nálezy z důkladného auditu celého backendu.
+
+### Způsob provedení
+`npm run check` zelený (16 testů). Audit potvrdil jako v pořádku: ownership produktů, admin
+RolesGuard, S3 klíče (bez path traversal), limity uploadů, Stripe webhook podpis, sanitizér
+HTML, JWT obsah (jen identita). Drobné LOW zbytky jako follow-up (affiliate throttle, validace
+query u analyze, externí img v příběhu).
+
+### ⚠️ Instrukce pro deploy — DŮLEŽITÉ
+Backend se nově **nespustí bez `JWT_SECRET` (≥32 znaků)** v serverovém `.env`. Před deployem ověř:
+```bash
+grep JWT_SECRET /opt/handmade/.env    # musí existovat a být dost dlouhý
+# když chybí/krátký, vygeneruj a doplň:  openssl rand -base64 48
+```
+Pokud appka dosud běžela na starém fallbacku, **nastavení nového secretu odhlásí všechny**
+(staré tokeny přestanou platit) — to je v pořádku, je to rotace pryč od nebezpečného klíče.
+
 ## [2026-11-07] Bezpečnost: oprava IDOR na AI endpointech + 404 u cizích produktů
 
 **Typ:** fix (security)

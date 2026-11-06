@@ -3,7 +3,7 @@ import {
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MakersService, CreateMakerProfileDto } from './makers.service';
+import { MakersService, CreateMakerProfileDto, UpdateMakerProfileDto } from './makers.service';
 import { imageUploadOptions } from '../common/upload/image-upload.options';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -29,7 +29,7 @@ export class MakersController {
   }
 
   @Patch('profile')
-  updateProfile(@CurrentUser() user: User, @Body() dto: Partial<CreateMakerProfileDto>) {
+  updateProfile(@CurrentUser() user: User, @Body() dto: UpdateMakerProfileDto) {
     return this.makersService.updateProfile(user, dto);
   }
 

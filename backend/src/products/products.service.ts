@@ -29,6 +29,31 @@ export class CreateProductDto {
   category?: string;
 }
 
+/**
+ * Pro PATCH. Vlastní validovaná třída (ne Partial<CreateProductDto>) — Partial
+ * se za běhu smaže na typ Object, takže ValidationPipe přeskočí a NEodfiltruje
+ * cizí klíče (makerId, status, id…) → mass assignment. Allowlist jen těchto polí.
+ */
+export class UpdateProductDto {
+  @IsOptional()
+  @IsString()
+  titleOriginal?: string;
+
+  @IsOptional()
+  @IsString()
+  descriptionOriginal?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  priceOriginal?: number;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -69,7 +94,7 @@ export class ProductsService {
     return this.productRepo.save(product);
   }
 
-  async update(id: string, user: User, dto: Partial<CreateProductDto>) {
+  async update(id: string, user: User, dto: UpdateProductDto) {
     const product = await this.findOne(id, user);
     Object.assign(product, dto);
     return this.productRepo.save(product);

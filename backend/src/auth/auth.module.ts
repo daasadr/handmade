@@ -14,7 +14,7 @@ import { EmailModule } from '../common/email/email.module';
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+      secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any },
     }),
     EmailModule,

@@ -3,7 +3,7 @@ import {
   UseInterceptors, UploadedFiles, BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ProductsService, CreateProductDto } from './products.service';
+import { ProductsService, CreateProductDto, UpdateProductDto } from './products.service';
 import { IMAGE_UPLOAD, imageUploadOptions } from '../common/upload/image-upload.options';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -34,7 +34,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser() user: User, @Body() dto: Partial<CreateProductDto>) {
+  update(@Param('id') id: string, @CurrentUser() user: User, @Body() dto: UpdateProductDto) {
     return this.productsService.update(id, user, dto);
   }
 

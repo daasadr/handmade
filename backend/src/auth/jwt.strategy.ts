@@ -13,7 +13,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+      // Přítomnost + délku vynucuje fail-fast guard v main.ts; žádný fallback.
+      secretOrKey: process.env.JWT_SECRET as string,
     });
   }
 

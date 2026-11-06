@@ -29,6 +29,17 @@ export class MakerProfile {
   @Column({ nullable: true, type: 'text' })
   bio: string;
 
+  /** Oblíbený citát / motto pod jménem tvůrce. */
+  @Column({ nullable: true, type: 'text' })
+  motto: string;
+
+  /**
+   * Odpovědi na řízené otázky šablony → složí se v souvislý příběh na profilu.
+   * Mapa { klíčOtázky: odpověď }. Prázdné = šablona nevyplněna (padá se na bio).
+   */
+  @Column({ type: 'jsonb', default: '{}' })
+  storyAnswers: Record<string, string>;
+
   @Column({ nullable: true })
   profileImageUrl: string;
 

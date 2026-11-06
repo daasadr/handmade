@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
+import { buildStory } from "@/lib/story-template";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +49,8 @@ export default function ProfilePage() {
   const vip = isVipActive(user);
   const limit = PLAN_LIMITS[user?.plan || "free"];
   const embedUrl = profile?.videoUrl ? getYouTubeEmbedUrl(profile.videoUrl) : null;
+  // Z odpovědí šablony složíme souvislý příběh; když je prázdný, padáme na bio.
+  const story = buildStory(profile?.storyAnswers);
 
   if (noProfile || !profile) {
     return (
@@ -101,6 +104,11 @@ export default function ProfilePage() {
             </Avatar>
             <div className="pb-1">
               <h2 className="font-heading text-2xl font-medium">{profile.brandName}</h2>
+              {profile.motto && (
+                <p className="text-sm italic mt-0.5 mb-1" style={{ color: "oklch(0.45 0.06 50)" }}>
+                  „{profile.motto}"
+                </p>
+              )}
               {user?.isFoundingMember && (
                 <span
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -116,11 +124,21 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Bio */}
-          {profile.bio && (
-            <p className="text-sm leading-relaxed text-foreground/80 mb-4 whitespace-pre-wrap">
-              {profile.bio}
-            </p>
+          {/* Příběh tvůrce — složený ze šablony; jinak krátké bio */}
+          {story.length > 0 ? (
+            <div className="space-y-3 mb-4">
+              {story.map((para, i) => (
+                <p key={i} className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                  {para}
+                </p>
+              ))}
+            </div>
+          ) : (
+            profile.bio && (
+              <p className="text-sm leading-relaxed text-foreground/80 mb-4 whitespace-pre-wrap">
+                {profile.bio}
+              </p>
+            )
           )}
 
           {/* Video embed */}

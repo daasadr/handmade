@@ -28,6 +28,34 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-06] Profil jako příběh — šablona, motto, nabídka citátů
+
+**Typ:** feat
+**Soubory:** `backend/src/migrations/1755000000000-AddProfileStory.ts` (nový), `backend/src/makers/maker-profile.entity.ts`, `backend/src/makers/makers.service.ts`, `frontend/lib/story-template.ts` (nový), `frontend/lib/api.ts`, `frontend/lib/i18n-dict.ts`, `frontend/app/(app)/profile/edit/page.tsx`, `frontend/app/(app)/profile/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+První dávka funkce „profil jako příběh tvůrce":
+- **Režim šablona:** 6 řízených otázek (jak jste začínal(a), co tvoříte, čím jste jedineční,
+  inspirace, co má vědět zákazník, sen). Z odpovědí se na veřejném profilu složí souvislý
+  příběh — bez zobrazení otázek. Prázdná šablona → padá se na staré `bio`.
+- **Motto / citát** pod jménem tvůrce + **nabídka kurátorovaných citátů** na výběr (pro ty,
+  kdo nevědí, co napsat).
+- DB: nové sloupce `motto` (text) a `storyAnswers` (jsonb) na `maker_profiles` (migrace
+  `1755000000000`, idempotentní).
+
+### Proč
+Profil byl jen krátký odstavec. Příběh prodává víc než popis; šablona s otázkami pomůže
+i těm, kdo neví, jak o sobě psát. (Beads epic `handmade-adq`.)
+
+### Způsob provedení
+Šablona otázek sdílená mezi editací a zobrazením (`lib/story-template.ts`, `buildStory()`),
+texty otázek v i18n (CS/EN). `npm run check` zelený (16 testů), `next build` zelený.
+Custom bohatý editor a obrázky v příběhu jsou samostatné následné úkoly.
+
+### Instrukce pro deploy
+Standardní `./deploy/deploy.sh` — migrace `1755000000000` přidá sloupce při startu backendu.
+
 ## [2026-10-23] Zámek proti dvojkliku na „Spustit analýzu"
 
 **Typ:** feat

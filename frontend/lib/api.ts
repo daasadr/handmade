@@ -107,12 +107,12 @@ export const api = {
 
   makers: {
     getProfile: () => request<MakerProfile>("/makers/profile"),
-    createProfile: (data: { brandName: string; bio?: string }) =>
+    createProfile: (data: MakerProfileInput) =>
       request<MakerProfile>("/makers/profile", {
         method: "POST",
         body: JSON.stringify(data),
       }),
-    updateProfile: (data: Partial<{ brandName: string; bio: string; videoUrl: string }>) =>
+    updateProfile: (data: MakerProfileInput) =>
       request<MakerProfile>("/makers/profile", {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -234,10 +234,21 @@ export interface MakerProfile {
   id: string;
   brandName: string;
   bio?: string;
+  motto?: string;
+  storyAnswers?: Record<string, string>;
   profileImageUrl?: string;
   videoUrl?: string;
   marketplaceLinks?: Record<string, string>;
 }
+
+/** Pole, která jdou poslat při vytvoření/úpravě profilu. */
+export type MakerProfileInput = Partial<{
+  brandName: string;
+  bio: string;
+  motto: string;
+  storyAnswers: Record<string, string>;
+  videoUrl: string;
+}>;
 
 export interface Product {
   id: string;

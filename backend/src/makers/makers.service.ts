@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsObject, MaxLength } from 'class-validator';
 import { MakerProfile } from './maker-profile.entity';
 import { User } from '../users/user.entity';
 
@@ -12,6 +12,17 @@ export class CreateMakerProfileDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  motto?: string;
+
+  // Mapa { klíčOtázky: odpověď }. Hodnoty hlídá frontend (textová pole); tady
+  // jen ověříme, že je to objekt — strukturu drží sdílená šablona na frontendu.
+  @IsOptional()
+  @IsObject()
+  storyAnswers?: Record<string, string>;
 
   @IsOptional()
   @IsUrl({ require_protocol: false })

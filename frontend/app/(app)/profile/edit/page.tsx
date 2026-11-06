@@ -8,6 +8,7 @@ import { api, MakerProfile } from "@/lib/api";
 import { compressImage, ImageUploadError } from "@/lib/image-upload";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
+import { STORY_QUESTION_KEYS, CURATED_QUOTES } from "@/lib/story-template";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,14 @@ export default function ProfileEditPage() {
   const t = useT();
   const router = useRouter();
   const [profile, setProfile] = useState<MakerProfile | null>(null);
-  const [form, setForm] = useState({ brandName: "", bio: "", videoUrl: "" });
+  const [form, setForm] = useState({
+    brandName: "",
+    bio: "",
+    videoUrl: "",
+    motto: "",
+    story: {} as Record<string, string>,
+  });
+  const [showQuotes, setShowQuotes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -42,7 +50,13 @@ export default function ProfileEditPage() {
     api.makers.getProfile()
       .then((p) => {
         setProfile(p);
-        setForm({ brandName: p.brandName, bio: p.bio || "", videoUrl: p.videoUrl || "" });
+        setForm({
+          brandName: p.brandName,
+          bio: p.bio || "",
+          videoUrl: p.videoUrl || "",
+          motto: p.motto || "",
+          story: p.storyAnswers || {},
+        });
       })
       .catch(() => setIsNew(true))
       .finally(() => setLoading(false));
@@ -94,6 +108,8 @@ export default function ProfileEditPage() {
         brandName: form.brandName,
         bio: form.bio || undefined,
         videoUrl: form.videoUrl || undefined,
+        motto: form.motto || undefined,
+        storyAnswers: form.story,
       };
       let p = isNew
         ? await api.makers.createProfile(data)
@@ -255,6 +271,71 @@ export default function ProfileEditPage() {
                 Vložte odkaz na video o vašem studiu — zobrazí se jako přehrávač na profilu
               </p>
             </div>
+
+            {/* Příběh tvůrce */}
+            <div className="pt-3 border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }}>
+              <h3 className="font-heading text-lg font-normal mt-2">{t("pe.storyCard")}</h3>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">{t("pe.storyIntro")}</p>
+
+              {/* Motto + nabídka citátů */}
+              <div className="space-y-1.5">
+                <Label htmlFor="motto">{t("pe.mottoLabel")}</Label>
+                <Input
+                  id="motto"
+                  placeholder={t("pe.mottoPlaceholder")}
+                  value={form.motto}
+                  maxLength={200}
+                  onChange={(e) => setForm({ ...form, motto: e.target.value })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowQuotes((v) => !v)}
+                  className="text-xs hover:underline"
+                  style={{ color: "oklch(0.40 0.10 196)" }}
+                >
+                  {showQuotes ? t("pe.hideQuotes") : t("pe.pickQuote")}
+                </button>
+                {showQuotes && (
+                  <div
+                    className="flex flex-col gap-0.5 mt-1 max-h-52 overflow-y-auto rounded-lg p-2"
+                    style={{ background: "oklch(0.97 0.008 80)" }}
+                  >
+                    {CURATED_QUOTES.map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => { setForm({ ...form, motto: q }); setShowQuotes(false); }}
+                        className="text-left text-xs px-2 py-1.5 rounded hover:bg-black/5 transition-colors"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Řízené otázky */}
+              <div className="space-y-4 mt-4">
+                {STORY_QUESTION_KEYS.map((k) => (
+                  <div key={k} className="space-y-1.5">
+                    <Label htmlFor={`story-${k}`}>
+                      {t(`story.q.${k}` as Parameters<typeof t>[0])}
+                    </Label>
+                    <Textarea
+                      id={`story-${k}`}
+                      rows={3}
+                      className="resize-none"
+                      placeholder={t(`story.q.${k}.ph` as Parameters<typeof t>[0])}
+                      value={form.story[k] ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, story: { ...form.story, [k]: e.target.value } })
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={saving}>
                 {saving ? t("new.submitting") : isNew ? t("pe.createTitle") : t("pe.save")}

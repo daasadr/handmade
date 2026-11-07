@@ -9,6 +9,7 @@ import { compressImage, ImageUploadError } from "@/lib/image-upload";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
 import { STORY_QUESTION_KEYS, CURATED_QUOTES } from "@/lib/story-template";
+import { getStored, setStored, removeStored } from "@/lib/safe-storage";
 import dynamic from "next/dynamic";
 
 // TipTap jen na klientovi — ssr:false brání hydration mismatchi a nenačítá
@@ -59,6 +60,10 @@ export default function ProfileEditPage() {
   const [showQuotes, setShowQuotes] = useState(false);
   const [uploadingStoryKey, setUploadingStoryKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Rozpracovaný koncept ukládáme do prohlížeče, ať se text neztratí. Klíč per
+  // uživatel, aby se na sdíleném prohlížeči nemíchaly koncepty dvou lidí.
+  const draftKey = `profile-draft-${user?.id ?? "anon"}`;
+  const [hydrated, setHydrated] = useState(false);
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -86,8 +91,30 @@ export default function ProfileEditPage() {
         });
       })
       .catch(() => setIsNew(true))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        // Obnov rozpracovaný koncept (má přednost před serverem — neztratit rozepsané).
+        const draft = getStored(draftKey);
+        if (draft) {
+          try {
+            setForm((f) => ({ ...f, ...JSON.parse(draft) }));
+          } catch {
+            /* poškozený koncept ignorujeme */
+          }
+        }
+        setHydrated(true);
+        setLoading(false);
+      });
+    // Běží jednou při načtení; draftKey je stabilní po přihlášení.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Průběžné ukládání konceptu (debounce) do prohlížeče — přežije reload, pád
+  // i omylem zavřenou záložku. Po úspěšném uložení profilu se koncept smaže.
+  useEffect(() => {
+    if (!hydrated) return;
+    const id = setTimeout(() => setStored(draftKey, JSON.stringify(form)), 500);
+    return () => clearTimeout(id);
+  }, [form, hydrated, draftKey]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -153,7 +180,15 @@ export default function ProfileEditPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.brandName.trim()) { toast.error(t("pe.brandRequired")); return; }
+    if (!form.brandName.trim()) {
+      toast.error(t("pe.brandRequired"));
+      // Pole názvu bývá odscrollované nahoře — doscrollujeme k němu a zaostříme,
+      // ať je jasné, kam hláška míří (dřív na to ukazovala nativní bublina u lišty).
+      const el = document.getElementById("brand") as HTMLInputElement | null;
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return;
+    }
     setSaving(true);
     try {
       const data = {
@@ -184,6 +219,7 @@ export default function ProfileEditPage() {
       }
       setProfile(p);
       setIsNew(false);
+      removeStored(draftKey); // uloženo na server → koncept už netřeba
       toast.success(t("pe.profileSaved"));
       router.push("/profile");
     } catch (err: unknown) {
@@ -292,7 +328,12 @@ export default function ProfileEditPage() {
           <CardTitle className="font-heading text-lg font-normal">{t("pe.studioCard")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSave} className="space-y-5">
+          {/* noValidate: nativní validaci řešíme sami (toast + doscrollování),
+              ať nevyskakuje bublina mířící do horní lišty. */}
+          <form onSubmit={handleSave} noValidate className="space-y-5">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <span>✦</span> {t("pe.autosaveNote")}
+            </p>
             <div className="space-y-1.5">
               <Label htmlFor="brand">{t("pe.brandLabel")}</Label>
               <Input

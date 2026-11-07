@@ -28,6 +28,31 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] Profil: automatické ukládání konceptu + oprava validační bubliny
+
+**Typ:** feat | fix
+**Soubory:** `frontend/app/(app)/profile/edit/page.tsx`, `frontend/lib/i18n-dict.ts`
+**Soubory (využito):** `frontend/lib/safe-storage.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **Automatické ukládání rozpracovaného konceptu** (do localStorage, debounce 500 ms, klíč
+  per uživatel). Přežije reload, pád i zavřenou záložku — text se neztratí. Při načtení se
+  koncept obnoví (má přednost před serverem), po úspěšném uložení profilu se smaže. Viditelná
+  poznámka to uživateli říká.
+- **Oprava validační bubliny:** formulář má `noValidate`, takže nevyskakuje nativní bublina
+  „Vyplňte prosím toto pole" mířící do horní lišty (když bylo pole názvu odscrollované). Místo
+  toho jasný toast + doscrollování a zaostření na pole názvu.
+
+### Proč
+Uživatelka: „není nic víc rozčilujícího, než když se text smaže v polovině psaní." A nativní
+validační bublina mířící do menu působila chaoticky.
+
+### Poznámka k fotce profilu
+U existujícího profilu se fotka ukládá hned při vložení (už dřív). U nového profilu se drží
+s náhledem a nahraje se při prvním uložení — upload ji potřebuje připnout k existujícímu
+profilu, takže dřív to nejde. `tsc --noEmit` zelený (plný build blokoval plný disk D:, ne kód).
+
 ## [2026-11-07] Export do marketplaců (CSV + copy-ready text)
 
 **Typ:** feat

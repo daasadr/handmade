@@ -397,6 +397,12 @@ export default function ProfileEditPage() {
                 </div>
               ) : (
               <div className="space-y-4 mt-4">
+                <p
+                  className="text-xs rounded-lg px-3 py-2"
+                  style={{ background: "oklch(0.78 0.11 196 / 0.10)", color: "oklch(0.40 0.06 50)" }}
+                >
+                  {t("pe.storyTemplateHint")}
+                </p>
                 {STORY_QUESTION_KEYS.map((k) => (
                   <div key={k} className="space-y-1.5">
                     <Label htmlFor={`story-${k}`}>

@@ -8,16 +8,9 @@ import { api, Product, isVipActive } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { exportAllCsv, hasExportable } from "@/lib/export";
 import { Navadeni } from "@/components/navadeni";
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: "oklch(0.52 0.04 50)",
-  analyzed: "oklch(0.55 0.12 155)",
-  completed: "oklch(0.40 0.10 196)",
-};
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 5, mini: 30, midi: 150, max: 99999,
@@ -194,25 +187,28 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Produkty */}
+      {/* Produkty — na Přehledu jen vstupní bod; samotný seznam je na /products,
+          ať je Přehled o předplatném/kvótě a Produkty o produktech (oddělené). */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-heading text-2xl font-light">{t("dash.yourProducts")}</h2>
-          <div className="flex items-center gap-2">
-            {hasExportable(products) && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => exportAllCsv(products)}
-                title={t("exp.allCsvHint")}
-              >
-                {t("exp.allCsv")}
-              </Button>
-            )}
-            <Link href="/products/new" className={cn(buttonVariants({ size: "sm" }))}>
-              {t("dash.addProduct")}
-            </Link>
-          </div>
+          {products.length > 0 && (
+            <div className="flex items-center gap-2">
+              {hasExportable(products) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => exportAllCsv(products)}
+                  title={t("exp.allCsvHint")}
+                >
+                  {t("exp.allCsv")}
+                </Button>
+              )}
+              <Link href="/products/new" className={cn(buttonVariants({ size: "sm" }))}>
+                {t("dash.addProduct")}
+              </Link>
+            </div>
+          )}
         </div>
 
         {products.length === 0 ? (
@@ -231,36 +227,22 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3">
-            {products.map((product) => {
-              const statusColor = STATUS_COLORS[product.status];
-              return (
-                <Link key={product.id} href={`/products/${product.id}`}>
-                  <Card
-                    className="border-0 card-mystical hover:shadow-md transition-shadow cursor-pointer"
-                    style={{ background: "oklch(0.94 0.012 75)" }}
-                  >
-                    <CardContent className="py-4 flex items-center justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{product.titleOriginal}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {product.category || t("prod.noCategory")}
-                          {product.priceOriginal ? ` · ${product.priceOriginal} EUR` : ""}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className="shrink-0 text-xs"
-                        style={{ background: `${statusColor}18`, color: statusColor }}
-                      >
-                        {t(`status.${product.status}` as "status.draft")}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
+          <Link href="/products" className="block">
+            <Card
+              className="border-0 card-mystical hover:shadow-md transition-shadow cursor-pointer"
+              style={{ background: "oklch(0.94 0.012 75)" }}
+            >
+              <CardContent className="py-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{t("dash.manageProducts")}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {products.length} {products.length === 1 ? t("dash.productOne") : t("dash.productMany")}
+                  </p>
+                </div>
+                <span className="text-xl" style={{ color: "oklch(0.40 0.10 196)" }}>→</span>
+              </CardContent>
+            </Card>
+          </Link>
         )}
       </div>
     </div>

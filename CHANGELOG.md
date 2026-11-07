@@ -182,6 +182,32 @@ Frontend-only, bez migrace. `./deploy/deploy.sh` — build teď projde bez závi
 
 ---
 
+## [2026-11-07] Oddělení Přehledu a Produktů (vlastní stránka /products)
+
+**Typ:** fix
+**Soubory:** `frontend/app/(app)/products/page.tsx`, `frontend/app/(app)/dashboard/page.tsx`,
+`frontend/lib/i18n-dict.ts`
+
+### Co bylo změněno
+`/products` je teď **samostatná stránka se seznamem produktů** (dřív jen `redirect("/dashboard")`).
+Přehled (`/dashboard`) zůstává o předplatném/kvótě/statistikách a místo celého seznamu produktů
+ukazuje jen vstupní kartu „Spravovat produkty" (s počtem) → `/products`. Prázdný stav
+(0 produktů) + navádění „Přidat první produkt" je na obou místech.
+
+### Proč
+Produkty i Přehled vedly na tutéž stránku, takže klik na „Produkty" v menu jen přenačetl
+Přehled a zvýraznění skočilo zpět na „Přehled" — vypadalo to nedodělaně. Uživatelka chtěla
+produkty oddělit od přehledu předplatného a počtu optimalizací.
+
+### Způsob provedení
+Seznam produktů přesunut do `/products` (klient, `api.products.list`). Zvýraznění v menu funguje
+(`pathname.startsWith`). `tsc` čistý.
+
+### Instrukce pro deploy (pokud potřeba)
+Frontend-only, bez migrace. `./deploy/deploy.sh`.
+
+---
+
 ## Formát záznamu:
 
 ```

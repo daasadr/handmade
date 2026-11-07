@@ -15,6 +15,7 @@ import { EmailModule } from './common/email/email.module';
 import { S3Module } from './common/s3/s3.module';
 import { RemoveBgModule } from './common/removebg/removebg.module';
 import { BillingModule } from './billing/billing.module';
+import { PublicModule } from './public/public.module';
 
 import { User } from './users/user.entity';
 import { MakerProfile } from './makers/maker-profile.entity';
@@ -51,6 +52,7 @@ import { CharityRecord } from './charity/charity-record.entity';
     AdminModule,
     AffiliateModule,
     BillingModule,
+    PublicModule,
   ],
   // AppController nese / (getHello) a /api/health. Bez téhle registrace se
   // nenamountuje a obojí vrací 404 — což se dlouho přehlíželo, protože health

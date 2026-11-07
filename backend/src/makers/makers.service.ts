@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IsString, IsOptional, IsUrl, IsObject, IsIn, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsObject, IsIn, IsBoolean, MaxLength } from 'class-validator';
 import sanitizeHtml from 'sanitize-html';
 import { MakerProfile } from './maker-profile.entity';
 import { User } from '../users/user.entity';
@@ -73,6 +73,10 @@ export class CreateMakerProfileDto {
   storyHtml?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @IsOptional()
   @IsUrl({ require_protocol: false })
   videoUrl?: string;
 }
@@ -113,6 +117,10 @@ export class UpdateMakerProfileDto {
   @IsString()
   @MaxLength(40000)
   storyHtml?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
 
   @IsOptional()
   @IsUrl({ require_protocol: false })

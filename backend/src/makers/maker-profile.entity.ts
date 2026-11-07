@@ -52,6 +52,10 @@ export class MakerProfile {
   @Column({ nullable: true, type: 'text' })
   storyHtml: string;
 
+  /** Opt-in: zobrazit profil ve veřejné výloze /vyrobci. Výchozí false (GDPR). */
+  @Column({ default: false })
+  isPublic: boolean;
+
   @Column({ nullable: true })
   profileImageUrl: string;
 

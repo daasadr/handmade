@@ -28,6 +28,34 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Tržiště (výloha) — backendový základ + OpenSpec návrh
+
+**Typ:** feat
+**Soubory:** `openspec/changes/marketplace-showcase/*` (nový), `backend/src/migrations/1758000000000-AddMakerPublicFlag.ts` (nový), `backend/src/makers/maker-profile.entity.ts`, `backend/src/makers/makers.service.ts`, `backend/src/public/*` (nový), `backend/src/app.module.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Začátek epiku „vlastní tržiště" (`handmade-5mr`) — model výloha + affiliate (bez plateb u nás):
+- **OpenSpec návrh** `marketplace-showcase` (proposal/design/tasks) — co/proč/jak + úkoly.
+- **Opt-in `isPublic`** na profilu (migrace `1758000000000`, default false — GDPR souhlas).
+- **`PublicModule`** s nepřihlášenými read-only endpointy:
+  - `GET /api/public/makers` — seznam zveřejněných tvůrců.
+  - `GET /api/public/makers/:id` — detail tvůrce (příběh) + jeho hotové produkty + odkazy na obchody.
+  Ven jen **allowlistovaná bezpečná pole** (žádný e-mail/kvóta/interní stav), neveřejní tvůrci se nevrací.
+
+### Proč
+Priorita roadmapy. Veřejná vrstva, která zviditelní tvůrce a posílá zákazníky na jejich
+Etsy/Amazon/Fler. Staví na profilu-příběhu, affiliate modulu a SEO.
+
+### Způsob provedení
+Samostatný `PublicController` bez `JwtAuthGuard`; data mapovaná explicitním allowlistem
+v `PublicService`. Typecheck + 16 testů zelené (tsc nutno s větší pamětí a jest `--runInBand`
+kvůli zahlcenému disku/RAM lokálně).
+
+### Další krok
+Frontend: přepínač zveřejnění v editaci profilu + veřejné stránky `/vyrobci` a `/vyrobci/[id]`
++ tlačítka „Koupit na …". Bez migrace. Deploy: `1758000000000` přidá sloupec při startu.
+
 ## [2026-11-07] Doladění optimalizace: pole „Upravit" (AI přepracuje jen zadané)
 
 **Typ:** feat

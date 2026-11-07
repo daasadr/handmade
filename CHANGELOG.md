@@ -28,6 +28,31 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Blog — frontend (admin editor + veřejné stránky)
+
+**Typ:** feat
+**Soubory:** `frontend/lib/api.ts`, `frontend/app/blog/page.tsx` (nový), `frontend/app/blog/[slug]/page.tsx` (nový), `frontend/app/(app)/admin/blog/page.tsx` (nový), `frontend/components/public-header.tsx`, `frontend/components/nav.tsx`, `frontend/app/page.tsx`, `frontend/app/sitemap.ts`, `frontend/lib/i18n-dict.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+- **Admin správa `/admin/blog`**: seznam článků + editor (název, slug, perex, úvodní obrázek,
+  autor, **publikovat/koncept**, obsah přes **TipTap editor** — reuse). Vytvořit/upravit/smazat.
+  Přístupné jen adminovi (backend to vynucuje, frontend skryje).
+- **Veřejné `/blog`** (výpis publikovaných) a **`/blog/[slug]`** (detail — sanitizované HTML).
+- Odkazy „Blog" ve veřejné hlavičce, nav (vč. „Blog (správa)" pro admina) a patičce landingu;
+  `/blog` do sitemap.
+
+### Proč
+Dokončení blogu — autorka publikuje články sama přes editor, veřejnost je čte (SEO/obsah).
+
+### Způsob provedení
+Reuse `StoryEditor` (TipTap) pro obsah i úvodní obrázek (přes existující upload). Veřejné
+stránky mimo `(app)` group, čtou `/api/public/blog`. `tsc --noEmit` zelený (plný build lokálně
+blokuje zahlcený disk; build poběží v Dockeru).
+
+### Deploy
+`./deploy/deploy.sh` (migrace `1759000000000` z předchozího commitu vytvoří tabulku).
+
 ## [2026-11-08] Blog — backend (DB + admin CRUD + veřejné čtení)
 
 **Typ:** feat

@@ -35,10 +35,16 @@ export function Nav() {
   const links = [
     { href: "/dashboard", label: t("nav.dashboard") },
     { href: "/products", label: t("nav.products") },
+    { href: "/blog", label: t("blog.nav") },
     { href: "/napoveda", label: t("nav.help") },
     { href: "/profile", label: t("nav.profile") },
-    // Stránka si oprávnění hlídá sama; tohle jen skrývá odkaz běžným uživatelům.
-    ...(user?.role === "admin" ? [{ href: "/admin", label: t("nav.admin") }] : []),
+    // Stránky si oprávnění hlídají samy; tohle jen skrývá odkazy běžným uživatelům.
+    ...(user?.role === "admin"
+      ? [
+          { href: "/admin", label: t("nav.admin") },
+          { href: "/admin/blog", label: t("blog.adminNav") },
+        ]
+      : []),
   ];
 
   return (

@@ -184,6 +184,24 @@ export const api = {
     getMaker: (id: string) => request<PublicMaker>(`/public/makers/${id}`),
   },
 
+  // Blog — veřejné čtení.
+  blog: {
+    list: () => request<BlogPostCard[]>("/public/blog"),
+    getBySlug: (slug: string) => request<BlogPost>(`/public/blog/${slug}`),
+  },
+
+  // Blog — správa (jen admin).
+  adminBlog: {
+    list: () => request<BlogPost[]>("/admin/blog"),
+    getOne: (id: string) => request<BlogPost>(`/admin/blog/${id}`),
+    create: (data: BlogPostInput) =>
+      request<BlogPost>("/admin/blog", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: BlogPostInput) =>
+      request<BlogPost>(`/admin/blog/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    remove: (id: string) =>
+      request<{ message: string }>(`/admin/blog/${id}`, { method: "DELETE" }),
+  },
+
   admin: {
     getUsers: () => request<AdminUser[]>("/admin/users"),
     updateUser: (id: string, data: UpdateAdminUserData) =>
@@ -315,6 +333,41 @@ export interface PublicMaker {
   marketplaceLinks: Record<string, string>;
   products: PublicProductCard[];
 }
+
+/** Blog — karta ve výpisu (bez celého HTML). */
+export interface BlogPostCard {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  publishedAt: string;
+}
+
+/** Blog — plný článek (admin i veřejný detail). */
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  contentHtml: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  published: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BlogPostInput = Partial<{
+  title: string;
+  excerpt: string;
+  contentHtml: string;
+  coverImageUrl: string;
+  authorName: string;
+  slug: string;
+  published: boolean;
+}>;
 
 export interface Product {
   id: string;

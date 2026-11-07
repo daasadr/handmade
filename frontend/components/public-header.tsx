@@ -29,6 +29,9 @@ export function PublicHeader() {
           <Link href="/vyrobci" className="text-sm hover:opacity-70 transition-opacity" style={{ color: "oklch(0.52 0.04 50)" }}>
             {t("mk.nav")}
           </Link>
+          <Link href="/blog" className="text-sm hover:opacity-70 transition-opacity" style={{ color: "oklch(0.52 0.04 50)" }}>
+            {t("blog.nav")}
+          </Link>
           <LangToggle />
           <Link href="/login" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
             {t("auth.login")}

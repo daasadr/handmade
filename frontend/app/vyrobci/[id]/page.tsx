@@ -133,7 +133,7 @@ export default function PublicMakerPage() {
                     <Card key={p.id} className="border-0 card-mystical overflow-hidden" style={{ background: "oklch(0.94 0.012 75)" }}>
                       {p.imageUrl && (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={p.imageUrl} alt={p.title} className="w-full aspect-square object-cover" />
+                        <img src={p.imageUrl} alt={p.title} loading="lazy" decoding="async" className="w-full aspect-square object-cover" />
                       )}
                       <CardContent className="py-4">
                         <p className="font-medium leading-snug">{p.title}</p>

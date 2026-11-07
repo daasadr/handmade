@@ -49,7 +49,7 @@ export default function BlogListPage() {
                   <div className="flex flex-col sm:flex-row">
                     {p.coverImageUrl && (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={p.coverImageUrl} alt="" className="sm:w-48 w-full h-40 sm:h-auto object-cover" />
+                      <img src={p.coverImageUrl} alt="" loading="lazy" decoding="async" className="sm:w-48 w-full h-40 sm:h-auto object-cover" />
                     )}
                     <CardContent className="py-5 flex-1">
                       <p className="font-heading text-xl font-medium leading-snug">{p.title}</p>

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { exportAllCsv, hasExportable } from "@/lib/export";
+import { Navadeni } from "@/components/navadeni";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "oklch(0.52 0.04 50)",
@@ -62,6 +63,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Tiché navádění: když nový uživatel (má profil, 0 produktů) chvíli váhá,
+          jemně ukáže na „Přidat první produkt". Sama zhasne, nic nezakrývá. */}
+      <Navadeni selector="[data-nav='pridat']" enabled={hasProfile === true && products.length === 0} />
+
       {/* Upgrade success banner */}
       {upgradeSuccess && (
         <div className="rounded-xl px-5 py-4 flex items-center gap-3"
@@ -220,7 +225,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground mt-2 mb-6">
                 {t("dash.emptyText")}
               </p>
-              <Link href="/products/new" className={cn(buttonVariants())}>
+              <Link href="/products/new" data-nav="pridat" className={cn(buttonVariants())}>
                 {t("dash.addFirst")}
               </Link>
             </CardContent>

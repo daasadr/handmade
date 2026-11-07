@@ -56,7 +56,7 @@ export default function BlogPostPage() {
             </p>
             {post.coverImageUrl && (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={post.coverImageUrl} alt="" className="w-full rounded-xl object-cover mb-6" style={{ maxHeight: "440px" }} />
+              <img src={post.coverImageUrl} alt="" decoding="async" className="w-full rounded-xl object-cover mb-6" style={{ maxHeight: "440px" }} />
             )}
             <div
               className="prose-story text-base text-foreground/85"

@@ -161,3 +161,53 @@
 }
 /* Placeholder prázdného editoru by byl fajn, ale držíme to jednoduché. */
 .prose-story:focus { outline: none; }
+
+/* ===== Behaviorální navádění (viz .claude/skills/navadeni) ===== */
+/* Jedna barva JEN pro navádění — teplá jantarová, neznamená nic jiného (ne odkaz,
+   ne tlačítko, ne stav). Kdo ji potká potřetí, ví, že znamená „tudy". */
+@property --uhel {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+:root {
+  --navadeni: oklch(0.70 0.16 55);
+}
+.je-navedeno {
+  position: relative;
+}
+/* Tenký prstenec, co jednou dvakrát objede obrys a zhasne. pointer-events:none,
+   ať nápověda nikdy nebere kliknutí. Masky vyříznou vnitřek — obarví se jen okraj. */
+.je-navedeno::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 3px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--uhel),
+    transparent 0deg 300deg,
+    var(--navadeni) 345deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: navadeni-obeh 2.4s linear 2;
+}
+@keyframes navadeni-obeh {
+  to {
+    --uhel: 360deg;
+  }
+}
+/* Pohyb v periferii je u části lidí spouštěč nevolnosti — bez animace jen klidné
+   orámování. Není to volitelné. */
+@media (prefers-reduced-motion: reduce) {
+  .je-navedeno::after {
+    animation: none;
+    background: none;
+    box-shadow: 0 0 0 2px var(--navadeni);
+  }
+}

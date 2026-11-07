@@ -28,6 +28,39 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Behaviorální navádění + zrychlení načítání
+
+**Typ:** feat | perf
+**Soubory:** `.claude/skills/navadeni/SKILL.md` (nový), `frontend/lib/navadeni/*` (nový), `frontend/components/navadeni.tsx` (nový), `frontend/app/globals.css`, `frontend/app/(app)/dashboard/page.tsx`, `frontend/app/layout.tsx`, `frontend/components/maker-story.tsx`, `frontend/app/vyrobci/[id]/page.tsx`, `frontend/app/blog/page.tsx`, `frontend/app/blog/[slug]/page.tsx`
+**Commit:** nepushováno
+
+### Behaviorální navádění (dle návodu — uložen jako skill `navadeni`)
+Tichá nápověda, která se ukáže, jen když návštěvník „hledá a nenachází", **sama zhasne,
+nic nezakrývá, nebere kliknutí**:
+- Čistý stavový automat (`lib/navadeni/automat.ts`: PŘÍCHOD→ROZHLÍŽÍ→HLEDÁ→ČTE) + všechna
+  čísla v `pravidla.ts`. Žádné bannery/odpočty/naléhavost.
+- `components/navadeni.tsx` napojí myš/čas/viditelnost na automat; signál „ticho po aktivitě".
+  Při HLEDÁ přidá na cíl třídu `je-navedeno` — tenký jantarový prstenec (CSS `::after`,
+  `pointer-events:none`, ~5,5 s a zhasne). Respektuje `prefers-reduced-motion` (bez animace),
+  nevyrušuje při psaní do pole, časovač se staví v zavřené kartě, max 3× za návštěvu s klidem.
+- Barva `--navadeni` (teplá jantarová) se nikde jinde nepoužívá — stává se „slovníkem" pro „tudy".
+- První nasazení: dashboard → nenápadně ukáže na „Přidat první produkt", když nový uživatel
+  (má profil, 0 produktů) chvíli váhá.
+- **Cookiefree analytika** (měření, jestli navádění pomáhá) je samostatný úkol `handmade-zub`.
+
+### Zrychlení načítání
+- **Fonty:** Cormorant 5 vah + kurzíva → 4 váhy bez kurzívy; DM Sans 5 → 4 váhy (700 `font-bold`
+  se nikde nepoužívá, kurzíva nadpisů taky ne). Ušetří ~7 font souborů při prvním načtení.
+- **Obrázky:** `loading="lazy"` + `decoding="async"` na obrázky ve veřejných seznamech/galeriích
+  (výloha, blog, příběh) — nestahují se všechny naráz.
+
+### Perf — k dořešení (follow-up)
+Veřejné stránky jsou klientské (fetch po mountu) — serverový render by zrychlil první vykreslení
+i SEO. Zvážit `next/image` (potřebuje konfiguraci domén S3).
+
+### Poznámka
+`tsc --noEmit` zelený (plný `next build` lokálně blokuje zahlcený disk D:).
+
 ## [2026-11-08] Blog — frontend (admin editor + veřejné stránky)
 
 **Typ:** feat

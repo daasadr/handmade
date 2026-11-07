@@ -6,17 +6,19 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { Providers } from "./providers";
 import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, getSiteJsonLd } from "@/lib/seo";
 
+// Jen reálně používané řezy — šetří přenos. 700 (font-bold) se nikde nepoužívá;
+// kurzíva nadpisů taky ne (kurzíva je jen na těle/motto). display:swap = text se
+// vykreslí hned náhradním písmem, nečeká se na font (default next/font, ponecháno).
 const cormorant = Cormorant_Garamond({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
+  weight: ["300", "400", "500", "600"],
 });
 
 const dmSans = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {

@@ -41,7 +41,7 @@ export function MakerStory({
             )}
             {b.image && (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={b.image} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: "420px" }} />
+              <img src={b.image} alt="" loading="lazy" decoding="async" className="w-full rounded-xl object-cover" style={{ maxHeight: "420px" }} />
             )}
           </div>
         ))}

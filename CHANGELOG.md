@@ -72,6 +72,32 @@ pak `./deploy/deploy.sh` (migrace 1760 proběhne automaticky). Frontend tlačít
 
 ---
 
+## [2026-11-07] Etsy OAuth push — frontend (tlačítka)
+
+**Typ:** feat
+**Soubory:** `frontend/lib/api.ts` (etsy klient), `frontend/app/(app)/profile/page.tsx`
+(karta Propojení s Etsy), `frontend/app/(app)/products/[id]/page.tsx` (tlačítko Odeslat koncept),
+`frontend/lib/i18n-dict.ts` (klíče `etsy.*` CS/EN)
+
+### Co bylo změněno
+Na profilu přibyla karta „Propojení s Etsy" (Propojit / Zrušit propojení + stav obchodu).
+Na detailu produktu u Etsy optimalizace tlačítko „Odeslat koncept na Etsy" (propojeno → odešle,
+nepropojeno → odkaz na profil, funkce vypnutá → nic). Návrat z OAuth (`?etsy=connected|error`)
+dá toast a uklidí URL.
+
+### Proč
+Dokončení „jednotlačítkové" cesty na Etsy z frontendu. Backend už hotový (commit c12b847).
+
+### Způsob provedení
+Čte se `window.location.search` místo `useSearchParams` (bez Suspense boundary). Karta/tlačítko
+se zobrazí jen když `/etsy/connection` vrátí stav (funkce zapnutá) — fail-safe i na UI. `tsc` čistý.
+
+### Instrukce pro deploy (pokud potřeba)
+Nasadit až s backendem po schválení Etsy appky (viz předchozí záznam). Jinak tlačítka zůstanou
+skrytá (server vrátí 503 / status se nenačte).
+
+---
+
 ## Formát záznamu:
 
 ```

@@ -220,7 +220,26 @@ export const api = {
       }),
     portal: () => request<{ url: string }>("/billing/portal"),
   },
+
+  // Přímé napojení na Etsy (OAuth + odeslání konceptu listingu).
+  etsy: {
+    status: () => request<EtsyConnectionStatus>("/etsy/connection"),
+    startUrl: () => request<{ url: string }>("/etsy/oauth/start"),
+    disconnect: () =>
+      request<EtsyConnectionStatus>("/etsy/connection", { method: "DELETE" }),
+    // Založí koncept listingu v obchodě tvůrce; vrátí odkaz do editace konceptu.
+    createDraft: (productId: string) =>
+      request<{ listingId: string; url: string }>(
+        `/products/${productId}/etsy-draft`,
+        { method: "POST" },
+      ),
+  },
 };
+
+export interface EtsyConnectionStatus {
+  connected: boolean;
+  shopId?: string;
+}
 
 // Typy
 export interface User {

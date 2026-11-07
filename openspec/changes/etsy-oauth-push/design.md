@@ -68,6 +68,27 @@ Po úspěchu ulož jen `etsyListingId` k produktu (už sloupec máme) a vrať od
 - Zámek proti dvojkliku na „Odeslat" (stejný `InFlightLock` jako u analyze), ať nevzniknou dva koncepty.
 - Review bezpečnosti jako samostatný úkol (OAuth + tajemství + vstup uživatele → CLAUDE.md 16).
 
+## Review bezpečnosti (task 10)
+
+Provedeno 2026-11-07. Nálezy:
+
+- **CSRF / state:** `state` je náhodných 24 B, uloží se jen při JWT-ověřeném `start`
+  (mapuje se na userId), spotřebuje se jednorázově, TTL 10 min. ✅ Chrání před podstrčeným
+  callbackem. ⚠️ Zbytkové riziko „login CSRF" (útočník nechá oběť dokončit jeho flow →
+  obchod oběti se naváže pod útočníkův účet). Standardní OAuth riziko, state ho zmírňuje;
+  objem/citlivost u nás nízká (jen zakládání konceptů). Ponecháno, zdokumentováno.
+- **PKCE bez client_secret:** token endpoint voláme jen s `client_id` + `code_verifier`
+  (PKCE S256). Shared secret se v OAuth NEPOUŽÍVÁ. ✅ Žádné tajemství v tělech requestů.
+- **Tokeny:** refresh token šifrovaný (AES-256-GCM), access token se neukládá. Nikde
+  nelogujeme obsah tokenu (jen HTTP status / Etsy chybové tělo listingu). ✅
+- **IDOR:** produkt ověřen v dotazu (`maker.userId`, 404); connection vždy podle `userId`
+  z JWT. ✅
+- **Open redirect:** callback přesměrovává jen na `FRONTEND_URL` (server env, ne vstup
+  uživatele). ✅
+- **Rate limit (DROBNÉ):** `/etsy/oauth/start` a `/products/:id/etsy-draft` nemají vlastní
+  throttle. Doporučeno přidat (bd follow-up) — nízká priorita, zneužití je drahé (OAuth flow).
+- **Fail-safe:** chybějící klíč → 503, nikdy 401, zbytek appky jede. ✅
+
 ## Dopad závislostí
 
 Bez nové runtime závislosti: OAuth i volání Etsy jde přes `fetch`/`undici` (jako stávající

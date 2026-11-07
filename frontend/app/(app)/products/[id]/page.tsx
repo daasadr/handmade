@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { api, Product, AiOptimization, Platform, PLATFORM_LABELS } from "@/lib/api";
 import { prepareImages, formatBytes } from "@/lib/image-upload";
 import { useT, useLocale } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { exportPlatformTxt, exportProductCsv, exportAmazonCsv } from "@/lib/export";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,9 @@ export default function ProductPage() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ titleOriginal: "", descriptionOriginal: "", priceOriginal: "", category: "" });
   const [saving, setSaving] = useState(false);
+  // Stav propojení s Etsy: null = neznámé / funkce vypnutá (tlačítko skryjeme).
+  const [etsyConnected, setEtsyConnected] = useState<boolean | null>(null);
+  const [sendingEtsy, setSendingEtsy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +70,27 @@ export default function ProductPage() {
     }
     load();
   }, [id, router]);
+
+  // Stav propojení s Etsy — best-effort. Chyba / vypnutá funkce → null (skryjeme).
+  useEffect(() => {
+    api.etsy
+      .status()
+      .then((s) => setEtsyConnected(s.connected))
+      .catch(() => setEtsyConnected(null));
+  }, []);
+
+  const handleSendToEtsy = async () => {
+    setSendingEtsy(true);
+    try {
+      const res = await api.etsy.createDraft(id);
+      toast.success(t("etsy.draftDone"));
+      if (res.url) window.open(res.url, "_blank", "noopener");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t("etsy.draftFailed"));
+    } finally {
+      setSendingEtsy(false);
+    }
+  };
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -602,6 +627,21 @@ export default function ProductPage() {
                 >
                   {t("exp.amazon")}
                 </Button>
+              )}
+              {/* Odeslat koncept na Etsy — jen u Etsy a jen když je účet propojen.
+                  Nepropojeno → odkaz na profil; null (vypnuto) → nic. */}
+              {displayedOpt.platform === "etsy" && etsyConnected === true && (
+                <Button size="sm" onClick={handleSendToEtsy} disabled={sendingEtsy}>
+                  {sendingEtsy ? t("etsy.sending") : t("etsy.send")}
+                </Button>
+              )}
+              {displayedOpt.platform === "etsy" && etsyConnected === false && (
+                <Link
+                  href="/profile"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  {t("etsy.connectHint")}
+                </Link>
               )}
             </div>
 

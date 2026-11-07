@@ -28,12 +28,14 @@
 
 ## Frontend
 
-- [ ] 7. **Profil — „Propojit s Etsy" / „Zrušit propojení"** + stav (propojeno jako shop …).
-  i18n CS/EN. Volá `/etsy/oauth/start` a přesměruje; `/etsy/callback` stránka dokončí.
-  _Ověření:_ `npx tsc --noEmit` čistý; vizuálně beze změny palety.
-- [ ] 8. **Detail produktu — „Odeslat koncept na Etsy"** (jen u Etsy optimalizace, jen když
-  je účet propojen). Po úspěchu odkaz na koncept. i18n CS/EN.
-  _Ověření:_ `npx tsc --noEmit` čistý.
+- [x] 7. **Profil — „Propojit s Etsy" / „Zrušit propojení"** + stav (propojeno — obchod …).
+  i18n CS/EN. Volá `/etsy/oauth/start` a přesměruje; návrat `?etsy=connected|error` → toast
+  + úklid URL (přes `window.location`, ne useSearchParams → bez Suspense). Karta jen když
+  je funkce zapnutá (status != null).
+  _Ověřeno:_ `npx tsc --noEmit` čistý.
+- [x] 8. **Detail produktu — „Odeslat koncept na Etsy"** (jen u Etsy optimalizace; propojeno →
+  tlačítko, nepropojeno → odkaz na profil, vypnuto → nic). Po úspěchu otevře koncept. i18n CS/EN.
+  _Ověřeno:_ `npx tsc --noEmit` čistý.
 
 ## Po schválení Etsy (živý test)
 
@@ -43,5 +45,5 @@
 
 ## Závěr
 
-- [ ] 10. **Review bezpečnosti** (OAuth, tajemství, vstup uživatele) — nálezy do `design.md`.
-- [ ] 11. **CHANGELOG + archivace** změny po dokončení.
+- [x] 10. **Review bezpečnosti** (OAuth, tajemství, vstup uživatele) — nálezy v `design.md`.
+- [ ] 11. **CHANGELOG + archivace** změny po dokončení (archivace až po živém testu task 9).

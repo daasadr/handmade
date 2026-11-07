@@ -6,8 +6,9 @@ import { api, MakerProfile, isVipActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useT } from "@/lib/i18n";
 import { buildStoryBlocks } from "@/lib/story-template";
+import { toast } from "sonner";
 import DOMPurify from "dompurify";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,6 +32,9 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<MakerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [noProfile, setNoProfile] = useState(false);
+  // Stav propojení s Etsy: null = funkce na serveru vypnutá (kartu skryjeme).
+  const [etsy, setEtsy] = useState<{ connected: boolean; shopId?: string } | null>(null);
+  const [etsyBusy, setEtsyBusy] = useState(false);
 
   useEffect(() => {
     api.makers.getProfile()
@@ -38,6 +42,48 @@ export default function ProfilePage() {
       .catch(() => setNoProfile(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    api.etsy.status().then(setEtsy).catch(() => setEtsy(null));
+  }, []);
+
+  // Zpětná vazba z OAuth callbacku (?etsy=connected|error) + úklid URL.
+  // Čteme window.location (ne useSearchParams), ať nemusíme řešit Suspense boundary.
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("etsy");
+    if (!status) return;
+    if (status === "connected") {
+      toast.success(t("etsy.connectedOk"));
+      api.etsy.status().then(setEtsy).catch(() => {});
+    } else if (status === "error") {
+      toast.error(t("etsy.connectErr"));
+    }
+    window.history.replaceState({}, "", "/profile");
+  }, [t]);
+
+  const connectEtsy = async () => {
+    setEtsyBusy(true);
+    try {
+      const { url } = await api.etsy.startUrl();
+      window.location.href = url; // přesměrování na Etsy přihlášení
+    } catch {
+      toast.error(t("etsy.connectErr"));
+      setEtsyBusy(false);
+    }
+  };
+
+  const disconnectEtsy = async () => {
+    setEtsyBusy(true);
+    try {
+      await api.etsy.disconnect();
+      setEtsy({ connected: false });
+      toast.success(t("etsy.disconnected"));
+    } catch {
+      toast.error(t("etsy.connectErr"));
+    } finally {
+      setEtsyBusy(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -233,6 +279,32 @@ export default function ProfilePage() {
           </Link>
         </CardContent>
       </Card>
+
+      {/* Propojení s Etsy — jen když je funkce na serveru zapnutá (etsy !== null) */}
+      {etsy !== null && (
+        <Card className="border-0 card-mystical" style={{ background: "oklch(0.94 0.012 75)" }}>
+          <CardContent className="py-5 space-y-3">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              {t("etsy.sectionTitle")}
+            </p>
+            <p className="text-sm text-muted-foreground">{t("etsy.sectionDesc")}</p>
+            {etsy.connected ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium" style={{ color: "oklch(0.40 0.12 155)" }}>
+                  {t("etsy.connectedShop")} {etsy.shopId}
+                </p>
+                <Button variant="outline" size="sm" onClick={disconnectEtsy} disabled={etsyBusy}>
+                  {t("etsy.disconnect")}
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" onClick={connectEtsy} disabled={etsyBusy}>
+                {t("etsy.connect")}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

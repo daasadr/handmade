@@ -8,13 +8,14 @@
   - [x] `GET /public/makers/:id` — detail tvůrce + jeho hotové produkty; neveřejný → 404.
 - [x] typecheck + testy zelené (16).
 
-## Frontend (výloha)
-- [ ] Přepínač „Zobrazit ve veřejném adresáři" v editaci profilu (isPublic).
-- [ ] Sdílená komponenta pro zobrazení příběhu (blocks + sanitizované custom HTML) — použít na profilu i veřejně.
-- [ ] `/vyrobci` — adresář zveřejněných tvůrců (karty: foto, jméno, motto).
-- [ ] `/vyrobci/[id]` — veřejný profil-příběh + produkty + tlačítka „Koupit na …".
-- [ ] Odkaz na výlohu z navigace / patičky landingu.
-- [ ] SEO: `/vyrobci` do sitemap, metadata veřejných stránek.
+## Frontend (výloha) — HOTOVO (kromě metadat per-page)
+- [x] Přepínač „Zobrazit ve veřejném adresáři" v editaci profilu (isPublic).
+- [x] Sdílená komponenta `MakerStory` (blocks + sanitizované custom HTML) — na veřejném profilu.
+- [x] `/vyrobci` — adresář zveřejněných tvůrců (karty: foto, jméno, motto).
+- [x] `/vyrobci/[id]` — veřejný profil-příběh + produkty + tlačítka „Koupit na …".
+- [x] Odkaz na výlohu z patičky landingu + veřejné hlavičky.
+- [x] `/vyrobci` do sitemap.
+- [ ] Metadata per-page veřejných stránek (klientské stránky — chce server komponenty; follow-up).
 
 ## Affiliate / kliky
 - [ ] Tlačítka „Koupit" vedou na marketplaceLinks (u Etsy deep-link dle etsyListingId), klik se počítá.

@@ -305,6 +305,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6 flex-wrap justify-center">
             {[
+              { href: "/vyrobci", label: en ? "Makers" : "Tvůrci" },
               { href: "/tarify", label: en ? "Plans" : "Tarify" },
               { href: "/podminky", label: en ? "Terms" : "Obchodní podmínky" },
               { href: "/gdpr", label: en ? "Privacy" : "GDPR" },

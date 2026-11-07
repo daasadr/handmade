@@ -178,6 +178,12 @@ export const api = {
       ),
   },
 
+  // Veřejná výloha — nepřihlášené čtení.
+  public: {
+    listMakers: () => request<PublicMakerCard[]>("/public/makers"),
+    getMaker: (id: string) => request<PublicMaker>(`/public/makers/${id}`),
+  },
+
   admin: {
     getUsers: () => request<AdminUser[]>("/admin/users"),
     updateUser: (id: string, data: UpdateAdminUserData) =>
@@ -257,6 +263,7 @@ export interface MakerProfile {
   storyImages?: Record<string, string>;
   storyMode?: "template" | "custom";
   storyHtml?: string;
+  isPublic?: boolean;
   profileImageUrl?: string;
   videoUrl?: string;
   marketplaceLinks?: Record<string, string>;
@@ -271,8 +278,43 @@ export type MakerProfileInput = Partial<{
   storyImages: Record<string, string>;
   storyMode: "template" | "custom";
   storyHtml: string;
+  isPublic: boolean;
   videoUrl: string;
 }>;
+
+/** Veřejná výloha — karta tvůrce v adresáři. */
+export interface PublicMakerCard {
+  id: string;
+  brandName: string;
+  motto: string | null;
+  profileImageUrl: string | null;
+}
+
+/** Veřejná výloha — produkt tvůrce. */
+export interface PublicProductCard {
+  id: string;
+  title: string;
+  category: string | null;
+  price: number | null;
+  imageUrl: string | null;
+  etsyListingId: string | null;
+}
+
+/** Veřejná výloha — detail tvůrce (jen bezpečná pole z backendu). */
+export interface PublicMaker {
+  id: string;
+  brandName: string;
+  motto: string | null;
+  bio: string | null;
+  storyMode: "template" | "custom" | null;
+  storyAnswers: Record<string, string>;
+  storyImages: Record<string, string>;
+  storyHtml: string | null;
+  profileImageUrl: string | null;
+  videoUrl: string | null;
+  marketplaceLinks: Record<string, string>;
+  products: PublicProductCard[];
+}
 
 export interface Product {
   id: string;

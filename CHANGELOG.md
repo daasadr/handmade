@@ -28,6 +28,35 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Tržiště (výloha) — veřejné stránky /vyrobci
+
+**Typ:** feat
+**Soubory:** `frontend/lib/api.ts`, `frontend/components/maker-story.tsx` (nový), `frontend/components/public-header.tsx` (nový), `frontend/app/vyrobci/page.tsx` (nový), `frontend/app/vyrobci/[id]/page.tsx` (nový), `frontend/app/(app)/profile/edit/page.tsx`, `frontend/app/sitemap.ts`, `frontend/app/page.tsx`, `frontend/lib/i18n-dict.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Viditelná část tržiště (navazuje na backendový základ ze stejného dne):
+- **`/vyrobci`** — veřejný adresář zveřejněných tvůrců (karty: foto, jméno, motto).
+- **`/vyrobci/[id]`** — veřejný profil-příběh + hotové produkty + tlačítka **„Koupit na Etsy/
+  Amazon/Fler"** (odkazy na obchod tvůrce; u Etsy deep-link na listing dle `etsyListingId`).
+- **Přepínač „Zobrazit můj profil ve veřejné výloze"** v editaci profilu (opt-in `isPublic`).
+- Sdílená komponenta `MakerStory` (příběh: šablona i sanitizované custom HTML) a `PublicHeader`.
+- `/vyrobci` do sitemap, odkaz „Tvůrci" v patičce landingu.
+
+### Proč
+Dokončení první fáze tržiště — tvůrce se zviditelní a posílá zákazníky na svůj marketplace.
+
+### Způsob provedení
+Veřejné stránky jsou mimo `(app)` group (bez JWT), čtou nepřihlášené `/api/public/*`.
+`tsc --noEmit` zelený (plný `next build` lokálně blokuje zahlcený disk; build poběží v Dockeru).
+
+### Zbývá (follow-up)
+Počítání kliků „Koupit" přes affiliate modul; metadata per-page veřejných stránek (chce
+server komponenty); klientské i18n má stejné SEO omezení jako zbytek webu.
+
+### Deploy
+`./deploy/deploy.sh` (migrace `1758000000000` z předchozího commitu přidá `isPublic`).
+
 ## [2026-11-08] Tržiště (výloha) — backendový základ + OpenSpec návrh
 
 **Typ:** feat

@@ -56,6 +56,7 @@ export default function ProfileEditPage() {
     storyImages: {} as Record<string, string>,
     storyMode: "template" as "template" | "custom",
     storyHtml: "",
+    isPublic: false,
   });
   const [showQuotes, setShowQuotes] = useState(false);
   const [uploadingStoryKey, setUploadingStoryKey] = useState<string | null>(null);
@@ -88,6 +89,7 @@ export default function ProfileEditPage() {
           storyImages: p.storyImages || {},
           storyMode: p.storyMode === "custom" ? "custom" : "template",
           storyHtml: p.storyHtml || "",
+          isPublic: p.isPublic ?? false,
         });
       })
       .catch(() => setIsNew(true))
@@ -200,6 +202,7 @@ export default function ProfileEditPage() {
         storyImages: form.storyImages,
         storyMode: form.storyMode,
         storyHtml: form.storyMode === "custom" ? form.storyHtml : undefined,
+        isPublic: form.isPublic,
       };
       let p = isNew
         ? await api.makers.createProfile(data)
@@ -366,6 +369,20 @@ export default function ProfileEditPage() {
               <p className="text-xs text-muted-foreground">
                 Vložte odkaz na video o vašem studiu — zobrazí se jako přehrávač na profilu
               </p>
+            </div>
+
+            {/* Veřejná výloha — opt-in */}
+            <div className="pt-3 border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }}>
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isPublic}
+                  onChange={(e) => setForm({ ...form, isPublic: e.target.checked })}
+                  className="h-4 w-4 shrink-0"
+                />
+                <span className="text-sm font-medium">{t("pe.makePublic")}</span>
+              </label>
+              <p className="text-xs text-muted-foreground mt-1 ml-6">{t("pe.makePublicHint")}</p>
             </div>
 
             {/* Příběh tvůrce */}

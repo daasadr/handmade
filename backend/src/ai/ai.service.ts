@@ -202,46 +202,10 @@ ${platformSchema}
     const content = message.content[0];
     if (content.type !== 'text') throw new BadRequestException('Neočekávaná odpověď AI');
 
-    let parsed: any;
-    try {
-      // Claude někdy obalí JSON do markdown bloků — extrahujeme čistý JSON
-      const raw = content.text.trim();
-      const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-      parsed = JSON.parse(jsonText);
-    } catch {
-      throw new BadRequestException('AI vrátila neplatný formát odpovědi');
-    }
-
-    // Tagy: nové pole `tags`, fallback na staré `keywords`. Etsy má tvrdý limit
-    // 20 znaků na tag — ořízneme, ať jsou reálně použitelné. Fler limit nemá.
-    const tagLimited = platform === 'etsy';
-    const tags: string[] = (Array.isArray(parsed.tags) ? parsed.tags : parsed.keywords || [])
-      .map((t: unknown) => String(t).trim())
-      .filter(Boolean)
-      .map((t: string) => (tagLimited ? t.slice(0, 20) : t))
-      .slice(0, 13);
-
-    const materials: string[] = (Array.isArray(parsed.materials) ? parsed.materials : [])
-      .map((m: unknown) => String(m).trim())
-      .filter(Boolean)
-      .slice(0, 13);
-
-    const bulletPoints: string[] = (Array.isArray(parsed.bullet_points) ? parsed.bullet_points : [])
-      .map((b: unknown) => String(b).trim())
-      .filter(Boolean)
-      .slice(0, 5);
-
-    const searchTerms: string =
-      typeof parsed.search_terms === 'string' ? parsed.search_terms.trim().slice(0, 240) : '';
-
-    const platformFields: {
-      materials?: string[];
-      bulletPoints?: string[];
-      searchTerms?: string;
-    } = {};
-    if (materials.length) platformFields.materials = materials;
-    if (bulletPoints.length) platformFields.bulletPoints = bulletPoints;
-    if (searchTerms) platformFields.searchTerms = searchTerms;
+    const { parsed, tags, platformFields } = this.parseOptimizationResponse(
+      content.text,
+      platform,
+    );
 
     // Reálná konkurence z Etsy — jen když je API nakonfigurováno a jde o Etsy.
     // Amazon nemá veřejné vyhledávací API (viz nápověda), takže tam zůstává odhad AI.
@@ -374,6 +338,194 @@ ${platformSchema}
     return new ServiceUnavailableException(
       `AI analýzu se nepodařilo dokončit. ${kontaktujteSpravce}`,
     );
+  }
+
+  /**
+   * Zparsuje odpověď Claude (stripne markdown) a vytáhne tagy + platformFields
+   * se stejnými limity jako analyze (Etsy tag ≤20 zn., ≤13 tagů/materiálů,
+   * ≤5 odrážek, search terms ≤240). Sdílí analyze i refine, ať se nerozejdou.
+   */
+  private parseOptimizationResponse(rawText: string, platform: Platform) {
+    let parsed: any;
+    try {
+      const raw = rawText.trim();
+      const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      parsed = JSON.parse(jsonText);
+    } catch {
+      throw new BadRequestException('AI vrátila neplatný formát odpovědi');
+    }
+
+    const tagLimited = platform === 'etsy';
+    const tags: string[] = (Array.isArray(parsed.tags) ? parsed.tags : parsed.keywords || [])
+      .map((t: unknown) => String(t).trim())
+      .filter(Boolean)
+      .map((t: string) => (tagLimited ? t.slice(0, 20) : t))
+      .slice(0, 13);
+
+    const materials: string[] = (Array.isArray(parsed.materials) ? parsed.materials : [])
+      .map((m: unknown) => String(m).trim())
+      .filter(Boolean)
+      .slice(0, 13);
+
+    const bulletPoints: string[] = (Array.isArray(parsed.bullet_points) ? parsed.bullet_points : [])
+      .map((b: unknown) => String(b).trim())
+      .filter(Boolean)
+      .slice(0, 5);
+
+    const searchTerms: string =
+      typeof parsed.search_terms === 'string' ? parsed.search_terms.trim().slice(0, 240) : '';
+
+    const platformFields: {
+      materials?: string[];
+      bulletPoints?: string[];
+      searchTerms?: string;
+    } = {};
+    if (materials.length) platformFields.materials = materials;
+    if (bulletPoints.length) platformFields.bulletPoints = bulletPoints;
+    if (searchTerms) platformFields.searchTerms = searchTerms;
+
+    return { parsed, tags, platformFields };
+  }
+
+  /**
+   * Doladění existující optimalizace podle instrukce uživatele. AI zachová, co
+   * sedí, a změní jen požadované. Počítá se do kvóty jako analýza (je to další
+   * volání Claude). Skóre/konkurence se nepřepočítává — refine je o textu.
+   */
+  async refine(
+    productId: string,
+    user: User,
+    platform: Platform,
+    lang: 'cs' | 'en',
+    instruction: string,
+  ) {
+    const lockKey = `${user.id}:${productId}:${platform}:refine`;
+    if (!this.analyzeLock.acquire(lockKey)) {
+      throw new ConflictException(
+        'Úprava tohoto produktu právě probíhá. Počkejte prosím na výsledek.',
+      );
+    }
+    try {
+      return await this.performRefine(productId, user, platform, lang, instruction);
+    } finally {
+      this.analyzeLock.release(lockKey);
+    }
+  }
+
+  private async performRefine(
+    productId: string,
+    user: User,
+    platform: Platform,
+    lang: 'cs' | 'en',
+    instruction: string,
+  ) {
+    const limit = PLAN_LIMITS[user.plan];
+    const now = new Date();
+    const needsReset =
+      !user.aiUsageResetAt ||
+      user.aiUsageResetAt.getMonth() !== now.getMonth() ||
+      user.aiUsageResetAt.getFullYear() !== now.getFullYear();
+    const currentUsage = needsReset ? 0 : user.aiUsageThisMonth;
+    if (!isVipActive(user) && currentUsage >= limit) {
+      throw new BadRequestException(
+        `Dosáhli jste měsíčního limitu ${limit} optimalizací pro váš tarif. Upgradujte plán pro více optimalizací.`,
+      );
+    }
+
+    // Vlastnictví ověřeno v dotazu (IDOR) — upravit jde jen vlastní produkt.
+    const product = await this.productRepo.findOne({
+      where: { id: productId, maker: { userId: user.id } },
+    });
+    if (!product) throw new NotFoundException('Produkt nenalezen');
+
+    const opt = await this.optimizationRepo.findOne({
+      where: { productId, platform },
+      order: { createdAt: 'DESC' },
+    });
+    if (!opt) {
+      throw new BadRequestException(
+        'Pro tuto platformu zatím není optimalizace — nejdřív spusťte analýzu.',
+      );
+    }
+
+    const trimmed = instruction.trim().slice(0, 1000);
+    if (!trimmed) throw new BadRequestException('Napište, co chcete upravit.');
+
+    const wantCzech = lang === 'cs' && platform !== 'fler';
+    const platformSchema =
+      platform === 'amazon'
+        ? `  "bullet_points": ["exactly 5 concise benefit bullets, each max ~200 chars"],\n  "search_terms": "space-separated backend keywords, no commas, max 240 chars",`
+        : platform === 'fler'
+          ? `  "tags": ["až 13 českých štítků, každý max 20 znaků, malými písmeny"],\n  "materials": ["až 13 materiálů česky"],`
+          : `  "tags": ["exactly 13 Etsy tags in English, each max 20 chars, lowercase"],\n  "materials": ["up to 13 materials in English"],`;
+
+    const current = {
+      optimized_title: opt.titleOptimized,
+      optimized_description: opt.descriptionOptimized,
+      tags: opt.keywords,
+      materials: opt.platformFields?.materials,
+      bullet_points: opt.platformFields?.bulletPoints,
+      search_terms: opt.platformFields?.searchTerms,
+      pricing_recommendation: opt.pricingRecommendation,
+    };
+
+    const promptText = `You are refining an EXISTING optimized handmade listing. Keep everything that already works and change ONLY what the user asks — do not rewrite unrelated parts.
+
+Original product:
+- Title: ${product.titleOriginal}
+- Description: ${product.descriptionOriginal}
+- Category: ${product.category || 'not specified'}
+
+Current optimized listing:
+${JSON.stringify(current, null, 2)}
+
+User's requested change (follow it precisely): "${trimmed}"
+
+Respond ONLY with a valid JSON object (no markdown, no explanation) in EXACTLY this structure:
+{
+  "optimized_title": "...",
+  "title_czech": "${wantCzech ? 'Český překlad názvu' : ''}",
+  "optimized_description": "...",
+  "description_czech": "${wantCzech ? 'Český překlad popisu, stejná délka' : ''}",
+${platformSchema}
+  "pricing_recommendation": "...",
+  "pricing_recommendation_czech": "${wantCzech ? 'Český překlad' : ''}",
+  "competitiveness_score": ${opt.competitivenessScore}
+}`;
+
+    let message: Anthropic.Message;
+    try {
+      message = await this.anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: promptText }],
+      });
+    } catch (err) {
+      throw this.translateAnthropicError(err);
+    }
+
+    const content = message.content[0];
+    if (content.type !== 'text') throw new BadRequestException('Neočekávaná odpověď AI');
+
+    const { parsed, tags, platformFields } = this.parseOptimizationResponse(
+      content.text,
+      platform,
+    );
+
+    // Přepíšeme existující optimalizaci. Skóre, scoreSource i marketConclusion
+    // necháváme být — refine mění text, ne tržní data (ta by znamenala nový dotaz na Etsy).
+    opt.titleOptimized = parsed.optimized_title ?? opt.titleOptimized;
+    opt.titleCzech = parsed.title_czech || opt.titleCzech;
+    opt.descriptionOptimized = parsed.optimized_description ?? opt.descriptionOptimized;
+    opt.descriptionCzech = parsed.description_czech || opt.descriptionCzech;
+    opt.keywords = tags.length ? tags : opt.keywords;
+    opt.platformFields = Object.keys(platformFields).length ? platformFields : opt.platformFields;
+    opt.pricingRecommendation = parsed.pricing_recommendation ?? opt.pricingRecommendation;
+    opt.pricingRecommendationCzech =
+      parsed.pricing_recommendation_czech || opt.pricingRecommendationCzech;
+    await this.optimizationRepo.save(opt);
+
+    return { optimization: opt, needsReset, newUsage: currentUsage + 1 };
   }
 
   async getOptimizations(productId: string, user: User) {

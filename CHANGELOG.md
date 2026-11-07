@@ -28,6 +28,34 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-07] Doladění optimalizace: pole „Upravit" (AI přepracuje jen zadané)
+
+**Typ:** feat
+**Soubory:** `backend/src/ai/ai.service.ts`, `backend/src/ai/ai.controller.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/lib/i18n-dict.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Pod hotovou optimalizací je pole „Upravit": uživatel napíše, co změnit (např. „ornament
+je jen vepředu, ne na každé hraně"), a AI **zachová stávající text a upraví jen to**. Zvládne
+velké opravy i drobnosti. Nový endpoint `POST /products/:id/refine` + klient + UI s loadingem.
+
+### Proč
+Dřív byla optimalizace „natvrdo" — když se AI v detailu netrefila, nešlo to doladit než
+celou novou analýzou. Požadavek uživatelky.
+
+### Způsob provedení
+- `refine()` v AiService: ověření vlastnictví **v dotazu** (IDOR), kontrola kvóty (počítá se
+  jako analýza — je to další volání Claude), in-flight zámek proti dvojkliku. Načte nejnovější
+  optimalizaci pro platformu, pošle ji Claudovi s instrukcí „změň jen tohle", přepíše text.
+  Skóre/konkurence se **nepřepočítává** (refine je o textu, ne o tržních datech).
+- Parsing odpovědi AI vytažen do sdíleného `parseOptimizationResponse()` — analyze i refine
+  parsují stejně (stejné limity tagů/materiálů/odrážek).
+- `npm run check` zelený (tsc + 16 testů — jest nutno `--runInBand` kvůli plnému disku/RAM).
+  Frontend `tsc --noEmit` zelený (plný build blokuje plný disk D:).
+
+### Instrukce pro deploy
+Standardní `./deploy/deploy.sh`. Bez migrace (refine přepisuje existující řádek optimalizace).
+
 ## [2026-11-07] Profil: automatické ukládání konceptu + oprava validační bubliny
 
 **Typ:** feat | fix

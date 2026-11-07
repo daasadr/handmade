@@ -1,10 +1,18 @@
-import { Controller, Post, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { IsString, MinLength, MaxLength } from 'class-validator';
 import { AiService, type Platform } from './ai.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/user.entity';
+
+class RefineDto {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(1000)
+  instruction: string;
+}
 
 @Controller('products')
 @UseGuards(JwtAuthGuard)
@@ -32,6 +40,28 @@ export class AiController {
     // Surová data konkurence jen přechodně k jednorázovému zobrazení — neukládá
     // se do DB, takže je vracíme přilepená k odpovědi (ne součást entity).
     return { ...result.optimization, competition: result.competition };
+  }
+
+  @Post(':id/refine')
+  async refine(
+    @Param('id') productId: string,
+    @Query('platform') platform: Platform = 'etsy',
+    @Query('lang') lang: 'cs' | 'en' = 'cs',
+    @Body() dto: RefineDto,
+    @CurrentUser() user: User,
+  ) {
+    const result = await this.aiService.refine(
+      productId,
+      user,
+      platform,
+      lang,
+      dto.instruction,
+    );
+    await this.usersRepo.update(user.id, {
+      aiUsageThisMonth: result.newUsage,
+      aiUsageResetAt: result.needsReset ? new Date() : user.aiUsageResetAt,
+    });
+    return result.optimization;
   }
 
   @Get(':id/optimizations')

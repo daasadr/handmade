@@ -165,6 +165,17 @@ export const api = {
       }),
     getOptimizations: (productId: string) =>
       request<AiOptimization[]>(`/products/${productId}/optimizations`),
+    // Doladění hotové optimalizace: AI zachová text, upraví jen zadané.
+    refine: (
+      productId: string,
+      platform: Platform,
+      instruction: string,
+      lang: "cs" | "en" = "cs",
+    ) =>
+      request<AiOptimization>(
+        `/products/${productId}/refine?platform=${platform}&lang=${lang}`,
+        { method: "POST", body: JSON.stringify({ instruction }) },
+      ),
   },
 
   admin: {

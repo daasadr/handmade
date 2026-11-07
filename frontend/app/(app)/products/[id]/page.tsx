@@ -32,6 +32,8 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<Platform>("etsy");
   const [analyzing, setAnalyzing] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [refining, setRefining] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [removingBg, setRemovingBg] = useState<string | null>(null);
   // Všechny analýzy produktu (napříč platformami) — zobrazujeme vždy tu pro
@@ -171,6 +173,22 @@ export default function ProductPage() {
       toast.error(err instanceof Error ? err.message : "Uložení selhalo");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (refineText.trim().length < 3 || !product) return;
+    setRefining(true);
+    try {
+      const updated = await api.ai.refine(product.id, platform, refineText.trim(), locale);
+      // Nahradíme upravenou optimalizaci podle id (displayedOpt se tím obnoví).
+      setOptimizations((prev) => [updated, ...prev.filter((o) => o.id !== updated.id)]);
+      setRefineText("");
+      toast.success(t("prod.refineDone"));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t("err.analysisFailed"));
+    } finally {
+      setRefining(false);
     }
   };
 
@@ -819,6 +837,33 @@ export default function ProductPage() {
                 but is not endorsed or certified by Etsy, Inc.
               </p>
             )}
+
+            {/* Doladit — AI přepracuje jen to, co uživatel zadá, zbytek zachová */}
+            <div className="pt-4 border-t" style={{ borderColor: "oklch(0.85 0.02 72)" }}>
+              <Label htmlFor="refine" className="text-sm font-medium">{t("prod.refineLabel")}</Label>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-2">{t("prod.refineHint")}</p>
+              <Textarea
+                id="refine"
+                rows={2}
+                className="resize-none"
+                placeholder={t("prod.refinePlaceholder")}
+                value={refineText}
+                onChange={(e) => setRefineText(e.target.value)}
+                disabled={refining}
+              />
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={handleRefine}
+                disabled={refining || refineText.trim().length < 3}
+              >
+                {refining ? (
+                  <><span className="animate-spin">✦</span> {t("prod.refining")}</>
+                ) : (
+                  t("prod.refineBtn")
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -28,6 +28,35 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Serverový render veřejných stránek (SEO + rychlejší první vykreslení)
+
+**Typ:** perf | seo
+**Soubory:** `frontend/lib/server-api.ts` (nový), `frontend/app/vyrobci/page.tsx` + `makers-content.tsx`, `frontend/app/vyrobci/[id]/page.tsx` + `maker-content.tsx`, `frontend/app/blog/page.tsx` + `blog-content.tsx`, `frontend/app/blog/[slug]/page.tsx` + `post-content.tsx` (vše upraveno/rozděleno)
+**Commit:** nepushováno
+
+### Co bylo změněno
+Veřejné stránky (`/vyrobci`, `/vyrobci/[id]`, `/blog`, `/blog/[slug]`) byly klientské —
+data se stahovala až v prohlížeči, takže vyhledávač i první vykreslení viděly jen spinner.
+Nově je každá **serverová obálka**, která data načte na serveru a předá je stávající vizuální
+(klientské) komponentě jako prop:
+- **Obsah je rovnou v HTML** (SEO/AI enginy ho vidí; zmizel „načítání" spinner → rychlejší první vykreslení).
+- **Per-stránku metadata** přes `generateMetadata` — u profilu tvůrce (jméno + motto/bio + foto jako OG)
+  i u článku (titulek + perex + úvodní obrázek jako OG), vč. `canonical`.
+- Neexistující profil/článek → správná **404** (`notFound()`).
+
+### Proč
+SEO/GEO je u tržiště a hlavně blogu klíčové — obsah musí být v HTML, ne až po JS. A první
+vykreslení je svižnější. Odpovídá na „co by obnášel serverový render".
+
+### Beze změny vzhledu a i18n
+Vizuální komponenty se jen přesunuly (`*-content.tsx`), JSX je totožné. První render je dál
+česky (jako všude), labely řeší klientský `useT` po hydrataci — žádný hydration mismatch.
+`force-dynamic` + `no-store` = SSR na request (ne při buildu, kdy backend neběží).
+
+### Poznámka
+`tsc --noEmit` zelený. Plný `next build` lokálně blokuje zahlcený disk — build proběhne
+v Dockeru při deployi (standardní App Router vzory, async `params`).
+
 ## [2026-11-08] Behaviorální navádění + zrychlení načítání
 
 **Typ:** feat | perf

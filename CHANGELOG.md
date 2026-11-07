@@ -155,6 +155,33 @@ Součást Etsy OAuth dávky (nasadit až po schválení appky). Migrace 1761 pro
 
 ---
 
+## [2026-11-07] Self-hostované fonty (oprava padajícího Docker buildu)
+
+**Typ:** fix
+**Soubory:** `frontend/app/layout.tsx`, `frontend/app/globals.css`, `frontend/public/fonts/*.woff2`,
+`.gitattributes`
+
+### Co bylo změněno
+Fonty Cormorant Garamond a DM Sans se už neberou přes `next/font/google`, ale jsou
+**self-hostované** — woff2 v `frontend/public/fonts/`, načtené přes `@font-face` v `globals.css`
+(proměnné `--font-heading`/`--font-body` na `:root`). Přidány subsety **latin i latin-ext**
+(latin-ext je nutný pro české č/ř/ž/ě/š/ů). `.gitattributes`: woff2/ttf/otf jako binárky.
+
+### Proč
+`next/font/google` stahuje fonty **při buildu** z Google. Docker build na serveru na
+`fonts.googleapis.com` občas nedosáhl → „Failed to fetch … from Google Fonts" a build spadl
+(`npm run build` exit 1). Self-host build odřízne od sítě — je deterministický a offline.
+Bonus: původní config měl jen `subsets:["latin"]`, teď je čeština krytá i přes latin-ext.
+
+### Způsob provedení
+Oba fonty jsou variabilní (jeden woff2 pokrývá řezy 300–600). `font-display: swap` zachován,
+latin řezy se přednačítají (`<link rel="preload">`). Plný `next build` lokálně zelený (EXIT 0).
+
+### Instrukce pro deploy (pokud potřeba)
+Frontend-only, bez migrace. `./deploy/deploy.sh` — build teď projde bez závislosti na Google Fonts.
+
+---
+
 ## Formát záznamu:
 
 ```

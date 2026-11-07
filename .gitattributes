@@ -1,3 +1,9 @@
 # Shell skripty musí mít vždy LF konce řádků — jedou na Linuxovém serveru.
 # CRLF (výchozí na Windows) by rozbil shebang: `#!/usr/bin/env bash\r` → chyba.
 *.sh text eol=lf
+
+# Fonty jsou binárky — žádná normalizace konců řádků (CRLF by soubor rozbil).
+*.woff2 binary
+*.woff binary
+*.ttf binary
+*.otf binary

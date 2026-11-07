@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/cookie-consent";
@@ -10,20 +9,9 @@ import {
 } from "@/lib/seo";
 import { getServerLocale, getServerPath } from "@/lib/i18n-server";
 
-// Jen reálně používané řezy — šetří přenos. 700 (font-bold) se nikde nepoužívá;
-// kurzíva nadpisů taky ne (kurzíva je jen na těle/motto). display:swap = text se
-// vykreslí hned náhradním písmem, nečeká se na font (default next/font, ponecháno).
-const cormorant = Cormorant_Garamond({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-});
-
-const dmSans = DM_Sans({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-});
+// Fonty jsou self-hostované přes @font-face v globals.css (proměnné --font-heading
+// a --font-body na :root). Dřív to byl next/font/google, ale ten stahuje fonty při
+// buildu z Google a build v Dockeru na ně občas nedosáhl → spadlý build. Viz globals.css.
 
 // Jazykově citlivá metadata + canonical a hreflang pro AKTUÁLNÍ cestu (z URL).
 // Platí pro celý web z jednoho místa; jednotlivé stránky si jen přepisují
@@ -67,7 +55,12 @@ export default async function RootLayout({
   // Jazyk z URL (/en) — ať se stránka vykreslí ve správném jazyce už na serveru.
   const locale = await getServerLocale();
   return (
-    <html lang={locale} className={`${cormorant.variable} ${dmSans.variable} h-full antialiased`}>
+    <html lang={locale} className="h-full antialiased">
+      <head>
+        {/* Přednačteme hlavní (latin) řezy, ať nad ohybem neproblikne náhradní písmo. */}
+        <link rel="preload" href="/fonts/cormorant-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col">
         {/* Strukturovaná data pro vyhledávače i AI odpovědní enginy (GEO/AEO). */}
         <script

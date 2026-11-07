@@ -4,12 +4,14 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { LangToggle } from "@/components/lang-toggle";
 import { FAQ, FAQ_EN } from "@/lib/seo";
 
 export default function LandingPage() {
   const { locale } = useLocale();
   const en = locale === "en";
+  const { user } = useAuth();
 
   const steps = en
     ? [
@@ -75,20 +77,32 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-2">
             <LangToggle className="mr-1" />
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-sm")}
-              style={{ color: "oklch(0.52 0.04 50)" }}
-            >
-              {en ? "Sign in" : "Přihlásit se"}
-            </Link>
-            <Link
-              href="/register"
-              className={cn(buttonVariants({ size: "sm" }), "text-sm")}
-              style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)" }}
-            >
-              {en ? "Start free" : "Začít zdarma"}
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className={cn(buttonVariants({ size: "sm" }), "text-sm")}
+                style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)" }}
+              >
+                {en ? "Open app" : "Do aplikace"}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-sm")}
+                  style={{ color: "oklch(0.52 0.04 50)" }}
+                >
+                  {en ? "Sign in" : "Přihlásit se"}
+                </Link>
+                <Link
+                  href="/register"
+                  className={cn(buttonVariants({ size: "sm" }), "text-sm")}
+                  style={{ background: "oklch(0.22 0.04 48)", color: "oklch(0.973 0.008 80)" }}
+                >
+                  {en ? "Start free" : "Začít zdarma"}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -120,6 +134,13 @@ export default function LandingPage() {
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                // Kurzíva přesahuje svůj inline box; background-clip:text jinak
+                // ořízne konce písmen (náběhy/dotahy). Malý vodorovný padding
+                // rozšíří clip box a `box-decoration-break: clone` ho uplatní
+                // i na zalomené řádky.
+                paddingInline: "0.08em",
+                WebkitBoxDecorationBreak: "clone",
+                boxDecorationBreak: "clone",
               }}>
                 {en ? "deserves to be found" : "zaslouží být nalezen"}
               </span>

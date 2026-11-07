@@ -17,6 +17,24 @@ interface LocaleCtx {
 const Ctx = createContext<LocaleCtx>({ locale: "cs", setLocale: () => {} });
 
 /**
+ * Veřejné lokalizované stránky (mají `/` i `/en` variantu renderovanou serverem).
+ * Na nich MUSÍ o jazyku rozhodovat URL, ne uložená volba — jinak přihlášený
+ * uživatel s uloženým "en" uvidí anglicky i českou URL (/blog) a přepínač
+ * „vypadá, že nefunguje". Appka (dashboard, profil…) /en prefix nemá a řídí se
+ * uloženou volbou přes vlastní přepínač.
+ */
+function isLocalizedPublicPath(pathname: string | null): boolean {
+  const p = (pathname ?? "/").replace(/^\/en/, "") || "/";
+  return (
+    p === "/" ||
+    p === "/blog" ||
+    p.startsWith("/blog/") ||
+    p === "/vyrobci" ||
+    p.startsWith("/vyrobci/")
+  );
+}
+
+/**
  * Jazyk aplikace (cs/en). `initialLocale` dodá server podle URL (/en = en),
  * aby se stránka vykreslila ve správném jazyce UŽ na serveru (SEO) a sedělo to
  * s prvním klientským renderem (bez hydration mismatch).
@@ -39,6 +57,14 @@ export function LocaleProvider({
     if (pathname === "/en" || pathname?.startsWith("/en/")) {
       setLocaleState("en");
       setStored(STORAGE_KEY, "en");
+      return;
+    }
+    // Veřejná lokalizovaná stránka bez /en = čeština podle URL. URL VYHRÁVÁ nad
+    // uloženou volbou — jinak by uložené "en" (z dřívějška) zobrazilo /blog
+    // anglicky a přepínač „nefungoval". localStorage zde nepřepisujeme, ať to
+    // nerozbije jazyk appky (ta má /en prefix a řídí se vlastním přepínačem).
+    if (isLocalizedPublicPath(pathname)) {
+      setLocaleState("cs");
       return;
     }
     const saved = getStored(STORAGE_KEY);

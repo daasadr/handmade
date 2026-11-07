@@ -35,6 +35,8 @@ export function Nav() {
   const links = [
     { href: "/dashboard", label: t("nav.dashboard") },
     { href: "/products", label: t("nav.products") },
+    // Tvůrci (výloha) = normální položka menu, ne schovaná pod blogem.
+    { href: "/vyrobci", label: t("mk.nav") },
     { href: "/blog", label: t("blog.nav") },
     { href: "/napoveda", label: t("nav.help") },
     { href: "/profile", label: t("nav.profile") },

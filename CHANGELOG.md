@@ -98,6 +98,37 @@ skrytá (server vrátí 503 / status se nenačte).
 
 ---
 
+## [2026-11-07] Oprava jazyka, „odhlašování" na veřejných stránkách, menu a hero
+
+**Typ:** fix
+**Soubory:** `frontend/lib/i18n.tsx`, `frontend/components/public-header.tsx`,
+`frontend/components/nav.tsx`, `frontend/app/page.tsx`, `frontend/lib/i18n-dict.ts`
+
+### Co bylo změněno
+1. **Přepínání EN→CS na veřejných stránkách.** Na české URL (`/blog`, `/vyrobci`, `/`)
+   teď o jazyku rozhoduje URL, ne uložená volba. Dřív uložené „en" přebilo URL a obsah
+   zůstal anglicky (přepínač „nefungoval"). `isLocalizedPublicPath()` v `LocaleProvider`.
+2. **Zdánlivé odhlašování.** Veřejná hlavička (`PublicHeader`) i landing hlavička ukazovaly
+   přihlášenému jen „Přihlásit" → vypadalo to jako odhlášení (token se přitom nemaže,
+   veřejné stránky nic ověřeného nevolají). Nově: přihlášený vidí „Do aplikace" → /dashboard.
+3. **Menu.** „Tvůrci" (`/vyrobci`) přidáno jako normální položka do menu přihlášené aplikace,
+   ne schované pod blogem.
+4. **Hero nadpis.** Gradientový `background-clip:text` na kurzívě ořezával konce písmen —
+   přidán `paddingInline` + `box-decoration-break: clone`.
+
+### Proč
+Zpětná vazba uživatelky po nasazení dvojjazyčného SEO: přepínač nepřepínal, browsing
+veřejných stránek vypadal jako odhlášení, Tvůrci chyběli v menu, useklá písmena v nadpisu.
+
+### Způsob provedení
+URL jako zdroj pravdy jen pro veřejné lokalizované cesty (appka s vlastním přepínačem zůstává
+na localStorage). `useAuth` v hlavičkách. `tsc` čistý.
+
+### Instrukce pro deploy (pokud potřeba)
+Frontend-only, bez migrace. `./deploy/deploy.sh`.
+
+---
+
 ## Formát záznamu:
 
 ```

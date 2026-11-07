@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,10 @@ import { cn } from "@/lib/utils";
  *  českou a anglickou adresou (ne klientský přepínač) — kvůli SEO a sdílení. */
 export function PublicHeader() {
   const t = useT();
+  // Přihlášený uživatel nesmí na veřejných stránkách vidět jen „Přihlásit" —
+  // vypadá to jako odhlášení. Token se tu nemaže (veřejné stránky nic ověřeného
+  // nevolají), jen hlavička to musí dát najevo → odkaz zpět do aplikace.
+  const { user } = useAuth();
   const pathname = usePathname() || "/";
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
   const csPath = isEn ? pathname.replace(/^\/en/, "") || "/" : pathname;
@@ -51,9 +56,15 @@ export function PublicHeader() {
               EN
             </Link>
           </div>
-          <Link href="/login" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-            {t("auth.login")}
-          </Link>
+          {user ? (
+            <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+              {t("nav.toApp")}
+            </Link>
+          ) : (
+            <Link href="/login" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+              {t("auth.login")}
+            </Link>
+          )}
         </div>
       </div>
     </header>

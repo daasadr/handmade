@@ -12,8 +12,23 @@ import { STORY_QUESTION_KEYS, CURATED_QUOTES } from "@/lib/story-template";
 import dynamic from "next/dynamic";
 
 // TipTap jen na klientovi — ssr:false brání hydration mismatchi a nenačítá
-// těžkou knihovnu na server.
-const StoryEditor = dynamic(() => import("@/components/story-editor"), { ssr: false });
+// těžkou knihovnu na server. `loading` ukáže indikátor, než se chunk stáhne
+// (knihovna je velká, chvíli to trvá).
+function EditorLoadingFallback() {
+  const t = useT();
+  return (
+    <div
+      className="rounded-lg border flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground"
+      style={{ borderColor: "oklch(0.85 0.02 72)" }}
+    >
+      <span className="text-xl animate-pulse">✦</span> {t("pe.editorLoading")}
+    </div>
+  );
+}
+const StoryEditor = dynamic(() => import("@/components/story-editor"), {
+  ssr: false,
+  loading: () => <EditorLoadingFallback />,
+});
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

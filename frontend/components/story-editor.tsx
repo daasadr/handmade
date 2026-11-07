@@ -122,6 +122,18 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
+function EditorLoading() {
+  const t = useT();
+  return (
+    <div
+      className="rounded-lg border flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground"
+      style={{ borderColor: "oklch(0.85 0.02 72)" }}
+    >
+      <span className="text-xl animate-pulse">✦</span> {t("pe.editorLoading")}
+    </div>
+  );
+}
+
 export default function StoryEditor({
   value,
   onChange,
@@ -146,7 +158,7 @@ export default function StoryEditor({
     },
   });
 
-  if (!editor) return null;
+  if (!editor) return <EditorLoading />;
 
   return (
     <div className="rounded-lg border" style={{ borderColor: "oklch(0.85 0.02 72)" }}>

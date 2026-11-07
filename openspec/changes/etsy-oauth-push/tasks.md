@@ -43,6 +43,15 @@
   nasadit, propojit vlastní obchod, odeslat koncept, ověřit v Etsy.
   _Ověření:_ koncept se objeví v obchodě se správným názvem/popisem/tagy.
 
+## Výloha — koncept vs. zveřejněno
+
+- [x] 12. **Buy link jen u zveřejněných.** `Product.etsyListingActive` (bool) + migrace 1761.
+  Push nastaví false (koncept). `EtsyListingService.syncListingState()` ověří stav přes Etsy
+  a překlopí (ukládá jen odvozený bool). `POST /products/:id/etsy-listing-state`. Výloha
+  (`public.service`) vystaví `etsyListingId` jen když `active`. Frontend: stav na detailu
+  produktu (koncept → návod + „Už jsem zveřejnil", auto-sync po návratu), typy + i18n CS/EN.
+  _Ověřeno:_ `npm run check` (26 testů) + `tsc` čisté.
+
 ## Závěr
 
 - [x] 10. **Review bezpečnosti** (OAuth, tajemství, vstup uživatele) — nálezy v `design.md`.

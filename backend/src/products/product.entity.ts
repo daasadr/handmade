@@ -49,6 +49,16 @@ export class Product {
   @Column({ nullable: true })
   etsyListingId: string;
 
+  /**
+   * Je Etsy listing ZVEŘEJNĚNÝ (state='active'), ne jen koncept? Push zakládá
+   * koncept, který NENÍ veřejně koupitelný — odkaz `etsy.com/listing/{id}` ožije
+   * až po zveřejnění tvůrcem. Výloha proto „Koupit na Etsy" ukáže jen když je
+   * `true`. Příznak překlápí `syncListingState` z reálného stavu listingu
+   * (ukládáme jen odvozený boolean, ne obsah z Etsy — Etsy API Terms).
+   */
+  @Column({ default: false })
+  etsyListingActive: boolean;
+
   @OneToMany(() => ProductImage, (img) => img.product, { cascade: true })
   images: ProductImage[];
 

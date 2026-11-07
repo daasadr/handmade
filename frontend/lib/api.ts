@@ -233,6 +233,12 @@ export const api = {
         `/products/${productId}/etsy-draft`,
         { method: "POST" },
       ),
+    // Ověří, zda je listing na Etsy už zveřejněný (překlopí příznak pro výlohu).
+    syncListingState: (productId: string) =>
+      request<{ active: boolean }>(
+        `/products/${productId}/etsy-listing-state`,
+        { method: "POST" },
+      ),
   },
 };
 
@@ -395,6 +401,10 @@ export interface Product {
   priceOriginal?: number;
   category?: string;
   status: "draft" | "analyzed" | "completed";
+  /** ID Etsy listingu (po pushnutí konceptu nebo ručně). */
+  etsyListingId?: string | null;
+  /** Je Etsy listing zveřejněný (ne jen koncept)? Řídí „Koupit na Etsy" ve výloze. */
+  etsyListingActive?: boolean;
   images?: { id: string; imageUrl: string; orderIndex: number }[];
   optimizations?: AiOptimization[];
   createdAt: string;

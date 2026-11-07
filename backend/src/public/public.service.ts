@@ -79,7 +79,10 @@ export class PublicService {
       category: p.category ?? null,
       price: p.priceOriginal ?? null,
       imageUrl: p.images?.[0]?.imageUrl ?? null,
-      etsyListingId: p.etsyListingId ?? null,
+      // Deep link na listing jen když je ZVEŘEJNĚNÝ — koncept není veřejně
+      // koupitelný a odkaz by vedl na mrtvou stránku. Jinak null (výloha pak
+      // nabídne odkaz na obchod tvůrce z marketplaceLinks).
+      etsyListingId: p.etsyListingActive ? (p.etsyListingId ?? null) : null,
     };
   }
 }

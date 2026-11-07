@@ -129,6 +129,32 @@ Frontend-only, bez migrace. `./deploy/deploy.sh`.
 
 ---
 
+## [2026-11-07] Výloha: „Koupit na Etsy" jen u zveřejněných listingů (ne konceptů)
+
+**Typ:** feat
+**Soubory:** `backend/src/products/product.entity.ts`, `backend/src/migrations/1761000000000-AddEtsyListingActive.ts`,
+`backend/src/etsy-connect/etsy-listing.service.ts`, `backend/src/etsy-connect/etsy-connect.controller.ts`,
+`backend/src/public/public.service.ts`, `frontend/lib/api.ts`, `frontend/app/(app)/products/[id]/page.tsx`,
+`frontend/lib/i18n-dict.ts`
+
+### Co bylo změněno
+Rozlišení Etsy **konceptu** vs. **zveřejněného** listingu. Nový `Product.etsyListingActive`
+(bool, migrace 1761). Push nastaví false. `syncListingState()` ověří reálný stav přes token
+tvůrce a příznak překlopí (`POST /products/:id/etsy-listing-state`). Výloha `/vyrobci` nabídne
+„Koupit na Etsy" na konkrétní produkt **jen když je listing zveřejněný** (jinak null →
+zůstane odkaz na obchod tvůrce). Na detailu produktu stav listingu: koncept → návod + tlačítko
+„Už jsem zveřejnil — zkontrolovat" + auto-ověření po návratu; zveřejněno → potvrzení.
+
+### Proč
+`createDraftListing` vytváří koncept, který NENÍ veřejně koupitelný — odkaz `etsy.com/listing/{id}`
+ožije až po zveřejnění tvůrcem. Bez tohoto rozlišení by výloha zákazníkům nabízela mrtvé
+„Koupit" odkazy na koncepty. Ukládáme jen odvozený boolean, ne obsah z Etsy (Etsy API Terms).
+
+### Instrukce pro deploy (pokud potřeba)
+Součást Etsy OAuth dávky (nasadit až po schválení appky). Migrace 1761 proběhne automaticky.
+
+---
+
 ## Formát záznamu:
 
 ```

@@ -185,10 +185,14 @@ export class EtsyListingService {
 
       const data: any = await res.json();
       const listingId = String(data?.listing_id ?? '');
-      // Uložíme jen ID konceptu (sloupec už existuje). Žádná další data z Etsy
-      // neukládáme (Etsy API Terms).
+      // Uložíme jen ID konceptu + příznak, že NENÍ zveřejněný (je to koncept).
+      // Žádná další data z Etsy neukládáme (Etsy API Terms). Výloha „Koupit na
+      // Etsy" se rozsvítí až po zveřejnění (syncListingState).
       if (listingId) {
-        await this.productRepo.update(product.id, { etsyListingId: listingId });
+        await this.productRepo.update(product.id, {
+          etsyListingId: listingId,
+          etsyListingActive: false,
+        });
       }
       return {
         listingId,
@@ -198,5 +202,48 @@ export class EtsyListingService {
     } finally {
       this.pushLock.release(lockKey);
     }
+  }
+
+  /**
+   * Zjistí reálný stav Etsy listingu a překlopí `etsyListingActive`
+   * (active = zveřejněno = veřejně koupitelné). Ukládáme jen ten odvozený
+   * boolean, ne obsah listingu (Etsy API Terms). Volá se, když se tvůrce vrátí
+   * do appky po zveřejnění konceptu na Etsy.
+   */
+  async syncListingState(
+    user: User,
+    productId: string,
+  ): Promise<{ active: boolean }> {
+    const product = await this.productRepo.findOne({
+      where: { id: productId, maker: { userId: user.id } },
+    });
+    if (!product) throw new NotFoundException('Produkt nenalezen');
+    if (!product.etsyListingId) return { active: false };
+
+    const { accessToken } = await this.connect.getAccessContext(user.id);
+    const res = await fetch(
+      `${APPLICATION_BASE}/listings/${product.etsyListingId}`,
+      {
+        headers: {
+          'x-api-key': this.oauth.getClientId(),
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+    if (!res.ok) {
+      // Listing smazán / nedostupný → bereme jako nezveřejněný (nezobrazíme „Koupit").
+      if (res.status === 404) {
+        await this.productRepo.update(product.id, { etsyListingActive: false });
+        return { active: false };
+      }
+      throw new ServiceUnavailableException(
+        'Nepodařilo se ověřit stav listingu na Etsy. Zkuste to prosím znovu.',
+      );
+    }
+    const data: any = await res.json();
+    const active = data?.state === 'active';
+    await this.productRepo.update(product.id, { etsyListingActive: active });
+    return { active };
   }
 }

@@ -90,4 +90,10 @@ export class EtsyDraftController {
   createDraft(@Param('id') productId: string, @CurrentUser() user: User) {
     return this.listing.createDraft(user, productId);
   }
+
+  /** Ověří, zda je listing na Etsy zveřejněný, a překlopí příznak pro výlohu. */
+  @Post(':id/etsy-listing-state')
+  syncState(@Param('id') productId: string, @CurrentUser() user: User) {
+    return this.listing.syncListingState(user, productId);
+  }
 }

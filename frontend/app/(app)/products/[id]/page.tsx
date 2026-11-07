@@ -48,6 +48,9 @@ export default function ProductPage() {
   // Stav propojení s Etsy: null = neznámé / funkce vypnutá (tlačítko skryjeme).
   const [etsyConnected, setEtsyConnected] = useState<boolean | null>(null);
   const [sendingEtsy, setSendingEtsy] = useState(false);
+  const [checkingState, setCheckingState] = useState(false);
+  // Aby se auto-ověření stavu listingu spustilo jen jednou na načtení.
+  const etsySyncedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +87,8 @@ export default function ProductPage() {
     try {
       const res = await api.etsy.createDraft(id);
       toast.success(t("etsy.draftDone"));
+      // Koncept = zatím nezveřejněno; výloha ho ukáže až po publikaci na Etsy.
+      setProduct((p) => (p ? { ...p, etsyListingId: res.listingId, etsyListingActive: false } : p));
       if (res.url) window.open(res.url, "_blank", "noopener");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t("etsy.draftFailed"));
@@ -91,6 +96,33 @@ export default function ProductPage() {
       setSendingEtsy(false);
     }
   };
+
+  const checkEtsyState = async () => {
+    setCheckingState(true);
+    try {
+      const { active } = await api.etsy.syncListingState(id);
+      setProduct((p) => (p ? { ...p, etsyListingActive: active } : p));
+      toast.success(active ? t("etsy.stateActive") : t("etsy.stateDraft"));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t("etsy.draftFailed"));
+    } finally {
+      setCheckingState(false);
+    }
+  };
+
+  // Když se tvůrce vrátí po zveřejnění konceptu, jednou automaticky ověříme stav,
+  // ať se „Koupit na Etsy" ve výloze rozsvítí bez ručního klikání.
+  useEffect(() => {
+    if (etsyConnected && product?.etsyListingId && !product.etsyListingActive && !etsySyncedRef.current) {
+      etsySyncedRef.current = true;
+      api.etsy
+        .syncListingState(id)
+        .then(({ active }) => {
+          if (active) setProduct((p) => (p ? { ...p, etsyListingActive: true } : p));
+        })
+        .catch(() => {});
+    }
+  }, [etsyConnected, product?.etsyListingId, product?.etsyListingActive, id]);
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -644,6 +676,43 @@ export default function ProductPage() {
                 </Link>
               )}
             </div>
+
+            {/* Stav Etsy listingu — koncept vs. zveřejněno. Výloha „Koupit na Etsy"
+                se rozsvítí až po zveřejnění (proto to tvůrci říkáme). */}
+            {displayedOpt.platform === "etsy" && product.etsyListingId && (
+              <div
+                className="rounded-xl p-4 text-sm"
+                style={{
+                  background: product.etsyListingActive
+                    ? "oklch(0.65 0.15 155 / 0.08)"
+                    : "oklch(0.88 0.10 85 / 0.12)",
+                  border: product.etsyListingActive
+                    ? "1px solid oklch(0.65 0.15 155 / 0.25)"
+                    : "1px solid oklch(0.75 0.12 80 / 0.35)",
+                }}
+              >
+                {product.etsyListingActive ? (
+                  <p style={{ color: "oklch(0.35 0.04 50)" }}>✦ {t("etsy.stateActive")}</p>
+                ) : (
+                  <div className="space-y-2">
+                    <p style={{ color: "oklch(0.40 0.08 70)" }}>{t("etsy.draftHint")}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`https://www.etsy.com/your/shops/me/tools/listings/${product.etsyListingId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                      >
+                        {t("etsy.openDraft")}
+                      </a>
+                      <Button size="sm" variant="outline" onClick={checkEtsyState} disabled={checkingState}>
+                        {checkingState ? t("etsy.checking") : t("etsy.published")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Závěr z konkurence — UKLÁDÁ SE, zobrazuje se vždy */}
             {displayedOpt.scoreSource === "market" && displayedOpt.marketConclusion && (

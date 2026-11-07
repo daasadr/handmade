@@ -18,7 +18,6 @@ export async function generateMetadata({
   return {
     title: maker.brandName,
     description: desc.slice(0, 160),
-    alternates: { canonical: `/vyrobci/${id}` },
     openGraph: {
       title: `${maker.brandName} — Handmade.net`,
       description: desc,

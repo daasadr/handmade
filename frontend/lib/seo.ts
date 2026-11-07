@@ -19,6 +19,14 @@ export const SITE_DESCRIPTION =
 export const SITE_TITLE =
   "Handmade.net — AI optimalizace listingů pro Etsy, Amazon a Fler";
 
+export const SITE_TITLE_EN =
+  "Handmade.net — AI listing optimization for Etsy, Amazon and Fler";
+
+export const SITE_DESCRIPTION_EN =
+  "AI tool that optimizes handmade sellers' listings — a better title, description, " +
+  "13 keywords, pricing and a competitiveness score for Etsy, Amazon Handmade and Fler. " +
+  "Copy the result to your own marketplace; you keep selling yourself.";
+
 /** FAQ — faktické, stručné odpovědi. Čeština (primární publikum). */
 export const FAQ: { q: string; a: string }[] = [
   {
@@ -74,6 +82,21 @@ export const FAQ_EN: { q: string; a: string }[] = [
     a: "The interface is in Czech and English. Optimizations work in both; Fler is available only in the Czech version.",
   },
 ];
+
+/**
+ * hreflang alternativy pro danou kanonickou (českou) cestu. Angličtina žije na
+ * prefixu /en. `x-default` míří na češtinu (primární trh).
+ */
+export function altLanguages(path: string): Record<string, string> {
+  const en = path === "/" ? "/en" : `/en${path}`;
+  return { cs: path, en, "x-default": path };
+}
+
+/** Canonical pro danou cestu v daném jazyce (en = /en prefix). */
+export function canonicalFor(path: string, locale: "cs" | "en"): string {
+  if (locale !== "en") return path;
+  return path === "/" ? "/en" : `/en${path}`;
+}
 
 /** Strukturovaná data (schema.org) jako jeden @graph pro celý web. */
 export function getSiteJsonLd() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { dict, type Dict } from "./i18n-dict";
 import { getStored, setStored } from "./safe-storage";
 
@@ -16,24 +17,38 @@ interface LocaleCtx {
 const Ctx = createContext<LocaleCtx>({ locale: "cs", setLocale: () => {} });
 
 /**
- * Jazyk aplikace (cs/en). Aby nedošlo k hydration mismatch, první render
- * (server i klient) je vždy `cs`; skutečný jazyk se dopočítá až po mountu
- * z localStorage, jinak z jazyka prohlížeče.
+ * Jazyk aplikace (cs/en). `initialLocale` dodá server podle URL (/en = en),
+ * aby se stránka vykreslila ve správném jazyce UŽ na serveru (SEO) a sedělo to
+ * s prvním klientským renderem (bez hydration mismatch).
+ *
+ * Po mountu a při každé změně cesty: URL rozhoduje — `/en/*` = anglicky; jinak
+ * uložená volba / jazyk prohlížeče. Díky napojení na `usePathname` se jazyk mění
+ * i při klientské navigaci mezi /blog a /en/blog.
  */
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("cs");
+export function LocaleProvider({
+  children,
+  initialLocale = "cs",
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
+  const pathname = usePathname();
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
-    let resolved: Locale | null = null;
-    const saved = getStored(STORAGE_KEY);
-    if (saved === "cs" || saved === "en") resolved = saved;
-    if (!resolved) {
-      // První návštěva → podle prohlížeče. Čeština jen pro cs*, jinak angličtina.
-      const nav = typeof navigator !== "undefined" ? navigator.language : "";
-      resolved = nav.toLowerCase().startsWith("cs") ? "cs" : "en";
+    if (pathname === "/en" || pathname?.startsWith("/en/")) {
+      setLocaleState("en");
+      setStored(STORAGE_KEY, "en");
+      return;
     }
-    if (resolved !== "cs") setLocaleState(resolved);
-  }, []);
+    const saved = getStored(STORAGE_KEY);
+    if (saved === "cs" || saved === "en") {
+      setLocaleState(saved);
+      return;
+    }
+    const nav = typeof navigator !== "undefined" ? navigator.language : "";
+    setLocaleState(nav.toLowerCase().startsWith("cs") ? "cs" : "en");
+  }, [pathname]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);

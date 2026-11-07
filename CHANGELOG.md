@@ -28,6 +28,42 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Dvojjazyčné SEO: /en adresy + serverový render EN + hreflang
+
+**Typ:** feat | seo
+**Soubory:** `frontend/middleware.ts` (nový), `frontend/lib/i18n-server.ts` (nový), `frontend/lib/seo.ts`, `frontend/lib/i18n.tsx`, `frontend/app/providers.tsx`, `frontend/app/layout.tsx`, `frontend/components/public-header.tsx`, `frontend/app/vyrobci/page.tsx` + `[id]/page.tsx`, `frontend/app/blog/page.tsx` + `[slug]/page.tsx`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Angličtina má konečně **vlastní adresy a vlastní místo ve vyhledávání** (appka míří na Etsy = globální trh):
+- **`middleware.ts`**: `/en/*` se interně přepíše na kanonickou cestu a jazyk se předá serveru
+  (hlavičky `x-locale` + `x-pathname`). Jeden strom rout slouží oběma jazykům (žádné duplikování).
+- **Server vykreslí správný jazyk**: root layout čte jazyk z URL → `LocaleProvider` se jím
+  inicializuje → `/en/...` je anglicky UŽ v HTML (ne až po JS). `<html lang>` dle jazyka.
+  `LocaleProvider` je navázaný na `usePathname` (reaguje i na klientskou navigaci).
+- **hreflang + canonical centrálně**: root `generateMetadata` nastaví pro každou cestu
+  `canonical` (v daném jazyce) a `alternates.languages` (`cs`, `en`, `x-default`). Google tak ví,
+  že cs a en jsou tatáž stránka pro jiné lidi — síla se neštěpí. Default titulek/popis jsou
+  jazykově citlivé (EN varianty).
+- **Veřejná hlavička**: přepínač jazyka = navigace mezi `/` a `/en` (sdílitelné, indexovatelné),
+  odkazy respektují aktuální jazyk.
+
+### Proč
+Dřív měla appka jednu adresu (cs) a EN se vůbec neindexovala → z anglického vyhledávání nechodil
+nikdo. Teď má EN vlastní indexovatelné URL a hreflang je propojí s cs.
+
+### Ověřeno
+Disk se uvolnil, takže proběhl **plný `next build` (zelený)** — middleware aktivní, SSR i metadata OK.
+Pozn.: čtení hlavičky v root layoutu dělá stránky dynamické (SSR na request) — pro tenhle
+nízkotraffic web zanedbatelné.
+
+### Beze změny vzhledu
+i18n slovník i komponenty beze změny; první render sedí se serverem (bez hydration mismatch).
+Přihlášená appka má dál klientský přepínač (localStorage), /en je pro veřejné SEO stránky.
+
+### Deploy
+`./deploy/deploy.sh` (jen frontend; žádná migrace).
+
 ## [2026-11-08] Serverový render veřejných stránek (SEO + rychlejší první vykreslení)
 
 **Typ:** perf | seo

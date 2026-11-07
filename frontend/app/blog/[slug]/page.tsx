@@ -18,7 +18,6 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: desc.slice(0, 160),
-    alternates: { canonical: `/blog/${slug}` },
     openGraph: {
       type: "article",
       title: `${post.title} — Handmade.net`,

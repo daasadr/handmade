@@ -1,11 +1,17 @@
 "use client";
 
 import { AuthProvider } from "@/lib/auth-context";
-import { LocaleProvider } from "@/lib/i18n";
+import { LocaleProvider, type Locale } from "@/lib/i18n";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
   return (
-    <LocaleProvider>
+    <LocaleProvider initialLocale={initialLocale}>
       <AuthProvider>{children}</AuthProvider>
     </LocaleProvider>
   );

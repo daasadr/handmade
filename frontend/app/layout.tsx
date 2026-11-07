@@ -4,7 +4,11 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/cookie-consent";
 import { Providers } from "./providers";
-import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, getSiteJsonLd } from "@/lib/seo";
+import {
+  SITE_URL, SITE_NAME, SITE_TITLE, SITE_TITLE_EN, SITE_DESCRIPTION, SITE_DESCRIPTION_EN,
+  getSiteJsonLd, canonicalFor, altLanguages,
+} from "@/lib/seo";
+import { getServerLocale, getServerPath } from "@/lib/i18n-server";
 
 // Jen reálně používané řezy — šetří přenos. 700 (font-bold) se nikde nepoužívá;
 // kurzíva nadpisů taky ne (kurzíva je jen na těle/motto). display:swap = text se
@@ -21,47 +25,56 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: { default: SITE_TITLE, template: "%s — Handmade.net" },
-  description: SITE_DESCRIPTION,
-  applicationName: SITE_NAME,
-  keywords: [
-    "Etsy SEO", "Amazon Handmade", "Fler", "optimalizace listingu",
-    "AI popis produktu", "klíčová slova Etsy", "Etsy tagy", "handmade prodej",
-    "název produktu Etsy", "cenová strategie handmade",
-  ],
-  authors: [{ name: SITE_NAME }],
-  openGraph: {
-    type: "website",
-    siteName: SITE_NAME,
-    url: SITE_URL,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    locale: "cs_CZ",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-  robots: { index: true, follow: true },
-};
+// Jazykově citlivá metadata + canonical a hreflang pro AKTUÁLNÍ cestu (z URL).
+// Platí pro celý web z jednoho místa; jednotlivé stránky si jen přepisují
+// title/description (hreflang/canonical dědí odtud).
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const path = await getServerPath();
+  const en = locale === "en";
+  const title = en ? SITE_TITLE_EN : SITE_TITLE;
+  const description = en ? SITE_DESCRIPTION_EN : SITE_DESCRIPTION;
+  const url = canonicalFor(path, locale);
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: "%s — Handmade.net" },
+    description,
+    applicationName: SITE_NAME,
+    keywords: [
+      "Etsy SEO", "Amazon Handmade", "Fler", "optimalizace listingu", "listing optimization",
+      "AI popis produktu", "klíčová slova Etsy", "Etsy tags", "handmade prodej", "sell handmade",
+    ],
+    authors: [{ name: SITE_NAME }],
+    alternates: { canonical: url, languages: altLanguages(path) },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      url,
+      title,
+      description,
+      locale: en ? "en_US" : "cs_CZ",
+    },
+    twitter: { card: "summary_large_image", title, description },
+    robots: { index: true, follow: true },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Jazyk z URL (/en) — ať se stránka vykreslí ve správném jazyce už na serveru.
+  const locale = await getServerLocale();
   return (
-    <html lang="cs" className={`${cormorant.variable} ${dmSans.variable} h-full antialiased`}>
+    <html lang={locale} className={`${cormorant.variable} ${dmSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {/* Strukturovaná data pro vyhledávače i AI odpovědní enginy (GEO/AEO). */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(getSiteJsonLd()) }}
         />
-        <Providers>
+        <Providers initialLocale={locale}>
           {children}
           <Toaster position="top-right" richColors />
           <CookieConsent />

@@ -33,6 +33,45 @@ Frontend-only, bez migrace. Nasadí se běžným `./deploy/deploy.sh`.
 
 ---
 
+## [2026-11-07] Etsy OAuth push — backend (koncept listingu jedním tlačítkem)
+
+**Typ:** feat
+**Soubory:** `backend/src/etsy-connect/*` (entity, oauth/connect/listing service, controllery, modul),
+`backend/src/common/crypto/token-cipher.ts` (+spec), `backend/src/migrations/1760000000000-CreateEtsyConnections.ts`,
+`backend/src/app.module.ts`, `backend/src/data-source.ts`, `.env.example`,
+`openspec/changes/etsy-oauth-push/*`
+**Commit:** viz git
+
+### Co bylo změněno
+Backend pro přímé odeslání optimalizace na Etsy jako **koncept listingu**. OAuth 2.0
+(Authorization Code + PKCE): `GET /etsy/oauth/start` → authorize URL, `GET /etsy/oauth/callback`
+(veřejný, identita přes `state`) dokončí propojení. `GET/DELETE /etsy/connection` stav/zrušení.
+`POST /products/:id/etsy-draft` založí koncept v obchodě tvůrce (`createDraftListing`).
+Refresh token se ukládá **šifrovaně** (AES-256-GCM, `TokenCipher`); access token se neukládá,
+obnovuje se za běhu (+ rotace refresh tokenu). Nová tabulka `etsy_connections` (migrace 1760).
+
+### Proč
+Etsy nemá CSV/feed import — jediná „jednotlačítková" cesta je OAuth API. Appka `handmadenet`
+je u Etsy založená, čeká na schválení; backend stavíme teď, ať je hotovo, až schválení přijde.
+Scope minimální `listings_r listings_w` (žádné tržby — viz handmade-qd1). Vzniká koncept, ne
+publikace (dopravní profil/fotky doplní výrobce).
+
+### Způsob provedení
+Fail-safe: bez `ETSY_API_KEY`/`ETSY_TOKEN_KEY` je integrace vypnutá (503 „není nakonfigurováno"),
+zbytek appky jede (jako konkurence v EtsyService). Vlastnictví ověřeno v dotazu (IDOR, 404),
+`InFlightLock` proti dvojkliku, nikdy 401, tokeny se nelogují. Čisté mapování polí
+(`buildDraftListingPayload`) s tvrdými limity Etsy (title 140, 13 tagů ≤20 znaků). OTEVŘENÁ
+otázka: `taxonomy_id` (default z env, nutno ověřit při živém testu). `npm run check` zelený
+(26 testů, z toho 10 nových).
+
+### Instrukce pro deploy (pokud potřeba)
+Zatím **nenasazovat kvůli Etsy** — čeká se na schválení appky. Až přijde: doplnit callback URL
+v Etsy *Settings* (`<web>/api/etsy/oauth/callback`), do serverového `.env` přidat
+`ETSY_TOKEN_KEY` (≥32 znaků, `openssl rand -base64 48`) a `ETSY_DEFAULT_TAXONOMY_ID`,
+pak `./deploy/deploy.sh` (migrace 1760 proběhne automaticky). Frontend tlačítka — samostatně.
+
+---
+
 ## Formát záznamu:
 
 ```

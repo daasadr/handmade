@@ -17,6 +17,7 @@ import { RemoveBgModule } from './common/removebg/removebg.module';
 import { BillingModule } from './billing/billing.module';
 import { PublicModule } from './public/public.module';
 import { BlogModule } from './blog/blog.module';
+import { EtsyConnectModule } from './etsy-connect/etsy-connect.module';
 
 import { User } from './users/user.entity';
 import { MakerProfile } from './makers/maker-profile.entity';
@@ -26,6 +27,7 @@ import { AiOptimization } from './ai/ai-optimization.entity';
 import { AffiliateLink } from './affiliate/affiliate-link.entity';
 import { CharityRecord } from './charity/charity-record.entity';
 import { BlogPost } from './blog/blog-post.entity';
+import { EtsyConnection } from './etsy-connect/etsy-connection.entity';
 
 @Module({
   imports: [
@@ -37,7 +39,7 @@ import { BlogPost } from './blog/blog-post.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord, BlogPost],
+      entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord, BlogPost, EtsyConnection],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       migrationsRun: process.env.NODE_ENV === 'production',
       synchronize: process.env.NODE_ENV !== 'production',
@@ -56,6 +58,7 @@ import { BlogPost } from './blog/blog-post.entity';
     BillingModule,
     PublicModule,
     BlogModule,
+    EtsyConnectModule,
   ],
   // AppController nese / (getHello) a /api/health. Bez téhle registrace se
   // nenamountuje a obojí vrací 404 — což se dlouho přehlíželo, protože health

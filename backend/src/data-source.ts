@@ -12,11 +12,12 @@ import { ProductImage } from './products/product-image.entity';
 import { AiOptimization } from './ai/ai-optimization.entity';
 import { AffiliateLink } from './affiliate/affiliate-link.entity';
 import { CharityRecord } from './charity/charity-record.entity';
+import { EtsyConnection } from './etsy-connect/etsy-connection.entity';
 
 export default new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord],
+  entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord, EtsyConnection],
   migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
   synchronize: false,
 });

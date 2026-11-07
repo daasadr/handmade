@@ -4,6 +4,35 @@
 > (pod tento blok s instrukcemi) ve formátu níže. Buď konkrétní — piš CO bylo změněno,
 > PROČ a JAKÝM způsobem. Uveď i soubory. Nikdy nepřepisuj existující záznamy.
 
+## [2026-11-07] Amazon Handmade flat-file CSV export
+
+**Typ:** feat
+**Soubory:** `frontend/lib/export.ts`, `frontend/app/(app)/products/[id]/page.tsx`, `frontend/lib/i18n-dict.ts`
+**Commit:** viz git
+
+### Co bylo změněno
+Přidán `exportAmazonCsv()` — stáhne optimalizaci jako CSV pod názvy sloupců, které
+Amazon Handmade používá (`item_sku`, `item_name`, `brand_name`, `product_description`,
+`bullet_point1-5`, `generic_keywords`, `standard_price`, `quantity`). Tlačítko
+„Amazon CSV (do šablony)" se zobrazí na detailu produktu jen když je vybraná platforma
+Amazon. Nový i18n klíč `exp.amazon` (CS/EN).
+
+### Proč
+Výrobce dnes vše kopíruje ručně. Amazon umí flat-file (Inventory File) upload, takže
+CSV s jeho názvy sloupců odstraní přepisování — stačí vložit sloupce do oficiální šablony.
+**Etsy záměrně vynecháno: Etsy žádný CSV/feed import listingů nemá** (pro Etsy je cesta
+jen OAuth API — viz fáze 2). Uživatelka se ptala, zda CSV jde přímo do Etsy — nejde.
+
+### Způsob provedení
+Vše client-side (data už máme načtená, žádný backend call). Amazon limity ořezány v kódu:
+`item_name` ≤200 znaků, `generic_keywords` ≤240 bajtů. `quantity` výchozí 1, `brand_name`
+prázdné (výrobce doplní). SKU slugifikováno z názvu. UTF-8 s BOM + CRLF kvůli Excelu.
+
+### Instrukce pro deploy (pokud potřeba)
+Frontend-only, bez migrace. Nasadí se běžným `./deploy/deploy.sh`.
+
+---
+
 ## Formát záznamu:
 
 ```

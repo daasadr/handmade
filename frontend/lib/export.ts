@@ -101,3 +101,60 @@ export function exportPlatformTxt(productTitle: string, o: AiOptimization) {
   const name = `${slugify(productTitle)}-${o.platform ?? "listing"}.txt`;
   downloadFile(name, buildPlatformText(productTitle, o), "text/plain;charset=utf-8");
 }
+
+/**
+ * Amazon Handmade „flat-file" export.
+ *
+ * PROČ zvlášť od obecného CSV: Amazon nemá jeden univerzální import — používá
+ * kategoriové Inventory File šablony stažené ze Seller Centralu, s PEVNÝMI názvy
+ * sloupců (item_name, bullet_point1-5, generic_keywords, standard_price…) a třemi
+ * řádky hlavičky. Ty šablony jsou obří, kategoriové a mění se, takže je nelze
+ * spolehlivě replikovat na klientu. Proto exportujeme data pod Amazon názvy
+ * sloupců — výrobce je vloží do oficiální šablony (copy sloupců), ne naopak.
+ *
+ * ⚠️ Etsy sem nepatří: Etsy žádný CSV/flat-file import listingů NEMÁ. Tahle
+ * funkce je čistě pro platform === "amazon".
+ */
+const AMAZON_HEADERS = [
+  "item_sku",
+  "item_name",
+  "brand_name",
+  "product_description",
+  "bullet_point1",
+  "bullet_point2",
+  "bullet_point3",
+  "bullet_point4",
+  "bullet_point5",
+  "generic_keywords",
+  "standard_price",
+  "quantity",
+];
+
+function amazonRow(product: Product, o: AiOptimization, brandName: string): string[] {
+  const pf = o.platformFields ?? {};
+  const bullets = pf.bulletPoints ?? [];
+  // generic_keywords = skryté vyhledávací termíny; když Amazon pole chybí,
+  // použij tagy. Amazon limit ~249 bajtů, raději ořízni.
+  const keywords = (pf.searchTerms || (o.keywords ?? []).join(" ")).slice(0, 240);
+  const price = product.priceOriginal != null ? String(product.priceOriginal) : "";
+  return [
+    slugify(product.titleOriginal), // item_sku — stabilní SKU z názvu
+    (o.titleOptimized ?? "").slice(0, 200), // Amazon item_name limit 200 znaků
+    brandName,
+    o.descriptionOptimized ?? "",
+    bullets[0] ?? "",
+    bullets[1] ?? "",
+    bullets[2] ?? "",
+    bullets[3] ?? "",
+    bullets[4] ?? "",
+    keywords,
+    price,
+    "1", // quantity — výchozí; výrobce upraví v šabloně
+  ];
+}
+
+export function exportAmazonCsv(product: Product, o: AiOptimization, brandName = "") {
+  const rows = [AMAZON_HEADERS, amazonRow(product, o, brandName)];
+  const csv = "﻿" + rows.map((r) => r.map(escapeCsv).join(",")).join("\r\n");
+  downloadFile(`${slugify(product.titleOriginal)}-amazon.csv`, csv, "text/csv;charset=utf-8");
+}

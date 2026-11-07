@@ -8,7 +8,7 @@ import { api, Product, AiOptimization, Platform, PLATFORM_LABELS } from "@/lib/a
 import { prepareImages, formatBytes } from "@/lib/image-upload";
 import { useT, useLocale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { exportPlatformTxt, exportProductCsv } from "@/lib/export";
+import { exportPlatformTxt, exportProductCsv, exportAmazonCsv } from "@/lib/export";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -593,6 +593,16 @@ export default function ProductPage() {
               >
                 {t("exp.csv")}
               </Button>
+              {/* Amazon flat-file — jen u Amazonu; Etsy žádný CSV import nemá */}
+              {displayedOpt.platform === "amazon" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => exportAmazonCsv(product, displayedOpt)}
+                >
+                  {t("exp.amazon")}
+                </Button>
+              )}
             </div>
 
             {/* Závěr z konkurence — UKLÁDÁ SE, zobrazuje se vždy */}

@@ -16,6 +16,7 @@ import { S3Module } from './common/s3/s3.module';
 import { RemoveBgModule } from './common/removebg/removebg.module';
 import { BillingModule } from './billing/billing.module';
 import { PublicModule } from './public/public.module';
+import { BlogModule } from './blog/blog.module';
 
 import { User } from './users/user.entity';
 import { MakerProfile } from './makers/maker-profile.entity';
@@ -24,6 +25,7 @@ import { ProductImage } from './products/product-image.entity';
 import { AiOptimization } from './ai/ai-optimization.entity';
 import { AffiliateLink } from './affiliate/affiliate-link.entity';
 import { CharityRecord } from './charity/charity-record.entity';
+import { BlogPost } from './blog/blog-post.entity';
 
 @Module({
   imports: [
@@ -35,7 +37,7 @@ import { CharityRecord } from './charity/charity-record.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord],
+      entities: [User, MakerProfile, Product, ProductImage, AiOptimization, AffiliateLink, CharityRecord, BlogPost],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       migrationsRun: process.env.NODE_ENV === 'production',
       synchronize: process.env.NODE_ENV !== 'production',
@@ -53,6 +55,7 @@ import { CharityRecord } from './charity/charity-record.entity';
     AffiliateModule,
     BillingModule,
     PublicModule,
+    BlogModule,
   ],
   // AppController nese / (getHello) a /api/health. Bez téhle registrace se
   // nenamountuje a obojí vrací 404 — což se dlouho přehlíželo, protože health

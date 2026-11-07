@@ -28,6 +28,35 @@ Příkazy pro uživatele k provedení na serveru.
 
 ---
 
+## [2026-11-08] Blog — backend (DB + admin CRUD + veřejné čtení)
+
+**Typ:** feat
+**Soubory:** `backend/src/blog/*` (nový), `backend/src/migrations/1759000000000-CreateBlogPosts.ts` (nový), `backend/src/app.module.ts`
+**Commit:** nepushováno
+
+### Co bylo změněno
+Začátek komunity blogem (epic `handmade-xs1`), model DB + admin rozhraní (ne soubory v repu —
+autorka publikuje sama). Backend:
+- Entita `BlogPost` (slug, title, excerpt, contentHtml, coverImageUrl, authorName, published,
+  publishedAt) + migrace `1759000000000`.
+- `BlogController` (`/admin/blog`, jen ADMIN) — list/detail/create/update/delete, auto-slug
+  (unikátní), HTML článku se **sanitizuje** stejně jako příběh profilu.
+- `BlogPublicController` (`/public/blog`) — nepřihlášené čtení **jen publikovaných** (výpis
+  bez celého HTML, detail dle slugu).
+
+### Proč
+Blog = obsahový marketing + silné SEO/GEO, přivádí návštěvnost. Zvolený model admin-CMS dělá
+autorku soběstačnou a znovupoužívá TipTap editor + sanitizaci.
+
+### Způsob provedení
+`BlogService` sdílí sanitizér s profilem (`sanitizeStoryHtml`). tsc + 16 testů zelené.
+
+### Další krok
+Frontend: admin správa `/admin/blog` (editor) + veřejné `/blog` a `/blog/[slug]`.
+
+### Deploy
+`./deploy/deploy.sh` — migrace `1759000000000` vytvoří tabulku při startu.
+
 ## [2026-11-08] Tržiště (výloha) — veřejné stránky /vyrobci
 
 **Typ:** feat

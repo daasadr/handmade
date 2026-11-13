@@ -24,15 +24,15 @@ const DEFAULT_WHEN_MADE = 'made_to_order'; // handmade bývá na zakázku
 const DEFAULT_LISTING_TYPE = 'physical';
 
 /**
- * ⚠️ OTEVŘENÁ OTÁZKA (viz design.md): `taxonomy_id` je u Etsy POVINNÉ číselné ID
- * z jejich taxonomie, naše `product.category` je volný text. Bez validního ID
- * createDraftListing SELŽE. Do vyřešení mapování bereme default z env
- * `ETSY_DEFAULT_TAXONOMY_ID` — a toto je PRVNÍ věc k ověření při živém testu
- * (task 9). Výrobce kategorii v konceptu stejně upraví.
+ * `taxonomy_id` je u Etsy POVINNÉ číselné ID z jejich taxonomie, naše
+ * `product.category` je volný text. Řešení: `resolveTaxonomyId()` vezme env
+ * `ETSY_DEFAULT_TAXONOMY_ID`, jinak si samo najde platný listový uzel v taxonomii
+ * Etsy. Tahle funkce je jen fallback pro čistý builder (volaný bez ID v testech).
+ * Výrobce kategorii v konceptu stejně upraví.
  */
 function defaultTaxonomyId(): number {
   const raw = Number(process.env.ETSY_DEFAULT_TAXONOMY_ID);
-  return Number.isFinite(raw) && raw > 0 ? raw : 1; // 1 = placeholder, nutno ověřit
+  return Number.isFinite(raw) && raw > 0 ? raw : 1; // fallback, běžně se nepoužije
 }
 
 export interface DraftListingPayload {
@@ -47,6 +47,8 @@ export interface DraftListingPayload {
   is_supply: boolean;
   tags: string[];
   materials: string[];
+  /** Povinné pro fyzický listing (Etsy docs). Načítá se z obchodu tvůrce. */
+  shipping_profile_id?: number;
 }
 
 /**
@@ -60,6 +62,7 @@ export function buildDraftListingPayload(
   product: Pick<Product, 'titleOriginal' | 'priceOriginal'>,
   opt: Pick<AiOptimization, 'titleOptimized' | 'descriptionOptimized' | 'keywords' | 'platformFields'>,
   taxonomyId: number = defaultTaxonomyId(),
+  shippingProfileId?: number,
 ): DraftListingPayload {
   const materials = (opt.platformFields?.materials ?? [])
     .map((m) => String(m).trim())
@@ -89,6 +92,7 @@ export function buildDraftListingPayload(
     is_supply: false,
     tags,
     materials,
+    shipping_profile_id: shippingProfileId,
   };
 }
 
@@ -107,6 +111,9 @@ function toFormBody(p: DraftListingPayload): string {
   params.set('is_supply', String(p.is_supply));
   if (p.tags.length) params.set('tags', p.tags.join(','));
   if (p.materials.length) params.set('materials', p.materials.join(','));
+  if (p.shipping_profile_id != null) {
+    params.set('shipping_profile_id', String(p.shipping_profile_id));
+  }
   return params.toString();
 }
 
@@ -114,6 +121,8 @@ function toFormBody(p: DraftListingPayload): string {
 export class EtsyListingService {
   private readonly logger = new Logger(EtsyListingService.name);
   private readonly pushLock = new InFlightLock();
+  // Taxonomie je velká a stabilní — najdeme platné ID jednou a držíme v paměti.
+  private cachedTaxonomyId?: number;
 
   constructor(
     @InjectRepository(Product)
@@ -159,7 +168,28 @@ export class EtsyListingService {
       const { accessToken, shopId } = await this.connect.getAccessContext(
         user.id,
       );
-      const payload = buildDraftListingPayload(product, opt);
+
+      // Fyzický listing u Etsy POVINNĚ potřebuje dopravní profil (docs). Vezmeme
+      // první z obchodu tvůrce. Když žádný nemá, nemá cenu volat Etsy — poradíme.
+      const shippingProfileId = await this.getFirstShippingProfileId(
+        shopId,
+        accessToken,
+      );
+      if (!shippingProfileId) {
+        throw new BadRequestException(
+          'Ve svém Etsy obchodě nemáš žádný dopravní profil. Vytvoř si ho v Etsy ' +
+            '(Shop Manager → Settings → Shipping settings) a zkus to znovu.',
+        );
+      }
+      // Platné taxonomy_id (povinné): z env, jinak si ho sami najdeme v taxonomii.
+      const taxonomyId = await this.resolveTaxonomyId(accessToken);
+
+      const payload = buildDraftListingPayload(
+        product,
+        opt,
+        taxonomyId,
+        shippingProfileId,
+      );
 
       const res = await fetch(
         `${APPLICATION_BASE}/shops/${shopId}/listings`,
@@ -177,9 +207,12 @@ export class EtsyListingService {
 
       if (!res.ok) {
         const detail = await res.text().catch(() => '');
-        this.logger.warn(`createDraftListing vrátil ${res.status}: ${detail.slice(0, 300)}`);
+        this.logger.warn(`createDraftListing vrátil ${res.status}: ${detail.slice(0, 500)}`);
+        // Reálnou hlášku z Etsy ukážeme uživateli (je to jeho vlastní obchod) —
+        // u živého testu hned vidíme, co Etsy případně ještě chce (např. readiness
+        // state). Oříznuto, ať nevznikne obří toast.
         throw new ServiceUnavailableException(
-          'Nepodařilo se založit koncept na Etsy. Zkuste to prosím znovu.',
+          `Etsy odmítlo založení konceptu: ${this.etsyErrorText(detail)}`,
         );
       }
 
@@ -245,5 +278,84 @@ export class EtsyListingService {
     const active = data?.state === 'active';
     await this.productRepo.update(product.id, { etsyListingActive: active });
     return { active };
+  }
+
+  /** První dopravní profil obchodu (shipping_profile_id), nebo null. */
+  private async getFirstShippingProfileId(
+    shopId: string,
+    accessToken: string,
+  ): Promise<number | null> {
+    try {
+      const res = await fetch(
+        `${APPLICATION_BASE}/shops/${shopId}/shipping-profiles`,
+        {
+          headers: {
+            'x-api-key': this.oauth.getClientId(),
+            Authorization: `Bearer ${accessToken}`,
+          },
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+      if (!res.ok) return null;
+      const data: any = await res.json();
+      const id = data?.results?.[0]?.shipping_profile_id;
+      return typeof id === 'number' ? id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Platné `taxonomy_id`: z env `ETSY_DEFAULT_TAXONOMY_ID`, jinak si najdeme první
+   * LISTOVÝ uzel v taxonomii Etsy (bez potomků) — to je validní kategorie.
+   * Výrobce ji v konceptu stejně upraví. Cachujeme, taxonomie se nemění.
+   */
+  private async resolveTaxonomyId(accessToken: string): Promise<number> {
+    const env = Number(process.env.ETSY_DEFAULT_TAXONOMY_ID);
+    if (Number.isFinite(env) && env > 0) return env;
+    if (this.cachedTaxonomyId) return this.cachedTaxonomyId;
+
+    try {
+      const res = await fetch(`${APPLICATION_BASE}/seller-taxonomy/nodes`, {
+        headers: {
+          'x-api-key': this.oauth.getClientId(),
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (res.ok) {
+        const data: any = await res.json();
+        const leaf = this.firstLeafId(data?.results ?? []);
+        if (leaf) {
+          this.cachedTaxonomyId = leaf;
+          return leaf;
+        }
+      }
+    } catch {
+      /* spadneme na fallback níže */
+    }
+    // Poslední záchrana — ať koncept aspoň vznikne; kategorii výrobce opraví.
+    return 1;
+  }
+
+  /** Najde první listový uzel (bez potomků) v taxonomickém stromu Etsy. */
+  private firstLeafId(nodes: any[]): number | null {
+    for (const n of nodes) {
+      const children = Array.isArray(n?.children) ? n.children : [];
+      if (children.length === 0 && typeof n?.id === 'number') return n.id;
+      const deep = this.firstLeafId(children);
+      if (deep) return deep;
+    }
+    return null;
+  }
+
+  /** Vytáhne čitelnou hlášku z chybové odpovědi Etsy (JSON `{error}` nebo text). */
+  private etsyErrorText(raw: string): string {
+    try {
+      const j = JSON.parse(raw);
+      return String(j?.error || j?.message || raw).slice(0, 200);
+    } catch {
+      return (raw || 'neznámá chyba').slice(0, 200);
+    }
   }
 }

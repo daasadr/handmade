@@ -208,6 +208,34 @@ Frontend-only, bez migrace. `./deploy/deploy.sh`.
 
 ---
 
+## [2026-11-13] Etsy createDraftListing — dopravní profil + taxonomy + čitelné chyby
+
+**Typ:** fix
+**Soubory:** `backend/src/etsy-connect/etsy-listing.service.ts`
+
+### Co bylo změněno
+Před živým testem napojení: `createDraft` teď před voláním Etsy **načte z obchodu tvůrce
+první dopravní profil** (`shipping_profile_id` — u fyzického listingu povinné dle Etsy docs)
+a **platné `taxonomy_id`** (z env `ETSY_DEFAULT_TAXONOMY_ID`, jinak si samo najde listový uzel
+v taxonomii Etsy). Když tvůrce nemá dopravní profil, vrátí jasnou radu místo kryptické chyby.
+Při odmítnutí Etsy se **reálná hláška z Etsy ukáže uživateli** (je to jeho obchod), ať je
+živý test sebediagnostický.
+
+### Proč
+Dokumentace Etsy: fyzický listing u `createDraftListing` povinně vyžaduje `shipping_profile_id`
+a validní `taxonomy_id`. Naše verze je neposílala → první test by spadl. Ověřeno proti
+developers.etsy.com/documentation/tutorials/listings.
+
+### Způsob provedení
+Nové helpery `getFirstShippingProfileId`, `resolveTaxonomyId` (+ cache), `firstLeafId`,
+`etsyErrorText`. `npm run check` zelený (26 testů). Pozn.: `readiness_state_id` zatím
+neposíláme — pokud ho Etsy u testu vyžádá, uvidíme to z vrácené hlášky a doplníme.
+
+### Instrukce pro deploy (pokud potřeba)
+Součást Etsy dávky. Živý test: viz etsy-oauth-push task 9.
+
+---
+
 ## Formát záznamu:
 
 ```

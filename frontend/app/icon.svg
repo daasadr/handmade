@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Handmade.net">
+  <defs>
+    <linearGradient id="hmSpark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00CED1"/>
+      <stop offset="1" stop-color="#00A86B"/>
+    </linearGradient>
+  </defs>
+  <!-- Teplá hnědá dlaždice (foreground z palety) — gradientová jiskra na ní vynikne i při 16 px. -->
+  <rect width="32" height="32" rx="7" fill="#2a1f18"/>
+  <!-- Čtyřcípá „jiskra" = brandový motiv (✦), tyrkys→smaragd. Jeden výrazný tvar kvůli čitelnosti v malém. -->
+  <path d="M16 4.5 L18.7 13.3 L27.5 16 L18.7 18.7 L16 27.5 L13.3 18.7 L4.5 16 L13.3 13.3 Z" fill="url(#hmSpark)"/>
+</svg>

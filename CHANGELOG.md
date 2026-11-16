@@ -4,6 +4,39 @@
 > (pod tento blok s instrukcemi) ve formátu níže. Buď konkrétní — piš CO bylo změněno,
 > PROČ a JAKÝM způsobem. Uveď i soubory. Nikdy nepřepisuj existující záznamy.
 
+## [2026-11-16] Brandovaná favicon + anglický OG náhled pro sdílení
+
+**Typ:** feat
+**Soubory:** `frontend/app/icon.svg` (nový), `frontend/app/apple-icon.tsx` (nový),
+`frontend/app/opengraph-image.tsx`, smazán `frontend/app/favicon.ico`
+**Commit:** viz git
+
+### Co bylo změněno
+Nahrazena výchozí Next.js favicon (ze šablony, nebrandovaná) vlastní ikonou:
+`app/icon.svg` = teplá hnědá dlaždice (`#2a1f18`) se čtyřcípou „jiskrou" (brandový
+motiv ✦) v gradientu tyrkys→smaragd (`#00CED1`→`#00A86B`). `app/apple-icon.tsx`
+generuje přes next/og 180×180 PNG pro iOS home screen ze stejného motivu. Výchozí
+`favicon.ico` smazán (nahrazen `icon.svg`, který moderní prohlížeče preferují).
+Dynamický OG náhled (`opengraph-image.tsx`) přepsán do **angličtiny** + přidán
+brandový sparkle mark.
+
+### Proč
+Uživatelka chtěla „pěknou favicon" a anglický náhled pro sdílení. Favicon byla dosud
+defaultní z Next šablony. OG je anglicky, protože **middleware nevpouští soubory
+s příponou** (`middleware.ts` matcher `(?!…|.*\..*)`), takže `/opengraph-image.png`
+nikdy nedostane jazyk z `/en` → CS/EN varianta přes URL nejde. Angličtina je
+univerzální (názvy marketplaců jsou stejně EN) a míří i do zahraničí; české stránky
+si v náhledu drží CS title/description z metadat.
+
+### Způsob provedení
+Konvence Next 16 pro ikony ověřeny v `node_modules/next/dist/docs/.../app-icons.md`
+(AGENTS.md: tenhle Next má vlastní pravidla). `icon.svg` = statický vektor (crisp
+všude, `sizes="any"`), `apple-icon.tsx` + OG = ImageResponse z next/og (Satori:
+jen inline styly, žádné oklch/ozdobné glyphy; „jiskra" kreslena jako `<svg>` s
+`<linearGradient>`). Build ověřen (`npx next build` → routes `/icon.svg`,
+`/apple-icon`, `/opengraph-image` OK). GEO/AEO/SEO (seo.ts, robots, sitemap,
+JSON-LD, llms.txt) beze změny — už existovalo.
+
 ## [2026-11-07] Amazon Handmade flat-file CSV export
 
 **Typ:** feat

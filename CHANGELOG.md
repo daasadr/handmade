@@ -4,6 +4,29 @@
 > (pod tento blok s instrukcemi) ve formátu níže. Buď konkrétní — piš CO bylo změněno,
 > PROČ a JAKÝM způsobem. Uveď i soubory. Nikdy nepřepisuj existující záznamy.
 
+## [2026-11-16] Fix: ETSY_TOKEN_KEY se nepředával do backend kontejneru (503)
+
+**Typ:** fix
+**Soubory:** `docker-compose.prod.yml`
+**Commit:** viz git
+
+### Co bylo změněno
+Do `environment:` backend služby přidáno `ETSY_TOKEN_KEY` (a volitelné
+`ETSY_DEFAULT_TAXONOMY_ID`). Dosud se předával jen `ETSY_API_KEY`.
+
+### Proč
+Propojení s Etsy padalo na **503** hned při „Propojit Etsy obchod". Příčina:
+`isEnabled()` = `oauth.isConfigured() && cipher.isConfigured()`. `TokenCipher`
+čte `process.env.ETSY_TOKEN_KEY`, jenže compose ho do kontejneru vůbec nepředával,
+takže i se správně vyplněným serverovým `.env` byl uvnitř undefined → integrace
+vypnutá → 503 na `/etsy/oauth/*`. Klasická past: proměnná je v `.env`, ale chybí
+v `environment:` mapě → do kontejneru se nedostane.
+
+### Způsob provedení
+Přidán řádek `ETSY_TOKEN_KEY: ${ETSY_TOKEN_KEY}` + `ETSY_DEFAULT_TAXONOMY_ID:
+${ETSY_DEFAULT_TAXONOMY_ID:-}`. Nutný **redeploy** (znovuvytvoření kontejneru, aby
+načetl nové env). Názvy proměnných už byly v `.env.example`.
+
 ## [2026-11-16] Brandovaná favicon + anglický OG náhled pro sdílení
 
 **Typ:** feat

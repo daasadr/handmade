@@ -36,6 +36,13 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ETSY_API_KEY: ${ETSY_API_KEY}
+      # Šifrovací klíč pro Etsy refresh tokeny (AES-256-GCM, TokenCipher). BEZ něj
+      # je celé propojení s Etsy vypnuté (isEnabled()=false → 503 na /etsy/oauth/*),
+      # i když ETSY_API_KEY existuje. Musí být ≥32 znaků. Patří do serverového .env.
+      ETSY_TOKEN_KEY: ${ETSY_TOKEN_KEY}
+      # Volitelné: výchozí Etsy kategorie (taxonomy_id) pro koncepty. Prázdné =
+      # appka si vezme první list z getSellerTaxonomyNodes.
+      ETSY_DEFAULT_TAXONOMY_ID: ${ETSY_DEFAULT_TAXONOMY_ID:-}
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET:-handmade-media}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}

@@ -165,7 +165,7 @@ export class EtsyConnectService {
   private async fetchShopId(accessToken: string): Promise<string> {
     const res = await fetch(`${APPLICATION_BASE}/users/me`, {
       headers: {
-        'x-api-key': this.oauth.getClientId(),
+        'x-api-key': this.oauth.getApiKeyHeader(),
         Authorization: `Bearer ${accessToken}`,
       },
       signal: AbortSignal.timeout(10000),

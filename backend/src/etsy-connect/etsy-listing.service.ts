@@ -196,7 +196,7 @@ export class EtsyListingService {
         {
           method: 'POST',
           headers: {
-            'x-api-key': this.oauth.getClientId(),
+            'x-api-key': this.oauth.getApiKeyHeader(),
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
@@ -258,7 +258,7 @@ export class EtsyListingService {
       `${APPLICATION_BASE}/listings/${product.etsyListingId}`,
       {
         headers: {
-          'x-api-key': this.oauth.getClientId(),
+          'x-api-key': this.oauth.getApiKeyHeader(),
           Authorization: `Bearer ${accessToken}`,
         },
         signal: AbortSignal.timeout(10000),
@@ -290,7 +290,7 @@ export class EtsyListingService {
         `${APPLICATION_BASE}/shops/${shopId}/shipping-profiles`,
         {
           headers: {
-            'x-api-key': this.oauth.getClientId(),
+            'x-api-key': this.oauth.getApiKeyHeader(),
             Authorization: `Bearer ${accessToken}`,
           },
           signal: AbortSignal.timeout(10000),
@@ -318,7 +318,7 @@ export class EtsyListingService {
     try {
       const res = await fetch(`${APPLICATION_BASE}/seller-taxonomy/nodes`, {
         headers: {
-          'x-api-key': this.oauth.getClientId(),
+          'x-api-key': this.oauth.getApiKeyHeader(),
           Authorization: `Bearer ${accessToken}`,
         },
         signal: AbortSignal.timeout(10000),

@@ -46,9 +46,17 @@ export class EtsyOAuthService {
     return this.scope;
   }
 
-  /** Keystring pro hlavičku `x-api-key` u aplikačních volání Etsy. */
-  getClientId(): string {
-    return this.credentials().clientId;
+  /**
+   * Hodnota do hlavičky `x-api-key` u datových (aplikačních) volání Etsy.
+   *
+   * POZOR: Etsy od začátku 2026 vyžaduje v této hlavičce CELÉ `keystring:shared_secret`,
+   * ne jen keystring — jinak vrací 403 „Shared secret is required in x-api-key header".
+   * Naproti tomu OAuth `client_id` (authorize + výměna/obnova tokenu) je JEN keystring
+   * (viz credentials().clientId) — proto se přihlášení povedlo, ale datová volání padala.
+   * Nepleť ty dvě věci dohromady.
+   */
+  getApiKeyHeader(): string {
+    return process.env.ETSY_API_KEY ?? '';
   }
 
   private credentials(): { clientId: string; clientSecret: string } {

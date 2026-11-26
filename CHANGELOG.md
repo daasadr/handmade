@@ -4,6 +4,34 @@
 > (pod tento blok s instrukcemi) ve formátu níže. Buď konkrétní — piš CO bylo změněno,
 > PROČ a JAKÝM způsobem. Uveď i soubory. Nikdy nepřepisuj existující záznamy.
 
+## [2026-11-26] Fix: x-api-key musí být keystring:shared_secret (403 od Etsy)
+
+**Typ:** fix
+**Soubory:** `backend/src/etsy-connect/etsy-oauth.service.ts`,
+`backend/src/etsy-connect/etsy-connect.service.ts`,
+`backend/src/etsy-connect/etsy-listing.service.ts`
+**Commit:** viz git
+
+### Co bylo změněno
+`getClientId()` (vracel jen keystring) nahrazen `getApiKeyHeader()`, který vrací
+**celé `keystring:shared_secret`** z `ETSY_API_KEY`. Přepnuto všech 5 míst, kde se
+posílá hlavička `x-api-key` (propojení přes getMe + 4 volání u odeslání konceptu).
+
+### Proč
+Po přihlášení a souhlasu padal callback na getMe s **403**:
+`{"error":"Shared secret is required in x-api-key header."}` (viz log na serveru).
+Etsy **od začátku 2026 změnilo formát hlavičky `x-api-key`** — musí obsahovat obě
+části `keystring:shared_secret`, ne jen keystring. My tam posílali jen keystring.
+Pozn.: OAuth `client_id` (authorize + výměna/obnova tokenu) je naopak **jen keystring**
+— proto přihlášení i výměna tokenu fungovaly, zatímco datová volání (getMe, dopravní
+profil, taxonomie, createDraft) vracela 403. Ty dvě hodnoty se nesmí plést.
+
+### Způsob provedení
+Potvrzeno Etsy dokumentací (Request Standards: `x-api-key: keystring:shared_secret`).
+Surová env hodnota `ETSY_API_KEY` je přesně v tomhle tvaru, takže se posílá rovnou.
+`npm run check` OK (26 testů). **Nevyžaduje novou autorizaci** — jen redeploy a znovu
+kliknout „Propojit Etsy" (minulý pokus se neuložil, protože spadl před uložením).
+
 ## [2026-11-26] Fix: Etsy propojení padalo na načtení obchodu (scope shops_r + getMe)
 
 **Typ:** fix

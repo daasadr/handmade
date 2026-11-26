@@ -26,7 +26,10 @@ export class EtsyOAuthService {
   private readonly logger = new Logger(EtsyOAuthService.name);
   private readonly tokenUrl = 'https://api.etsy.com/v3/public/oauth/token';
   private readonly connectUrl = 'https://www.etsy.com/oauth/connect';
-  private readonly scope = 'listings_r listings_w';
+  // shops_r je NUTNÝ: getMe (zjištění shop_id při propojení) i getShopShippingProfiles
+  // (dopravní profil pro createDraftListing) ho vyžadují. Bez něj padá jak propojení
+  // („Nepodařilo se načíst obchod"), tak pozdější odeslání konceptu.
+  private readonly scope = 'listings_r listings_w shops_r';
 
   // State store PKCE verifierů. In-memory stačí pro jednu instanci backendu
   // (jako InFlightLock u analyze). TTL 10 min — po přihlášení na Etsy se tvůrce
@@ -36,6 +39,11 @@ export class EtsyOAuthService {
 
   isConfigured(): boolean {
     return !!process.env.ETSY_API_KEY;
+  }
+
+  /** Scopes, o které žádáme — ať je EtsyConnectService uloží konzistentně (bez driftu). */
+  getScope(): string {
+    return this.scope;
   }
 
   /** Keystring pro hlavičku `x-api-key` u aplikačních volání Etsy. */

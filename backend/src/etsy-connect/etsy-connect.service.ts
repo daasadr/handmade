@@ -79,7 +79,7 @@ export class EtsyConnectService {
     );
     // Etsy user id je část access tokenu před tečkou.
     const etsyUserId = tokens.access_token.split('.')[0];
-    const shopId = await this.fetchShopId(etsyUserId, tokens.access_token);
+    const shopId = await this.fetchShopId(tokens.access_token);
 
     const existing = await this.repo.findOne({
       where: { userId: pending.userId },
@@ -88,7 +88,7 @@ export class EtsyConnectService {
     row.etsyUserId = etsyUserId;
     row.shopId = shopId;
     row.refreshTokenEnc = this.cipher.encrypt(tokens.refresh_token);
-    row.scopes = 'listings_r listings_w';
+    row.scopes = this.oauth.getScope();
     await this.repo.save(row);
 
     // Přednahrajeme access token do cache, ať první odeslání nemusí hned obnovovat.
@@ -154,12 +154,16 @@ export class EtsyConnectService {
     await this.repo.delete({ userId });
   }
 
-  /** Zjistí shop id vlastníka účtu (getShopByOwnerUserId). */
-  private async fetchShopId(
-    etsyUserId: string,
-    accessToken: string,
-  ): Promise<string> {
-    const res = await fetch(`${APPLICATION_BASE}/users/${etsyUserId}/shops`, {
+  /**
+   * Zjistí shop id ověřeného uživatele přes getMe (`/users/me` → { user_id, shop_id }).
+   *
+   * PROČ getMe a ne getShopByOwnerUserId (`/users/{id}/shops`): druhý endpoint při
+   * propojení vracel chybu („Nepodařilo se načíst obchod", 403/404) — je citlivý na
+   * odvození user_id z tokenu. getMe je kanonické „kdo jsem + můj obchod" a vrací
+   * shop_id přímo. Vyžaduje scope shops_r (proto o něj žádáme, viz EtsyOAuthService).
+   */
+  private async fetchShopId(accessToken: string): Promise<string> {
+    const res = await fetch(`${APPLICATION_BASE}/users/me`, {
       headers: {
         'x-api-key': this.oauth.getClientId(),
         Authorization: `Bearer ${accessToken}`,
@@ -167,16 +171,20 @@ export class EtsyConnectService {
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) {
+      // Tělo getMe je jen { user_id, shop_id } nebo chybová hláška — žádné tajemství.
+      // Logujeme status + útržek těla, ať je příští selhání diagnostikovatelné.
+      const body = await res.text().catch(() => '');
+      this.logger.warn(`Etsy getMe vrátil ${res.status}: ${body.slice(0, 300)}`);
       throw new ServiceUnavailableException(
-        'Nepodařilo se načíst váš Etsy obchod. Zkuste to prosím znovu.',
+        'Nepodařilo se načíst váš Etsy účet. Zkuste to prosím znovu.',
       );
     }
     const data: any = await res.json();
-    // Endpoint vrací buď jeden obchod, nebo { results: [...] } dle verze — ošetříme obojí.
-    const shopId = data?.shop_id ?? data?.results?.[0]?.shop_id;
+    const shopId = data?.shop_id;
     if (!shopId) {
-      throw new ServiceUnavailableException(
-        'K tomuto Etsy účtu se nenašel žádný obchod.',
+      // Účet existuje, ale nemá otevřený Etsy obchod — čekatelný stav, poradíme co dál.
+      throw new BadRequestException(
+        'Tento Etsy účet nemá otevřený obchod (shop). Přihlas se účtem, který má na Etsy založený obchod.',
       );
     }
     return String(shopId);

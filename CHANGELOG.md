@@ -4,6 +4,35 @@
 > (pod tento blok s instrukcemi) ve formátu níže. Buď konkrétní — piš CO bylo změněno,
 > PROČ a JAKÝM způsobem. Uveď i soubory. Nikdy nepřepisuj existující záznamy.
 
+## [2026-11-26] Fix: Etsy propojení padalo na načtení obchodu (scope shops_r + getMe)
+
+**Typ:** fix
+**Soubory:** `backend/src/etsy-connect/etsy-oauth.service.ts`,
+`backend/src/etsy-connect/etsy-connect.service.ts`
+**Commit:** viz git
+
+### Co bylo změněno
+1. OAuth scope rozšířen z `listings_r listings_w` na **`listings_r listings_w shops_r`**.
+2. `fetchShopId` přepsán z `getShopByOwnerUserId` (`/users/{id}/shops`) na **`getMe`**
+   (`/users/me` → `{ user_id, shop_id }`). Přidáno logování HTTP statusu + útržku těla
+   při selhání a jasná hláška, když účet nemá otevřený obchod.
+3. Uložený `scopes` string se teď bere z `oauth.getScope()` (nový getter) — bez driftu.
+
+### Proč
+Po úspěšném přihlášení na Etsy a „Grant" padalo propojení v callbacku na
+„**Nepodařilo se načíst váš Etsy obchod**" (log na serveru). Z Etsy OpenAPI specifikace:
+- `getMe` i `getShopShippingProfiles` (ten je nutný i pro pozdější odeslání konceptu)
+  **vyžadují scope `shops_r`**, o který jsme nežádali.
+- `getShopByOwnerUserId` je navíc křehký (403/404 podle odvození user_id z tokenu).
+`getMe` vrací `shop_id` přímo a je kanonické. Bez `shops_r` by později selhalo i načtení
+dopravního profilu u konceptu — řešíme obojí jedním scope.
+
+### Způsob provedení
+Scopy ověřeny stažením `https://www.etsy.com/openapi/generated/oas/3.0.0.json` a
+prohledáním operací (getMe/getShopShippingProfiles → `shops_r`; createDraftListing →
+`listings_w`). `npm run check` OK (26 testů). **Nutný redeploy + nová autorizace**
+(stará udělená oprávnění shops_r neobsahují → uživatel musí znovu „Propojit Etsy").
+
 ## [2026-11-16] Fix: ETSY_TOKEN_KEY se nepředával do backend kontejneru (503)
 
 **Typ:** fix
